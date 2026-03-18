@@ -171,6 +171,7 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
   }
 
   function handleNodeClick(node: ReagraphNode) {
+    if (!node?.id) return
     const found = docs.find(d => d.path === node.id)
     if (found) {
       setView('files')
@@ -207,9 +208,22 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
     return { graphNodes: nodes, graphEdges: edges }
   }, [docs, selectedPath])
 
-  const filteredDocs = searchQuery
-    ? docs.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : docs
+  const filteredDocs = useMemo(() => {
+    if (!searchQuery) return docs
+    // Collect matching file paths
+    const matchingFilePaths = new Set(
+      docs.filter(d => d.type === 'file' && d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => d.path)
+    )
+    // Include all docs whose path is matched or is a prefix of a matched path
+    return docs.filter(d => {
+      if (matchingFilePaths.has(d.path)) return true
+      // Include directory if any matching file starts with this dir's path
+      if (d.type === 'directory') {
+        return Array.from(matchingFilePaths).some(fp => fp.startsWith(d.path + '/'))
+      }
+      return false
+    })
+  }, [docs, searchQuery])
 
   return (
     <div className="flex flex-col h-full">
@@ -295,6 +309,7 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
                       <button
                         onClick={() => {
                           setContent(editContent)
+                          setWikiLinks(parseWikiLinks(editContent))
                           setIsEditing(false)
                         }}
                         className="text-xs px-3 py-1 rounded bg-primary/20 border border-primary/30 text-primary"
