@@ -144,6 +144,7 @@ export interface Agent {
   created_at: number
   updated_at: number
   config?: JsonValue
+  agentType?: 'openclaw' | 'claude-code' | 'codex' | 'generic'
   taskStats?: {
     total: number
     assigned: number

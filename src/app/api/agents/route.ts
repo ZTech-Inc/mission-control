@@ -12,6 +12,7 @@ import { runOpenClaw } from '@/lib/command';
 import { config as appConfig } from '@/lib/config';
 import { resolveWithin } from '@/lib/paths';
 import path from 'node:path';
+import { getAgentType } from '@/lib/agent-workspace';
 
 /**
  * GET /api/agents - List all agents with optional filtering
@@ -106,6 +107,7 @@ export async function GET(request: NextRequest) {
 
       return {
         ...agent,
+        agentType: getAgentType(agent as any),
         taskStats: {
           ...taskStats,
           completed: taskStats.done,

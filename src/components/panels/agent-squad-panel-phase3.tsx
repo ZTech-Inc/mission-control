@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
@@ -91,6 +91,189 @@ const statusCardStyles: Record<string, { edge: string; glow: string; dot: string
     glow: 'from-rose-400/15 via-transparent to-transparent',
     dot: 'bg-rose-300',
   },
+}
+
+// Inline SVG logos for agent type badges
+function OpenClawLogo() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+    </svg>
+  )
+}
+
+function ClaudeCodeLogo() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 1.5L2 7.5v9l10 6 10-6v-9L12 1.5zm0 2.3l7.5 4.35v8.7L12 21.2l-7.5-4.35V8.15L12 3.8z"/>
+    </svg>
+  )
+}
+
+function CodexLogo() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 2a8 8 0 110 16A8 8 0 0112 4zm-2 4v8l6-4-6-4z"/>
+    </svg>
+  )
+}
+
+type AgentTypeName = 'openclaw' | 'claude-code' | 'codex' | 'generic'
+
+const agentTypeConfig: Record<AgentTypeName, { label: string; badgeClass: string; Logo: () => React.ReactElement }> = {
+  'openclaw': {
+    label: 'OpenClaw Agents',
+    badgeClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+    Logo: OpenClawLogo,
+  },
+  'claude-code': {
+    label: 'Claude Code Agents',
+    badgeClass: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+    Logo: ClaudeCodeLogo,
+  },
+  'codex': {
+    label: 'Codex Agents',
+    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    Logo: CodexLogo,
+  },
+  'generic': {
+    label: 'Other Agents',
+    badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+    Logo: () => <span className="text-[10px]">•</span>,
+  },
+}
+
+const GROUP_ORDER: AgentTypeName[] = ['openclaw', 'claude-code', 'codex', 'generic']
+
+function AgentGroupedGrid({
+  agents,
+  hasRecentHeartbeat,
+  formatLastSeen,
+  onSelectAgent,
+  onWakeAgent,
+  onUpdateStatus,
+  onSpawnAgent,
+  t,
+}: {
+  agents: Agent[]
+  hasRecentHeartbeat: (agent: Agent) => boolean
+  formatLastSeen: (timestamp?: number) => string
+  onSelectAgent: (agent: Agent) => void
+  onWakeAgent: (name: string, sessionKey: string) => Promise<void>
+  onUpdateStatus: (name: string, status: Agent['status'], activity?: string) => Promise<void>
+  onSpawnAgent: (agent: Agent) => void
+  t: ReturnType<typeof useTranslations<'agentSquadPhase3'>>
+}) {
+  const grouped: Record<AgentTypeName, Agent[]> = { openclaw: [], 'claude-code': [], codex: [], generic: [] }
+  for (const agent of agents) {
+    const type = (agent.agentType as AgentTypeName) || 'generic'
+    const key: AgentTypeName = GROUP_ORDER.includes(type) ? type : 'generic'
+    grouped[key].push(agent)
+  }
+
+  return (
+    <div className="space-y-8">
+      {GROUP_ORDER.map(groupKey => {
+        const groupAgents = grouped[groupKey]
+        if (groupAgents.length === 0) return null
+        const { label, badgeClass, Logo } = agentTypeConfig[groupKey]
+        return (
+          <div key={groupKey}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-xs ${badgeClass}`}>
+                <Logo />
+                {label}
+              </span>
+              <span className="text-xs text-muted-foreground/50">{groupAgents.length}</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {groupAgents.map(agent => {
+                const modelName = formatModelName(agent.config)
+                const taskStatsLine = buildTaskStatParts(agent.taskStats)
+                return (
+                  <div
+                    key={agent.id}
+                    className="group relative overflow-hidden rounded-xl border border-border/70 bg-card p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-lg cursor-pointer"
+                    onClick={() => onSelectAgent(agent)}
+                  >
+                    <div className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${(statusCardStyles[agent.status] || defaultCardStyle).edge}`} />
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <AgentAvatar name={agent.name} size="md" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-semibold text-foreground truncate">{agent.name}</h3>
+                            <span className={`inline-flex items-center gap-1 text-2xs px-1.5 py-0.5 rounded-full border ${badgeClass}`} title={groupKey}>
+                              <Logo />
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {agent.role}{modelName && <> · <span className="font-mono text-muted-foreground/80">{modelName}</span></>}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {hasRecentHeartbeat(agent) && (
+                          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" title="Recent heartbeat" />
+                        )}
+                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs capitalize ${statusBadgeStyles[agent.status]}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${(statusCardStyles[agent.status] || defaultCardStyle).dot}`} />
+                          {agent.status}
+                        </span>
+                      </div>
+                    </div>
+                    {taskStatsLine && (
+                      <div className="text-xs text-muted-foreground mb-2 pl-0.5">
+                        {taskStatsLine.map((part, i) => (
+                          <span key={part.label}>
+                            {i > 0 && <span className="mx-1 text-muted-foreground/40">·</span>}
+                            <span className={part.color || 'text-foreground/80'}>{part.count}</span>
+                            {' '}{part.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                      <span className="text-[11px] text-muted-foreground/70">
+                        {formatLastSeen(agent.last_seen)}
+                      </span>
+                      <div className="flex gap-1">
+                        {agent.session_key ? (
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); onWakeAgent(agent.name, agent.session_key!) }}
+                            size="xs" variant="ghost"
+                            className="h-6 px-2 text-xs text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200"
+                            title="Wake agent via session"
+                          >
+                            {t('wake')}
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); onUpdateStatus(agent.name, 'idle', 'Manually activated') }}
+                            disabled={agent.status === 'idle'}
+                            size="xs" variant="ghost" className="h-6 px-2 text-xs"
+                          >
+                            {t('wake')}
+                          </Button>
+                        )}
+                        <Button
+                          onClick={(e) => { e.stopPropagation(); onSpawnAgent(agent) }}
+                          size="xs" variant="ghost"
+                          className="h-6 px-2 text-xs text-blue-300 hover:bg-blue-500/15 hover:text-blue-200"
+                        >
+                          {t('spawn')}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export function AgentSquadPanelPhase3() {
@@ -387,119 +570,16 @@ export function AgentSquadPanelPhase3() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {agents.map(agent => {
-              const modelName = formatModelName(agent.config)
-              const taskStatsLine = buildTaskStatParts(agent.taskStats)
-
-              return (
-                <div
-                  key={agent.id}
-                  className="group relative overflow-hidden rounded-xl border border-border/70 bg-card p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-lg cursor-pointer"
-                  onClick={() => setSelectedAgent(agent)}
-                >
-                  <div className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${(statusCardStyles[agent.status] || defaultCardStyle).edge}`} />
-
-                  {/* Header: avatar + name + status */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <AgentAvatar name={agent.name} size="md" />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-semibold text-foreground truncate">{agent.name}</h3>
-                          {(agent as any).source && (agent as any).source !== 'manual' && (
-                            <span className={`text-2xs px-1.5 py-0.5 rounded-full border ${
-                              (agent as any).source === 'local'
-                                ? 'bg-violet-500/15 text-violet-300 border-violet-500/30'
-                                : (agent as any).source === 'gateway'
-                                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
-                                  : 'bg-slate-500/15 text-slate-300 border-slate-500/30'
-                            }`}>
-                              {(agent as any).source}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {agent.role}{modelName && <> · <span className="font-mono text-muted-foreground/80">{modelName}</span></>}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {hasRecentHeartbeat(agent) && (
-                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" title="Recent heartbeat" />
-                      )}
-                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs capitalize ${statusBadgeStyles[agent.status]}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${(statusCardStyles[agent.status] || defaultCardStyle).dot}`} />
-                        {agent.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Task stats — inline */}
-                  {taskStatsLine && (
-                    <div className="text-xs text-muted-foreground mb-2 pl-0.5">
-                      {taskStatsLine.map((part, i) => (
-                        <span key={part.label}>
-                          {i > 0 && <span className="mx-1 text-muted-foreground/40">·</span>}
-                          <span className={part.color || 'text-foreground/80'}>{part.count}</span>
-                          {' '}{part.label}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Footer: last seen + actions */}
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                    <span className="text-[11px] text-muted-foreground/70">
-                      {formatLastSeen(agent.last_seen)}
-                    </span>
-                    <div className="flex gap-1">
-                      {agent.session_key ? (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            wakeAgent(agent.name, agent.session_key!)
-                          }}
-                          size="xs"
-                          variant="ghost"
-                          className="h-6 px-2 text-xs text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200"
-                          title="Wake agent via session"
-                        >
-                          {t('wake')}
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            updateAgentStatus(agent.name, 'idle', 'Manually activated')
-                          }}
-                          disabled={agent.status === 'idle'}
-                          size="xs"
-                          variant="ghost"
-                          className="h-6 px-2 text-xs"
-                        >
-                          {t('wake')}
-                        </Button>
-                      )}
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedAgent(agent)
-                          setShowQuickSpawnModal(true)
-                        }}
-                        size="xs"
-                        variant="ghost"
-                        className="h-6 px-2 text-xs text-blue-300 hover:bg-blue-500/15 hover:text-blue-200"
-                      >
-                        {t('spawn')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <AgentGroupedGrid
+            agents={agents}
+            hasRecentHeartbeat={hasRecentHeartbeat}
+            formatLastSeen={formatLastSeen}
+            onSelectAgent={setSelectedAgent}
+            onWakeAgent={wakeAgent}
+            onUpdateStatus={updateAgentStatus}
+            onSpawnAgent={(agent) => { setSelectedAgent(agent); setShowQuickSpawnModal(true) }}
+            t={t}
+          />
         )}
       </div>
 

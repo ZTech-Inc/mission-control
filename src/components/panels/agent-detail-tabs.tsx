@@ -2165,6 +2165,8 @@ export function FilesTab({ agent }: { agent: Agent }) {
   const [saving, setSaving] = useState(false)
   const [workspace, setWorkspace] = useState<string | null>(null)
 
+  const [isFlatFile, setIsFlatFile] = useState(false)
+
   const loadFiles = async () => {
     setLoading(true)
     setError(null)
@@ -2176,6 +2178,7 @@ export function FilesTab({ agent }: { agent: Agent }) {
       }
       const data = await response.json()
       setWorkspace(data.workspace || null)
+      setIsFlatFile(Boolean(data.flatFile))
       const entries = Object.entries(data.files || {}).map(([name, value]: [string, any]) => ({
         name,
         exists: Boolean(value?.exists),
@@ -2228,6 +2231,42 @@ export function FilesTab({ agent }: { agent: Agent }) {
     return (
       <div className="p-6 flex items-center justify-center py-8">
         <Loader variant="inline" label="Loading files" />
+      </div>
+    )
+  }
+
+  // Flat file agent: show read-only prompt viewer
+  if (!loading && isFlatFile) {
+    const flatEntry = files.find(f => f.name === 'agent.md')
+    return (
+      <div className="p-5 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h4 className="text-lg font-medium text-foreground">{t('workspaceFiles')}</h4>
+            {workspace && (
+              <p className="text-xs text-muted-foreground font-mono mt-0.5">{workspace}</p>
+            )}
+          </div>
+          <Button onClick={loadFiles} size="sm" variant="secondary" disabled={loading}>
+            {loading ? '...' : t('refresh')}
+          </Button>
+        </div>
+        <div className="bg-surface-1/50 border border-border/50 rounded-lg p-3 text-xs text-muted-foreground">
+          This agent is defined as a single prompt file.
+        </div>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        {flatEntry?.exists && (
+          <div className="space-y-2">
+            <div className="font-mono text-xs text-muted-foreground">{workspace}</div>
+            <pre className="w-full bg-surface-1 text-foreground border border-border rounded-md px-3 py-2 font-mono text-xs overflow-auto max-h-[500px] whitespace-pre-wrap">
+              {flatEntry.content || <span className="text-muted-foreground/50">(empty)</span>}
+            </pre>
+          </div>
+        )}
       </div>
     )
   }
