@@ -24,6 +24,9 @@ export const MOCK_AGENT_ASSIGNMENTS: AgentTeamAssignment[] = [
   { agent_id: 4, team_id: 3, role: 'lead', assigned_at: 1700000103 },
   { agent_id: 5, team_id: 4, role: 'member', assigned_at: 1700000104 },
   { agent_id: 6, team_id: 5, role: 'lead', assigned_at: 1700000105 },
+  { agent_id: 7, team_id: 2, role: 'lead', assigned_at: 1700000106 },
+  { agent_id: 8, team_id: 4, role: 'lead', assigned_at: 1700000107 },
+  { agent_id: 9, team_id: 5, role: 'lead', assigned_at: 1700000108 },
 ]
 
 const deptDocContent = {

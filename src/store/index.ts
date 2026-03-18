@@ -526,12 +526,12 @@ interface MissionControlStore {
   memoryFiles: MemoryFile[]
   selectedMemoryFile: string | null
   memoryContent: string | null
-  memoryFileLinks: { wikiLinks: unknown[]; incoming: string[]; outgoing: string[] } | null
+  memoryFileLinks: { wikiLinks: string[]; incoming: string[]; outgoing: string[] } | null
   memoryHealth: unknown | null
   setMemoryFiles: (files: MemoryFile[]) => void
   setSelectedMemoryFile: (path: string | null) => void
   setMemoryContent: (content: string | null) => void
-  setMemoryFileLinks: (links: { wikiLinks: unknown[]; incoming: string[]; outgoing: string[] } | null) => void
+  setMemoryFileLinks: (links: { wikiLinks: string[]; incoming: string[]; outgoing: string[] } | null) => void
   setMemoryHealth: (health: unknown | null) => void
 
   // Token Usage & Cost Tracking
