@@ -1,0 +1,3702 @@
+{
+  "organization": "ZTech Incorporation",
+  "tagline": "Two Humans. 500+ AI Agents. One Mission: Make Every Client #1.",
+  "summary": {
+    "total_departments": 14,
+    "total_teams": 45,
+    "total_ai_agents_target": 432,
+    "human_leaders": "2 (CEO + CTO)",
+    "operating_hours": "24/7/365",
+    "protocol_standards": "A2A + ACP + MCP + ICP",
+    "agents_populated_in_file": 299
+  },
+  "departments": [
+    {
+      "name": "DIGITAL MARKETING DEPARTMENT",
+      "mission": "Mission: Make every client the undisputed leader in their market through data-driven, AI-powered marketing excellence.",
+      "teams": [
+        {
+          "name": "TEAM 1: SEO & CONTENT STRATEGY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "SEO Strategist",
+              "Role / Title": "Team Lead \u2013 SEO",
+              "Core Skills": "Technical SEO, site audits, algorithm analysis, SERP strategy",
+              "Key Deliverables": "SEO roadmaps, audit reports, ranking strategies",
+              "Skill Source": "rank-tracker",
+              "Use Case Mapping": "SEO optimization",
+              "KPI": "Organic traffic growth %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Content Writer",
+              "Role / Title": "Senior Content Specialist",
+              "Core Skills": "Blog writing, long-form, storytelling, brand voice",
+              "Key Deliverables": "Blog posts, articles, whitepapers, guides",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Blog post writing",
+              "KPI": "Content output volume + engagement",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Keyword Analyst",
+              "Role / Title": "Keyword Research Lead",
+              "Core Skills": "Keyword research, search intent analysis, gap analysis",
+              "Key Deliverables": "Keyword maps, opportunity reports, content briefs",
+              "Skill Source": "rank-tracker",
+              "Use Case Mapping": "SEO optimization",
+              "KPI": "Keyword ranking improvements",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Link Building Agent",
+              "Role / Title": "Outreach & Backlink Specialist",
+              "Core Skills": "Backlink strategy, outreach, digital PR, guest posting",
+              "Key Deliverables": "Link acquisition plans, outreach campaigns",
+              "Skill Source": "aada (Marketing)",
+              "Use Case Mapping": "KOL outreach",
+              "KPI": "Domain authority growth",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Blog Manager",
+              "Role / Title": "Editorial Operations Lead",
+              "Core Skills": "Content calendar, editorial workflow, publishing",
+              "Key Deliverables": "Content calendars, publishing schedules",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Content calendar",
+              "KPI": "Publishing consistency score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Content Repurposer",
+              "Role / Title": "Multi-Format Specialist",
+              "Core Skills": "Content adaptation, platform optimization",
+              "Key Deliverables": "Social snippets, threads, carousels from long-form",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "Content repurposing",
+              "KPI": "Repurposed content reach",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "SEO Copywriter",
+              "Role / Title": "Search-Optimized Writer",
+              "Core Skills": "SEO writing, meta tags, structured data, CTR optimization",
+              "Key Deliverables": "Optimized landing pages, meta descriptions",
+              "Skill Source": "rank-tracker",
+              "Use Case Mapping": "SEO optimization + AI content humanization",
+              "KPI": "CTR improvement %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Content QA Agent",
+              "Role / Title": "Editorial Quality Gate",
+              "Core Skills": "Fact-checking, grammar, brand compliance, plagiarism check",
+              "Key Deliverables": "Quality reports, content approvals",
+              "Skill Source": "adversarial-prompting",
+              "Use Case Mapping": "Fact-checking",
+              "KPI": "Error rate reduction",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "9",
+              "Agent Name": "Technical SEO Agent",
+              "Role / Title": "Site Architecture Specialist",
+              "Core Skills": "Core Web Vitals, schema, crawlability, indexation",
+              "Key Deliverables": "Technical audit reports, fix implementations",
+              "Skill Source": "rank-tracker",
+              "Use Case Mapping": "Performance optimization",
+              "KPI": "Core Web Vitals scores",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "10",
+              "Agent Name": "Local SEO Agent",
+              "Role / Title": "Local Search Specialist",
+              "Core Skills": "Google Business, local citations, map pack optimization",
+              "Key Deliverables": "Local SEO strategies, citation management",
+              "Skill Source": "rank-tracker",
+              "Use Case Mapping": "SEO optimization",
+              "KPI": "Local pack rankings",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "11",
+              "Agent Name": "Content Translator",
+              "Role / Title": "Multilingual Content Lead",
+              "Core Skills": "Translation, localization, cultural adaptation",
+              "Key Deliverables": "Localized content across languages",
+              "Skill Source": "telegram-multilingual-voice-reply",
+              "Use Case Mapping": "Multilingual translation",
+              "KPI": "Market reach expansion",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "12",
+              "Agent Name": "AI Humanizer Agent",
+              "Role / Title": "Content Authenticity Specialist",
+              "Core Skills": "AI-to-human rewriting, tone matching, authenticity",
+              "Key Deliverables": "Human-grade polished content",
+              "Skill Source": "adversarial-prompting",
+              "Use Case Mapping": "AI content humanization",
+              "KPI": "Content authenticity score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: PAID ADVERTISING & PERFORMANCE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Ad Campaign Manager",
+              "Role / Title": "Team Lead \u2013 Paid Media",
+              "Core Skills": "Google Ads, Meta Ads, campaign architecture",
+              "Key Deliverables": "Campaign strategies, budget plans, performance reports",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Ad campaign management",
+              "KPI": "ROAS improvement",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "PPC Specialist",
+              "Role / Title": "Search Ads Expert",
+              "Core Skills": "Google Search, Shopping, keyword bidding, quality score",
+              "Key Deliverables": "PPC campaigns, bid strategies, ad copy",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Ad campaign management",
+              "KPI": "Cost per acquisition",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Retargeting Agent",
+              "Role / Title": "Audience Recovery Specialist",
+              "Core Skills": "Remarketing, lookalike audiences, pixel management",
+              "Key Deliverables": "Retargeting campaigns, audience segments",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Competitor ad monitoring",
+              "KPI": "Conversion recovery rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Budget Optimizer",
+              "Role / Title": "Ad Spend Intelligence",
+              "Core Skills": "Budget allocation, ROAS optimization, diminishing returns analysis",
+              "Key Deliverables": "Budget reports, reallocation recommendations",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Ad campaign management",
+              "KPI": "Budget efficiency ratio",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "A/B Test Agent",
+              "Role / Title": "Experimentation Lead",
+              "Core Skills": "Multivariate testing, statistical significance, creative testing",
+              "Key Deliverables": "Test designs, result analysis, winning variants",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Headline A/B testing",
+              "KPI": "Test win rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-growth-hacker.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Ad Creative Agent",
+              "Role / Title": "Performance Creative Specialist",
+              "Core Skills": "Ad copy, visual briefs, UGC-style ads",
+              "Key Deliverables": "Ad creatives, copy variants, video ad scripts",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "AI UGC factory + Ad script generation",
+              "KPI": "Creative click-through rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Programmatic Agent",
+              "Role / Title": "Display & Programmatic Lead",
+              "Core Skills": "DSP management, programmatic buying, RTB",
+              "Key Deliverables": "Display campaigns, audience strategies",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Ad campaign management",
+              "KPI": "CPM efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Conversion Tracker",
+              "Role / Title": "Attribution & Tracking Specialist",
+              "Core Skills": "Pixel setup, UTM, server-side tracking, GA4",
+              "Key Deliverables": "Tracking implementations, attribution models",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Attribution accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "9",
+              "Agent Name": "Social Ads Agent",
+              "Role / Title": "Social Platform Ad Expert",
+              "Core Skills": "Meta, TikTok, LinkedIn, Snapchat ad platforms",
+              "Key Deliverables": "Social ad campaigns, audience targeting",
+              "Skill Source": "Paid Media Specialist",
+              "Use Case Mapping": "Automated Instagram posting",
+              "KPI": "Social ad ROAS",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/paid-media/paid-media-paid-media-specialist.md"
+            },
+            {
+              "#": "10",
+              "Agent Name": "Competitor Ad Monitor",
+              "Role / Title": "Competitive Intelligence (Ads)",
+              "Core Skills": "Ad library monitoring, competitor spend analysis",
+              "Key Deliverables": "Competitive ad reports, strategy gaps",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Competitor ad monitoring",
+              "KPI": "Competitive advantage index",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: SOCIAL MEDIA & COMMUNITY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Social Media Manager",
+              "Role / Title": "Team Lead \u2013 Social",
+              "Core Skills": "Multi-platform strategy, scheduling, trend analysis",
+              "Key Deliverables": "Social strategies, content schedules, performance reviews",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Social post variants",
+              "KPI": "Follower growth + engagement rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Community Manager",
+              "Role / Title": "Community Lead",
+              "Core Skills": "Discord/Slack management, moderation, engagement",
+              "Key Deliverables": "Community guidelines, engagement reports",
+              "Skill Source": "Reddit Community Builder",
+              "Use Case Mapping": "Community management",
+              "KPI": "Community health score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-reddit-community-builder.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Influencer Outreach Agent",
+              "Role / Title": "KOL Partnership Lead",
+              "Core Skills": "Influencer identification, negotiation, campaign management",
+              "Key Deliverables": "Influencer briefs, partnership agreements",
+              "Skill Source": "aada (Marketing)",
+              "Use Case Mapping": "KOL outreach",
+              "KPI": "Influencer campaign ROI",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Content Scheduler",
+              "Role / Title": "Publishing Operations",
+              "Core Skills": "Cross-platform scheduling, timing optimization",
+              "Key Deliverables": "Publishing queues, optimal timing reports",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Automated Instagram posting",
+              "KPI": "Posting consistency score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Engagement Analyst",
+              "Role / Title": "Social Intelligence Lead",
+              "Core Skills": "Engagement metrics, sentiment analysis, trend detection",
+              "Key Deliverables": "Engagement reports, sentiment dashboards",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Sentiment analysis + Social analytics digest",
+              "KPI": "Engagement rate improvement",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Trend Scout Agent",
+              "Role / Title": "Viral & Trend Detection",
+              "Core Skills": "Trend monitoring, viral content analysis, opportunity detection",
+              "Key Deliverables": "Trend alerts, content opportunity briefs",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Trending-topic monitoring + Viral-content research",
+              "KPI": "Trend capture speed",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Reply & Comment Agent",
+              "Role / Title": "Real-Time Engagement",
+              "Core Skills": "Comment management, brand voice, crisis response",
+              "Key Deliverables": "Timely responses, engagement threads",
+              "Skill Source": "Reddit Community Builder",
+              "Use Case Mapping": "Automated comment replies",
+              "KPI": "Response time & satisfaction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-reddit-community-builder.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "LinkedIn Specialist",
+              "Role / Title": "B2B Social Lead",
+              "Core Skills": "LinkedIn content, B2B engagement, thought leadership",
+              "Key Deliverables": "LinkedIn posts, article series, networking",
+              "Skill Source": "Reddit Community Builder",
+              "Use Case Mapping": "LinkedIn post optimization + LinkedIn cold outreach",
+              "KPI": "LinkedIn engagement rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-reddit-community-builder.md"
+            },
+            {
+              "#": "9",
+              "Agent Name": "TikTok/Reels Agent",
+              "Role / Title": "Short-Form Video Lead",
+              "Core Skills": "Short-form video strategy, hooks, trends",
+              "Key Deliverables": "Video scripts, content plans, trend adaptations",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "Short-video scripts + ClawdClipper TikTok editing",
+              "KPI": "Video views & shares",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "10",
+              "Agent Name": "Crisis Management Agent",
+              "Role / Title": "Brand Safety & Crisis",
+              "Core Skills": "Crisis detection, rapid response, damage control",
+              "Key Deliverables": "Crisis protocols, response templates",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Crisis sentiment alerts",
+              "KPI": "Crisis response time",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 4: ANALYTICS & REPORTING",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Analytics Director",
+              "Role / Title": "Team Lead \u2013 Analytics",
+              "Core Skills": "GA4, data strategy, attribution modeling",
+              "Key Deliverables": "Analytics frameworks, measurement plans",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Data-driven decision rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Dashboard Builder",
+              "Role / Title": "Visualization Specialist",
+              "Core Skills": "Looker, Data Studio, Tableau, custom dashboards",
+              "Key Deliverables": "Real-time dashboards, automated reports",
+              "Skill Source": "agent-hq",
+              "Use Case Mapping": "Dynamic dashboard + Mission Control dashboard",
+              "KPI": "Dashboard adoption rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Conversion Tracker",
+              "Role / Title": "Funnel Optimization Lead",
+              "Core Skills": "Funnel analysis, CRO, heatmap analysis",
+              "Key Deliverables": "Conversion reports, optimization plans",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Zombie-customer detection",
+              "KPI": "Conversion rate improvement",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-growth-hacker.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Attribution Analyst",
+              "Role / Title": "Multi-Touch Attribution Lead",
+              "Core Skills": "Attribution models, channel ROI, incrementality",
+              "Key Deliverables": "Attribution reports, channel mix recommendations",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Attribution model accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Reporting Automation Agent",
+              "Role / Title": "Automated Intelligence",
+              "Core Skills": "Report generation, scheduled delivery, custom alerts",
+              "Key Deliverables": "Automated client reports, alert systems",
+              "Skill Source": "Report Distribution Agent",
+              "Use Case Mapping": "Project status reports",
+              "KPI": "Report delivery reliability",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-report-distribution-agent.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Marketing Data Scientist",
+              "Role / Title": "Predictive Marketing Intelligence",
+              "Core Skills": "Predictive modeling, LTV analysis, churn prediction",
+              "Key Deliverables": "Predictive models, customer segments",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Predictive analytics",
+              "KPI": "Prediction accuracy %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "ROI Calculator Agent",
+              "Role / Title": "Marketing Economics",
+              "Core Skills": "Campaign ROI, ROAS, cost modeling",
+              "Key Deliverables": "ROI analyses, budget justifications",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Budget efficiency score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "A/B Analysis Agent",
+              "Role / Title": "Statistical Testing",
+              "Core Skills": "Statistical significance, Bayesian analysis, test design",
+              "Key Deliverables": "Test results, confidence intervals",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Headline A/B testing",
+              "KPI": "Test velocity + accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-growth-hacker.md"
+            },
+            {
+              "#": "9",
+              "Agent Name": "Competitive Intel Agent",
+              "Role / Title": "Market Intelligence",
+              "Core Skills": "Competitor analysis, market share, benchmarking",
+              "Key Deliverables": "Competitive reports, benchmark studies",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Competitor monitoring + Competitor feature matrix",
+              "KPI": "Intelligence freshness",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "10",
+              "Agent Name": "Customer Insight Agent",
+              "Role / Title": "Voice of Customer Analytics",
+              "Core Skills": "Survey analysis, review mining, NPS tracking",
+              "Key Deliverables": "Customer insight reports, NPS analysis",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Review insight extraction + Customer feedback aggregation",
+              "KPI": "NPS improvement",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        }
+      ],
+      "department_lead": "Marketing Director Agent",
+      "revenue_impact": "Direct (Retainers + Performance)",
+      "scaling_priority": "HIGH",
+      "protocol_stack": "A2A + ICP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "52",
+      "agents_populated": 42
+    },
+    {
+      "name": "SOFTWARE ENGINEERING DEPARTMENT (WEB2)",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: FRONTEND DEVELOPMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Frontend Lead",
+              "Role / Title": "Team Lead \u2013 Frontend",
+              "Core Skills": "React/Vue/Angular, architecture, Core Web Vitals, SSR",
+              "Key Deliverables": "Frontend architecture, code standards, tech stack decisions",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "PageSpeed + code quality",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "UI Developer",
+              "Role / Title": "Interface Implementation",
+              "Core Skills": "HTML/CSS/JS, Tailwind, component libraries, responsive design",
+              "Key Deliverables": "Pixel-perfect UIs, design system components",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Design fidelity score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "UX Agent",
+              "Role / Title": "User Experience Specialist",
+              "Core Skills": "User research, wireframing, prototyping, usability testing",
+              "Key Deliverables": "UX reports, wireframes, user flow diagrams",
+              "Skill Source": "UX Researcher (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "User satisfaction score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-ux-researcher.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Responsive Design Specialist",
+              "Role / Title": "Cross-Device Expert",
+              "Core Skills": "Mobile-first design, breakpoints, adaptive layouts",
+              "Key Deliverables": "Responsive implementations, device testing reports",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Chrome extensions",
+              "KPI": "Cross-device compatibility %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Performance Optimizer",
+              "Role / Title": "Frontend Performance Lead",
+              "Core Skills": "Lighthouse, bundle optimization, lazy loading, CDN",
+              "Key Deliverables": "Performance audits, optimization implementations",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Performance optimization",
+              "KPI": "Core Web Vitals green score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Animation Specialist",
+              "Role / Title": "Motion & Interaction",
+              "Core Skills": "CSS animations, Framer Motion, GSAP, micro-interactions",
+              "Key Deliverables": "Interactive UIs, animated components",
+              "Skill Source": "Whimsy Injector (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Interaction delight score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-whimsy-injector.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Design System Agent",
+              "Role / Title": "Component Architecture",
+              "Core Skills": "Storybook, design tokens, atomic design, component docs",
+              "Key Deliverables": "Design system library, component documentation",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Documentation generation",
+              "KPI": "Component reuse rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Accessibility Agent",
+              "Role / Title": "WCAG Compliance Lead",
+              "Core Skills": "WCAG 2.1, ARIA, screen reader testing, accessibility audits",
+              "Key Deliverables": "Accessibility audit reports, remediation plans",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "WCAG compliance score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "9",
+              "Agent Name": "SSR/SSG Agent",
+              "Role / Title": "Server-Rendering Specialist",
+              "Core Skills": "Next.js, Nuxt, Astro, static generation, hydration",
+              "Key Deliverables": "SSR/SSG implementations, performance optimizations",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Time to first byte",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "10",
+              "Agent Name": "Frontend Test Agent",
+              "Role / Title": "UI Testing Specialist",
+              "Core Skills": "Jest, Cypress, Playwright, visual regression",
+              "Key Deliverables": "Test suites, visual regression reports",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing + End-to-end tests",
+              "KPI": "Test coverage %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: BACKEND DEVELOPMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Backend Lead",
+              "Role / Title": "Team Lead \u2013 Backend",
+              "Core Skills": "Node.js/Python/Go, system design, API architecture",
+              "Key Deliverables": "Backend architecture, API strategy, tech standards",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "System uptime %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "API Architect",
+              "Role / Title": "API Design Lead",
+              "Core Skills": "REST, GraphQL, gRPC, OpenAPI, API versioning",
+              "Key Deliverables": "API designs, documentation, integration specs",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "API documentation + API integration",
+              "KPI": "API reliability score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Database Engineer",
+              "Role / Title": "Data Storage Specialist",
+              "Core Skills": "PostgreSQL, MongoDB, Redis, query optimization",
+              "Key Deliverables": "Database schemas, migration scripts, optimization",
+              "Skill Source": "Data Engineer (Agency)",
+              "Use Case Mapping": "Database querying + Database migration",
+              "KPI": "Query performance",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-data-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Microservices Agent",
+              "Role / Title": "Distributed Systems",
+              "Core Skills": "Service mesh, event-driven, message queues, Kubernetes",
+              "Key Deliverables": "Microservice designs, service mesh configs",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "Microservice decomposition",
+              "KPI": "Service availability",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Integration Specialist",
+              "Role / Title": "Third-Party Systems",
+              "Core Skills": "OAuth, webhooks, payment gateways, CRM integration",
+              "Key Deliverables": "Integration implementations, API wrappers",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "API integration",
+              "KPI": "Integration success rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Auth & Security Agent",
+              "Role / Title": "Backend Security Lead",
+              "Core Skills": "JWT, OAuth2, RBAC, encryption, OWASP",
+              "Key Deliverables": "Auth systems, security implementations",
+              "Skill Source": "Identity & Trust Architect",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Security incident rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/agentic-identity-trust.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Caching & Queue Agent",
+              "Role / Title": "Performance Infrastructure",
+              "Core Skills": "Redis, RabbitMQ, Kafka, caching strategies",
+              "Key Deliverables": "Caching layers, queue systems",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "Performance optimization",
+              "KPI": "Cache hit ratio",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Real-Time Agent",
+              "Role / Title": "WebSocket & Streaming",
+              "Core Skills": "WebSockets, SSE, real-time data, pub/sub",
+              "Key Deliverables": "Real-time features, streaming implementations",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Latency metrics",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "9",
+              "Agent Name": "Backend Test Agent",
+              "Role / Title": "API Testing Specialist",
+              "Core Skills": "Unit testing, integration testing, load testing",
+              "Key Deliverables": "Test suites, load test reports",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing",
+              "KPI": "API test coverage",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "10",
+              "Agent Name": "Legacy Modernizer",
+              "Role / Title": "Migration Specialist",
+              "Core Skills": "Legacy analysis, incremental migration, strangler pattern",
+              "Key Deliverables": "Migration plans, modernized codebases",
+              "Skill Source": "Senior Developer (Agency)",
+              "Use Case Mapping": "Code refactoring",
+              "KPI": "Migration completion %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-senior-developer.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: MOBILE DEVELOPMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Mobile Lead",
+              "Role / Title": "Team Lead \u2013 Mobile",
+              "Core Skills": "Cross-platform strategy, React Native, Flutter",
+              "Key Deliverables": "Mobile architecture, platform strategy",
+              "Skill Source": "Mobile App Builder (Agency)",
+              "Use Case Mapping": "iOS app development",
+              "KPI": "App store rating",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-mobile-app-builder.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "iOS Developer Agent",
+              "Role / Title": "iOS Specialist",
+              "Core Skills": "Swift, SwiftUI, UIKit, App Store guidelines",
+              "Key Deliverables": "iOS applications, App Store submissions",
+              "Skill Source": "Mobile App Builder (Agency)",
+              "Use Case Mapping": "iOS app development + Automated App Store submission",
+              "KPI": "iOS crash-free rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-mobile-app-builder.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Android Developer Agent",
+              "Role / Title": "Android Specialist",
+              "Core Skills": "Kotlin, Jetpack Compose, Material Design",
+              "Key Deliverables": "Android applications, Play Store submissions",
+              "Skill Source": "Mobile App Builder (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Android crash-free rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-mobile-app-builder.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Cross-Platform Lead",
+              "Role / Title": "Unified Mobile Expert",
+              "Core Skills": "React Native, Flutter, Expo, code sharing",
+              "Key Deliverables": "Cross-platform apps, shared component libraries",
+              "Skill Source": "Mobile App Builder (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Code reuse ratio",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-mobile-app-builder.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Mobile QA Agent",
+              "Role / Title": "Mobile Testing Lead",
+              "Core Skills": "Device testing, app performance, crash analysis",
+              "Key Deliverables": "Test reports, device compatibility matrices",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing",
+              "KPI": "Bug escape rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Mobile UX Agent",
+              "Role / Title": "Mobile Experience Lead",
+              "Core Skills": "Mobile UX patterns, gesture navigation, app flows",
+              "Key Deliverables": "Mobile UX designs, interaction patterns",
+              "Skill Source": "UX Researcher (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Mobile usability score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-ux-researcher.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Push & Engagement Agent",
+              "Role / Title": "Mobile Engagement",
+              "Core Skills": "Push notifications, in-app messaging, deep linking",
+              "Key Deliverables": "Engagement systems, notification strategies",
+              "Skill Source": "Mobile App Builder (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Push open rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-mobile-app-builder.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "App Performance Agent",
+              "Role / Title": "Mobile Optimization",
+              "Core Skills": "App size, startup time, memory, battery optimization",
+              "Key Deliverables": "Performance reports, optimization implementations",
+              "Skill Source": "Mobile App Builder (Agency)",
+              "Use Case Mapping": "Performance optimization",
+              "KPI": "App vitals score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-mobile-app-builder.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 4: DEVOPS & INFRASTRUCTURE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "DevOps Lead",
+              "Role / Title": "Team Lead \u2013 DevOps",
+              "Core Skills": "CI/CD strategy, cloud architecture, IaC",
+              "Key Deliverables": "Infrastructure strategy, deployment pipelines",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "DevOps automation + CI/CD pipelines",
+              "KPI": "Deployment frequency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "CI/CD Agent",
+              "Role / Title": "Pipeline Specialist",
+              "Core Skills": "GitHub Actions, GitLab CI, Jenkins, automated testing",
+              "Key Deliverables": "CI/CD pipelines, automation workflows",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "CI/CD pipelines",
+              "KPI": "Build success rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Cloud Architect",
+              "Role / Title": "Cloud Infrastructure Lead",
+              "Core Skills": "AWS, GCP, Azure, multi-cloud, cost optimization",
+              "Key Deliverables": "Cloud architectures, cost reports",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "DevOps automation",
+              "KPI": "Cloud cost efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Monitoring Agent",
+              "Role / Title": "Observability Lead",
+              "Core Skills": "Datadog, Grafana, Prometheus, alerting, OTLP",
+              "Key Deliverables": "Monitoring dashboards, alert configurations",
+              "Skill Source": "agentic-devops",
+              "Use Case Mapping": "Log analysis + Self-healing home server",
+              "KPI": "MTTR (Mean Time to Resolve)",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Security Ops Agent",
+              "Role / Title": "DevSecOps Lead",
+              "Core Skills": "SAST/DAST, container security, secrets management",
+              "Key Deliverables": "Security scans, vulnerability reports",
+              "Skill Source": "Security Engineer (Agency)",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Vulnerability count",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-security-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Container Agent",
+              "Role / Title": "Docker & Kubernetes",
+              "Core Skills": "Docker, Kubernetes, Helm, service orchestration",
+              "Key Deliverables": "Container configs, K8s manifests",
+              "Skill Source": "agentic-devops",
+              "Use Case Mapping": "DevOps automation",
+              "KPI": "Container uptime",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Database Ops Agent",
+              "Role / Title": "DB Infrastructure",
+              "Core Skills": "Database replication, backup, disaster recovery",
+              "Key Deliverables": "Backup strategies, DR plans",
+              "Skill Source": "Data Engineer (Agency)",
+              "Use Case Mapping": "Data backup verification",
+              "KPI": "Backup success rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-data-engineer.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Cost Optimizer Agent",
+              "Role / Title": "FinOps Specialist",
+              "Core Skills": "Cloud cost analysis, reserved instances, right-sizing",
+              "Key Deliverables": "Cost reports, optimization recommendations",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "SaaS management",
+              "KPI": "Monthly cloud spend reduction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 5: QUALITY ASSURANCE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "QA Lead",
+              "Role / Title": "Team Lead \u2013 QA",
+              "Core Skills": "Test strategy, quality standards, release management",
+              "Key Deliverables": "Test strategies, quality gates, release criteria",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Code review",
+              "KPI": "Defect escape rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Test Automation Agent",
+              "Role / Title": "Automation Framework Lead",
+              "Core Skills": "Selenium, Playwright, Cypress, test frameworks",
+              "Key Deliverables": "Automated test suites, framework maintenance",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing + End-to-end tests",
+              "KPI": "Automation coverage %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Manual Test Agent",
+              "Role / Title": "Exploratory Testing Lead",
+              "Core Skills": "Exploratory testing, edge cases, user journey testing",
+              "Key Deliverables": "Bug reports, test scenarios",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing",
+              "KPI": "Critical bug detection rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Performance Test Agent",
+              "Role / Title": "Load & Stress Testing",
+              "Core Skills": "JMeter, k6, load testing, capacity planning",
+              "Key Deliverables": "Performance reports, capacity plans",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Performance optimization",
+              "KPI": "Performance benchmark scores",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Regression Agent",
+              "Role / Title": "Regression Prevention",
+              "Core Skills": "Regression suites, change impact analysis",
+              "Key Deliverables": "Regression reports, risk assessments",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing",
+              "KPI": "Regression detection rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "API Test Agent",
+              "Role / Title": "API Quality Specialist",
+              "Core Skills": "Postman, API testing, contract testing",
+              "Key Deliverables": "API test suites, contract test results",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing",
+              "KPI": "API test pass rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Security Test Agent",
+              "Role / Title": "Penetration Testing",
+              "Core Skills": "OWASP, pen testing, vulnerability scanning",
+              "Key Deliverables": "Security test reports, vulnerability assessments",
+              "Skill Source": "Security Engineer (Agency)",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Security test pass rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-security-engineer.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Code Review Agent",
+              "Role / Title": "Code Quality Gate",
+              "Core Skills": "Static analysis, code review, best practices enforcement",
+              "Key Deliverables": "Code review reports, quality scores",
+              "Skill Source": "Senior Developer (Agency)",
+              "Use Case Mapping": "Code review + Overnight code review",
+              "KPI": "Code quality index",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-senior-developer.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "Engineering Director Agent",
+      "revenue_impact": "Direct (Project Fees)",
+      "scaling_priority": "HIGH",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "120+ agents",
+      "total_agents_target": "58",
+      "agents_populated": 44
+    },
+    {
+      "name": "WEB3 & BLOCKCHAIN DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: SMART CONTRACT ENGINEERING",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Solidity Developer",
+              "Role / Title": "Team Lead \u2013 Smart Contracts",
+              "Core Skills": "Solidity, EVM, ERC standards, gas optimization",
+              "Key Deliverables": "Smart contracts, token contracts, audit-ready code",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development + deployment",
+              "KPI": "Contract audit pass rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Rust/Move Developer",
+              "Role / Title": "Non-EVM Chain Specialist",
+              "Core Skills": "Rust, Move, Solana, Aptos, Sui programs",
+              "Key Deliverables": "Solana/Aptos programs, cross-chain contracts",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development + deployment",
+              "KPI": "Program reliability",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Contract Auditor",
+              "Role / Title": "Security Audit Lead",
+              "Core Skills": "Audit methodologies, vulnerability detection, formal verification",
+              "Key Deliverables": "Audit reports, security recommendations",
+              "Skill Source": "aegis-security + agentic-security-audit",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Vulnerabilities caught pre-deploy"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Gas Optimization Agent",
+              "Role / Title": "Efficiency Specialist",
+              "Core Skills": "Gas analysis, storage optimization, batch operations",
+              "Key Deliverables": "Optimized contracts, gas reports",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development",
+              "KPI": "Gas cost reduction %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Upgradeable Contract Agent",
+              "Role / Title": "Proxy Pattern Specialist",
+              "Core Skills": "Proxy patterns, UUPS, Diamond, storage layouts",
+              "Key Deliverables": "Upgradeable contract architectures",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development",
+              "KPI": "Upgrade safety score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Contract Testing Agent",
+              "Role / Title": "Blockchain QA",
+              "Core Skills": "Hardhat, Foundry, fuzzing, invariant testing",
+              "Key Deliverables": "Test suites, coverage reports",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Test writing",
+              "KPI": "Contract test coverage",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: DAPP DEVELOPMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "DApp Architect",
+              "Role / Title": "Team Lead \u2013 DApp",
+              "Core Skills": "DApp architecture, Web3 frontend, state management",
+              "Key Deliverables": "DApp designs, architecture documents",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "DApp user adoption",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Frontend Web3 Agent",
+              "Role / Title": "Web3 UI Specialist",
+              "Core Skills": "ethers.js, wagmi, RainbowKit, Web3 UX",
+              "Key Deliverables": "DApp frontends, wallet connection UIs",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Web3 UX satisfaction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Wallet Integration Agent",
+              "Role / Title": "Wallet Connectivity",
+              "Core Skills": "MetaMask, WalletConnect, multi-chain wallets",
+              "Key Deliverables": "Wallet integrations, transaction UIs",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Autonomous wallet agent",
+              "KPI": "Wallet connection success rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Subgraph Developer",
+              "Role / Title": "Indexing Specialist",
+              "Core Skills": "The Graph, subgraph design, GraphQL, indexing",
+              "Key Deliverables": "Subgraphs, query optimizations",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "Database querying",
+              "KPI": "Query response time",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "NFT Platform Agent",
+              "Role / Title": "NFT Specialist",
+              "Core Skills": "ERC-721, ERC-1155, marketplaces, metadata",
+              "Key Deliverables": "NFT platforms, minting systems",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development",
+              "KPI": "NFT transaction success rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Web3 UX Agent",
+              "Role / Title": "Blockchain UX",
+              "Core Skills": "Gas abstraction, account abstraction, onboarding UX",
+              "Key Deliverables": "Simplified Web3 experiences",
+              "Skill Source": "UX Researcher (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Web3 onboarding completion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-ux-researcher.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: TOKENOMICS & DEFI",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Tokenomics Analyst",
+              "Role / Title": "Team Lead \u2013 Token Economics",
+              "Core Skills": "Token design, vesting, emission schedules, game theory",
+              "Key Deliverables": "Tokenomics models, economic simulations",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Automated Polymarket trading",
+              "KPI": "Token economic health",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "2",
+              "Agent Name": "DeFi Strategist",
+              "Role / Title": "DeFi Protocol Expert",
+              "Core Skills": "AMMs, lending, yield farming, protocol design",
+              "Key Deliverables": "DeFi protocol designs, strategy documents",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "dFlow Solana trading",
+              "KPI": "Protocol TVL growth",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Liquidity Architect",
+              "Role / Title": "Liquidity Engineering",
+              "Core Skills": "Liquidity pools, market making, bonding curves",
+              "Key Deliverables": "Liquidity strategies, pool configurations",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Automated Polymarket trading",
+              "KPI": "Liquidity depth",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Economic Modeling Agent",
+              "Role / Title": "Simulation Specialist",
+              "Core Skills": "Agent-based modeling, Monte Carlo, stress testing",
+              "Key Deliverables": "Economic models, risk assessments",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Predictive analytics",
+              "KPI": "Model accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "DAO Framework Agent",
+              "Role / Title": "Governance Specialist",
+              "Core Skills": "Governor contracts, voting systems, treasury management",
+              "Key Deliverables": "DAO frameworks, governance implementations",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development",
+              "KPI": "Governance participation rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 4: BLOCKCHAIN INFRASTRUCTURE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Node Operator Agent",
+              "Role / Title": "Team Lead \u2013 Infrastructure",
+              "Core Skills": "Node operation, validator setup, RPC endpoints",
+              "Key Deliverables": "Node deployments, uptime monitoring",
+              "Skill Source": "agentic-devops",
+              "Use Case Mapping": "DevOps automation",
+              "KPI": "Node uptime %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Cross-Chain Bridge Agent",
+              "Role / Title": "Interoperability Lead",
+              "Core Skills": "Bridge protocols, cross-chain messaging, LayerZero",
+              "Key Deliverables": "Bridge implementations, cross-chain features",
+              "Skill Source": "aegis-security",
+              "Use Case Mapping": "Smart-contract development",
+              "KPI": "Bridge transaction success",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Indexer Agent",
+              "Role / Title": "Chain Data Specialist",
+              "Core Skills": "Block indexing, event processing, chain analytics",
+              "Key Deliverables": "Indexing services, chain data APIs",
+              "Skill Source": "Data Engineer (Agency)",
+              "Use Case Mapping": "Database querying",
+              "KPI": "Indexing latency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-data-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Protocol Researcher",
+              "Role / Title": "Research & Analysis",
+              "Core Skills": "Protocol analysis, consensus mechanisms, L2 solutions",
+              "Key Deliverables": "Research papers, protocol evaluations",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Technology trend analysis",
+              "KPI": "Research-to-product conversion",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Blockchain DevOps Agent",
+              "Role / Title": "Chain Infrastructure",
+              "Core Skills": "Blockchain deployment, testnet management, RPC",
+              "Key Deliverables": "Infrastructure configs, deployment scripts",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "DevOps automation",
+              "KPI": "Infrastructure reliability",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 22
+    },
+    {
+      "name": "AI AUTOMATION & SOLUTIONS DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: AI ENGINEERING",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "ML Engineer",
+              "Role / Title": "Team Lead \u2013 AI Engineering",
+              "Core Skills": "TensorFlow, PyTorch, model training, MLOps",
+              "Key Deliverables": "ML models, training pipelines, model deployments",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Predictive analytics",
+              "KPI": "Model accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "NLP Specialist",
+              "Role / Title": "Language AI Lead",
+              "Core Skills": "LLMs, RAG systems, text classification, embeddings",
+              "Key Deliverables": "NLP pipelines, RAG implementations, chatbots",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "FAQ auto-replies + Multilingual support",
+              "KPI": "NLP task accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Computer Vision Agent",
+              "Role / Title": "Visual AI Lead",
+              "Core Skills": "Object detection, image classification, OCR",
+              "Key Deliverables": "CV models, image processing pipelines",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "AI image generation",
+              "KPI": "CV model precision",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Model Training Agent",
+              "Role / Title": "Training Pipeline Lead",
+              "Core Skills": "Fine-tuning, RLHF, data curation, hyperparameter tuning",
+              "Key Deliverables": "Fine-tuned models, training reports",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Predictive analytics",
+              "KPI": "Training efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Data Scientist",
+              "Role / Title": "Analytics & Modeling",
+              "Core Skills": "Statistical analysis, feature engineering, experimentation",
+              "Key Deliverables": "Data models, experiment designs, insights",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "CSV/spreadsheet analysis + Data analysis automation",
+              "KPI": "Insight-to-action rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "LLM Integration Agent",
+              "Role / Title": "Foundation Model Specialist",
+              "Core Skills": "OpenAI, Anthropic, open-source LLM integration",
+              "Key Deliverables": "LLM-powered features, API integrations",
+              "Skill Source": "claude-connect",
+              "Use Case Mapping": "Local models (Ollama)",
+              "KPI": "LLM response quality",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Voice AI Agent",
+              "Role / Title": "Speech & Audio AI",
+              "Core Skills": "TTS, STT, voice cloning, audio processing",
+              "Key Deliverables": "Voice features, audio pipelines",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Phone voice assistant + Voicemail transcription",
+              "KPI": "Voice recognition accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "AI Ethics Agent",
+              "Role / Title": "Responsible AI Lead",
+              "Core Skills": "Bias detection, fairness, explainability, safety",
+              "Key Deliverables": "Ethics reviews, bias reports, safety guidelines",
+              "Skill Source": "adversarial-prompting",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Bias detection rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: AUTOMATION ARCHITECTURE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Automation Architect",
+              "Role / Title": "Team Lead \u2013 Automation",
+              "Core Skills": "Workflow design, system integration, process optimization",
+              "Key Deliverables": "Automation architectures, integration blueprints",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "n8n workflow orchestration",
+              "KPI": "Automation ROI",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Workflow Designer",
+              "Role / Title": "Process Engineering",
+              "Core Skills": "n8n, Make, Zapier, workflow optimization",
+              "Key Deliverables": "Automated workflows, process maps",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "n8n workflow orchestration + Solo founder with 22 cron jobs",
+              "KPI": "Workflow efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "RPA Agent",
+              "Role / Title": "Robotic Process Automation",
+              "Core Skills": "Browser automation, data extraction, form filling",
+              "Key Deliverables": "RPA bots, automation scripts",
+              "Skill Source": "adobe-automator",
+              "Use Case Mapping": "Browser automation scripts",
+              "KPI": "Tasks automated per month",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Integration Agent",
+              "Role / Title": "System Connector",
+              "Core Skills": "API orchestration, webhooks, middleware, iPaaS",
+              "Key Deliverables": "Integration pipelines, connector libraries",
+              "Skill Source": "claude-connect",
+              "Use Case Mapping": "API integration + Vibe orchestration",
+              "KPI": "Integration reliability",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Email Automation Agent",
+              "Role / Title": "Communication Automation",
+              "Core Skills": "Email workflows, drip campaigns, smart routing",
+              "Key Deliverables": "Email automation systems, routing rules",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Email classification & filtering + Inbox zero",
+              "KPI": "Email processing efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Document Automation Agent",
+              "Role / Title": "Document Processing",
+              "Core Skills": "OCR, document parsing, template generation",
+              "Key Deliverables": "Document pipelines, template systems",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Automatic document classification + Contract management",
+              "KPI": "Document processing speed",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Scheduling Automation Agent",
+              "Role / Title": "Calendar & Time Intelligence",
+              "Core Skills": "Calendar integration, scheduling optimization",
+              "Key Deliverables": "Scheduling systems, availability management",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Smart scheduling + \"Donna\" meeting coordination",
+              "KPI": "Scheduling efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: AGENT DEVELOPMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Agent Builder",
+              "Role / Title": "Team Lead \u2013 Agent Dev",
+              "Core Skills": "Multi-agent systems, agent frameworks, tool use",
+              "Key Deliverables": "Custom agent architectures, agent deployments",
+              "Skill Source": "agent-spawner + agent-team-orchestration",
+              "Use Case Mapping": "Multi-agent expert team",
+              "KPI": "Agent deployment success rate"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Agent Trainer",
+              "Role / Title": "Agent Optimization Lead",
+              "Core Skills": "Prompt engineering, fine-tuning, evaluation",
+              "Key Deliverables": "Trained agents, performance benchmarks",
+              "Skill Source": "adaptive-suite",
+              "Use Case Mapping": "Self-evolving content standards",
+              "KPI": "Agent performance score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Prompt Engineer",
+              "Role / Title": "Prompt Architecture",
+              "Core Skills": "Prompt design, chain-of-thought, system prompts",
+              "Key Deliverables": "Prompt libraries, system prompt templates",
+              "Skill Source": "adversarial-prompting",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Prompt effectiveness %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Evaluation Agent",
+              "Role / Title": "Agent Quality Assurance",
+              "Core Skills": "Evaluation frameworks, benchmarking, regression testing",
+              "Key Deliverables": "Evaluation reports, quality benchmarks",
+              "Skill Source": "agent-team-orchestration",
+              "Use Case Mapping": "Autonomous version control",
+              "KPI": "Agent quality score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Fine-Tuning Specialist",
+              "Role / Title": "Model Customization",
+              "Core Skills": "LoRA, QLoRA, dataset curation, domain adaptation",
+              "Key Deliverables": "Fine-tuned models, training datasets",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Self-built tools",
+              "KPI": "Fine-tuned model accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Agent Orchestrator",
+              "Role / Title": "Multi-Agent Coordination",
+              "Core Skills": "Orchestration patterns, handoffs, state management",
+              "Key Deliverables": "Orchestration systems, agent coordination",
+              "Skill Source": "agent-orchestrator",
+              "Use Case Mapping": "10-agent business team + Raspberry Pi orchestrating",
+              "KPI": "Orchestration reliability",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "MCP Integration Agent",
+              "Role / Title": "Tool & Protocol Integration",
+              "Core Skills": "MCP servers, tool connections, external APIs",
+              "Key Deliverables": "MCP integrations, tool adapters",
+              "Skill Source": "claude-connect",
+              "Use Case Mapping": "API integration",
+              "KPI": "Tool integration success rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Agent Memory Agent",
+              "Role / Title": "Knowledge & State Management",
+              "Core Skills": "Vector stores, memory systems, context management",
+              "Key Deliverables": "Memory architectures, knowledge bases",
+              "Skill Source": "agentmemory",
+              "Use Case Mapping": "Personal knowledge base (RAG) + Semantic memory search",
+              "KPI": "Memory retrieval accuracy",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 4: DATA & ANALYTICS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Data Pipeline Agent",
+              "Role / Title": "Team Lead \u2013 Data",
+              "Core Skills": "ETL/ELT, data pipelines, orchestration",
+              "Key Deliverables": "Data pipelines, data warehouse architectures",
+              "Skill Source": "Data Engineer (Agency)",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Pipeline reliability",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-data-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "ETL Specialist",
+              "Role / Title": "Data Transformation",
+              "Core Skills": "Data extraction, transformation, loading, quality",
+              "Key Deliverables": "ETL jobs, data quality checks",
+              "Skill Source": "Data Engineer (Agency)",
+              "Use Case Mapping": "CSV/spreadsheet analysis",
+              "KPI": "Data quality score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-data-engineer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "BI Analyst",
+              "Role / Title": "Business Intelligence",
+              "Core Skills": "Dashboards, KPI tracking, business reporting",
+              "Key Deliverables": "BI dashboards, KPI reports",
+              "Skill Source": "agent-hq",
+              "Use Case Mapping": "Dynamic dashboard",
+              "KPI": "Decision support effectiveness",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Predictive Modeling Agent",
+              "Role / Title": "Forecasting Specialist",
+              "Core Skills": "Time series, forecasting, recommendation systems",
+              "Key Deliverables": "Predictive models, forecast reports",
+              "Skill Source": "AI Engineer (Agency)",
+              "Use Case Mapping": "Predictive analytics + AI earnings tracking",
+              "KPI": "Forecast accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Data Quality Agent",
+              "Role / Title": "Data Governance",
+              "Core Skills": "Data validation, deduplication, lineage tracking",
+              "Key Deliverables": "Quality reports, governance frameworks",
+              "Skill Source": "AI Data Remediation (Agency)",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Data accuracy rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Web Scraping Agent",
+              "Role / Title": "Data Acquisition",
+              "Core Skills": "Web scraping, API harvesting, data collection",
+              "Key Deliverables": "Data feeds, scraped datasets",
+              "Skill Source": "AI Data Remediation (Agency)",
+              "Use Case Mapping": "Competitor price scraping + Reverse-engineering APIs",
+              "KPI": "Data freshness",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 29
+    },
+    {
+      "name": "SALES & BUSINESS DEVELOPMENT DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: LEAD GENERATION",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Prospecting Agent",
+              "Role / Title": "Team Lead \u2013 Lead Gen",
+              "Core Skills": "Prospect identification, ICP targeting, lead sourcing",
+              "Key Deliverables": "Prospect lists, ICP profiles, lead databases",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Score 400 leads in 60 seconds",
+              "KPI": "Qualified leads generated",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Research Analyst",
+              "Role / Title": "Prospect Intelligence",
+              "Core Skills": "Company research, decision-maker mapping, trigger events",
+              "Key Deliverables": "Research dossiers, opportunity briefs",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Competitor research + Market analysis",
+              "KPI": "Research quality score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "List Builder",
+              "Role / Title": "Database Management",
+              "Core Skills": "Data enrichment, contact validation, list segmentation",
+              "Key Deliverables": "Verified contact lists, enriched databases",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Score 400 leads in 60 seconds",
+              "KPI": "List accuracy rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Outreach Sequencer",
+              "Role / Title": "Multi-Channel Outreach",
+              "Core Skills": "Email sequences, LinkedIn automation, cold calling scripts",
+              "Key Deliverables": "Outreach sequences, follow-up cadences",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "LinkedIn cold outreach + LinkedIn GTM",
+              "KPI": "Response rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Lead Scoring Agent",
+              "Role / Title": "Lead Qualification",
+              "Core Skills": "Scoring models, intent signals, behavioral analysis",
+              "Key Deliverables": "Lead scores, qualification reports",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Score 400 leads in 60 seconds + Zombie-customer detection",
+              "KPI": "MQL-to-SQL conversion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Inbound Lead Agent",
+              "Role / Title": "Inbound Processing",
+              "Core Skills": "Form handling, chatbot qualification, speed-to-lead",
+              "Key Deliverables": "Qualified inbound leads, routing rules",
+              "Skill Source": "Support Responder (Agency)",
+              "Use Case Mapping": "Customer support routing",
+              "KPI": "Inbound response time",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-support-responder.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Social Selling Agent",
+              "Role / Title": "Social Pipeline",
+              "Core Skills": "LinkedIn engagement, social listening, relationship building",
+              "Key Deliverables": "Social engagement plans, connection strategies",
+              "Skill Source": "Reddit Community Builder (Agency)",
+              "Use Case Mapping": "LinkedIn cold outreach",
+              "KPI": "Social pipeline value",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-reddit-community-builder.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: SALES EXECUTION",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Sales Strategist",
+              "Role / Title": "Team Lead \u2013 Sales",
+              "Core Skills": "Sales methodology, pipeline management, forecasting",
+              "Key Deliverables": "Sales strategies, pipeline reviews, forecasts",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Natural-language HubSpot queries",
+              "KPI": "Win rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Proposal Writer",
+              "Role / Title": "Proposal & Pitch Lead",
+              "Core Skills": "Proposal writing, pricing strategy, value proposition",
+              "Key Deliverables": "Custom proposals, pitch decks, SOWs",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Blog post writing",
+              "KPI": "Proposal conversion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Deal Closer",
+              "Role / Title": "Negotiation & Closing",
+              "Core Skills": "Negotiation, objection handling, deal structuring",
+              "Key Deliverables": "Closed deals, contract negotiations",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Sales calls \u2192 content engine",
+              "KPI": "Close rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Objection Handler",
+              "Role / Title": "Objection Intelligence",
+              "Core Skills": "Objection analysis, response frameworks, battle cards",
+              "Key Deliverables": "Battle cards, objection response library",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Interview-prep agent",
+              "KPI": "Objection resolution rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Demo Agent",
+              "Role / Title": "Technical Demonstration",
+              "Core Skills": "Product demos, POC delivery, technical storytelling",
+              "Key Deliverables": "Demo environments, POC implementations",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Rapid Prototyper use cases",
+              "KPI": "Demo-to-close rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Contract Agent",
+              "Role / Title": "Legal & Commercial",
+              "Core Skills": "Contract review, redlining, terms negotiation",
+              "Key Deliverables": "Reviewed contracts, commercial terms",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Contract management",
+              "KPI": "Contract cycle time",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "CRM Intelligence Agent",
+              "Role / Title": "Pipeline Analytics",
+              "Core Skills": "CRM management, deal tracking, pipeline intelligence",
+              "Key Deliverables": "CRM reports, pipeline analytics",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Personal CRM + Natural-language HubSpot queries",
+              "KPI": "CRM data accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: PARTNERSHIPS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Partnership Scout",
+              "Role / Title": "Team Lead \u2013 Partnerships",
+              "Core Skills": "Partner identification, market analysis, opportunity mapping",
+              "Key Deliverables": "Partnership opportunity reports, partner profiles",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Market analysis",
+              "KPI": "Partnership pipeline value",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Alliance Manager",
+              "Role / Title": "Relationship Management",
+              "Core Skills": "Partner relationship management, joint planning",
+              "Key Deliverables": "Partner agreements, joint roadmaps",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Contract management",
+              "KPI": "Partner satisfaction score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Co-Marketing Agent",
+              "Role / Title": "Joint Marketing",
+              "Core Skills": "Co-branded campaigns, joint webinars, content",
+              "Key Deliverables": "Co-marketing materials, joint campaigns",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Social post variants",
+              "KPI": "Co-marketing lead contribution",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Channel Sales Agent",
+              "Role / Title": "Channel Development",
+              "Core Skills": "Reseller management, channel programs, enablement",
+              "Key Deliverables": "Channel programs, partner enablement materials",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Score 400 leads in 60 seconds",
+              "KPI": "Channel revenue contribution",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Referral Program Agent",
+              "Role / Title": "Referral Growth",
+              "Core Skills": "Referral program design, tracking, incentives",
+              "Key Deliverables": "Referral programs, tracking systems",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Viral-content research",
+              "KPI": "Referral conversion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-growth-hacker.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 19
+    },
+    {
+      "name": "CLIENT SUCCESS DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: ONBOARDING",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Onboarding Coordinator",
+              "Role / Title": "Team Lead \u2013 Onboarding",
+              "Core Skills": "Client onboarding, process design, kickoff management",
+              "Key Deliverables": "Onboarding playbooks, kickoff agendas",
+              "Skill Source": "Support Responder (Agency)",
+              "Use Case Mapping": "Onboarding automation",
+              "KPI": "Onboarding completion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-support-responder.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Setup Agent",
+              "Role / Title": "Technical Onboarding",
+              "Core Skills": "Account setup, tool configuration, data migration",
+              "Key Deliverables": "Configured accounts, migration reports",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "Onboarding automation",
+              "KPI": "Setup time-to-completion",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Training Facilitator",
+              "Role / Title": "Client Education",
+              "Core Skills": "Training materials, documentation, walkthroughs",
+              "Key Deliverables": "Training docs, video tutorials, guides",
+              "Skill Source": "ZK Steward (Agency)",
+              "Use Case Mapping": "Book/course outlines",
+              "KPI": "Client training satisfaction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/specialized-zk-steward.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Welcome Sequencer",
+              "Role / Title": "First Impressions",
+              "Core Skills": "Welcome sequences, engagement drips, value demonstration",
+              "Key Deliverables": "Welcome email series, first-30-day plans",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Automated thank-you notes",
+              "KPI": "First-30-day engagement",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Data Import Agent",
+              "Role / Title": "Client Data Migration",
+              "Core Skills": "Data migration, mapping, validation, cleansing",
+              "Key Deliverables": "Migrated datasets, validation reports",
+              "Skill Source": "AI Data Remediation (Agency)",
+              "Use Case Mapping": "Database migration",
+              "KPI": "Data migration accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-ai-engineer.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: ACCOUNT MANAGEMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Account Manager",
+              "Role / Title": "Team Lead \u2013 Accounts",
+              "Core Skills": "Account strategy, relationship management, growth planning",
+              "Key Deliverables": "Account plans, QBR presentations, growth strategies",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Personal CRM",
+              "KPI": "Account retention rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Success Strategist",
+              "Role / Title": "Value Realization Lead",
+              "Core Skills": "ROI tracking, success metrics, value documentation",
+              "Key Deliverables": "Success reports, ROI analyses",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Client ROI delivered",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Upsell Agent",
+              "Role / Title": "Expansion Revenue Lead",
+              "Core Skills": "Opportunity identification, cross-sell, upsell strategy",
+              "Key Deliverables": "Upsell proposals, expansion plans",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Zombie-customer detection",
+              "KPI": "Expansion revenue %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Relationship Tracker",
+              "Role / Title": "Stakeholder Management",
+              "Core Skills": "Relationship mapping, health scoring, touchpoint tracking",
+              "Key Deliverables": "Relationship maps, health score dashboards",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Personal CRM",
+              "KPI": "Relationship health score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "QBR Agent",
+              "Role / Title": "Business Review Lead",
+              "Core Skills": "QBR preparation, metrics compilation, strategy recommendations",
+              "Key Deliverables": "QBR decks, performance summaries",
+              "Skill Source": "Report Distribution Agent",
+              "Use Case Mapping": "Project status reports",
+              "KPI": "QBR satisfaction score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-report-distribution-agent.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Churn Prevention Agent",
+              "Role / Title": "At-Risk Account Lead",
+              "Core Skills": "Churn signals, intervention strategies, save plays",
+              "Key Deliverables": "At-risk alerts, retention playbooks",
+              "Skill Source": "Sales Engine (Agency)",
+              "Use Case Mapping": "Zombie-customer detection",
+              "KPI": "Churn rate reduction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Client Communication Agent",
+              "Role / Title": "Updates & Reporting",
+              "Core Skills": "Status updates, proactive communication, milestone reporting",
+              "Key Deliverables": "Status emails, milestone reports",
+              "Skill Source": "Report Distribution Agent",
+              "Use Case Mapping": "Project status reports + Follow-up reminders",
+              "KPI": "Communication satisfaction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-report-distribution-agent.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: SUPPORT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Support Agent (Tier 1)",
+              "Role / Title": "Frontline Support Lead",
+              "Core Skills": "FAQ, common issues, first-response resolution",
+              "Key Deliverables": "Support responses, knowledge articles",
+              "Skill Source": "Support Responder (Agency)",
+              "Use Case Mapping": "FAQ auto-replies + Customer support routing",
+              "KPI": "First-response resolution rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-support-responder.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Support Agent (Tier 2)",
+              "Role / Title": "Technical Support Lead",
+              "Core Skills": "Complex troubleshooting, technical diagnosis",
+              "Key Deliverables": "Technical resolutions, escalation documentation",
+              "Skill Source": "Support Responder (Agency)",
+              "Use Case Mapping": "WhatsApp omnichannel support",
+              "KPI": "Tier 2 resolution rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-support-responder.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Escalation Router",
+              "Role / Title": "Intelligent Routing",
+              "Core Skills": "Issue classification, priority assessment, skill matching",
+              "Key Deliverables": "Routing rules, escalation paths",
+              "Skill Source": "Support Responder (Agency)",
+              "Use Case Mapping": "Customer support routing + Urgent-message escalation",
+              "KPI": "Correct routing %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-support-responder.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Feedback Analyst",
+              "Role / Title": "Voice of Customer",
+              "Core Skills": "Feedback analysis, NPS, satisfaction surveys, trend detection",
+              "Key Deliverables": "Feedback reports, improvement recommendations",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Customer feedback aggregation + Review insight extraction",
+              "KPI": "CSAT improvement",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Knowledge Base Agent",
+              "Role / Title": "Self-Service Lead",
+              "Core Skills": "Knowledge base management, article writing, search optimization",
+              "Key Deliverables": "Knowledge base articles, FAQ updates",
+              "Skill Source": "ZK Steward (Agency)",
+              "Use Case Mapping": "FAQ auto-replies",
+              "KPI": "Self-service resolution rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/specialized-zk-steward.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "SLA Monitor Agent",
+              "Role / Title": "Service Level Management",
+              "Core Skills": "SLA tracking, response time monitoring, breach prevention",
+              "Key Deliverables": "SLA dashboards, compliance reports",
+              "Skill Source": "agent-hq",
+              "Use Case Mapping": "Mission Control dashboard",
+              "KPI": "SLA compliance rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Multi-Channel Support Agent",
+              "Role / Title": "Omnichannel Lead",
+              "Core Skills": "Email, chat, phone, social media support",
+              "Key Deliverables": "Omnichannel support coverage",
+              "Skill Source": "Support Responder (Agency)",
+              "Use Case Mapping": "WhatsApp omnichannel support + Cross-platform notification aggregation",
+              "KPI": "Channel consistency score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-support-responder.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Bug Report Agent",
+              "Role / Title": "Issue Documentation",
+              "Core Skills": "Bug reproduction, documentation, engineering handoff",
+              "Key Deliverables": "Bug reports, reproduction steps",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Bug fixing",
+              "KPI": "Bug report quality score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "Client Success Director",
+      "revenue_impact": "Retention & Upsell",
+      "scaling_priority": "HIGH",
+      "protocol_stack": "A2A + ICP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "50+ agents",
+      "total_agents_target": "28",
+      "agents_populated": 20
+    },
+    {
+      "name": "BRAND & CREATIVE DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: DESIGN",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Creative Director",
+              "Role / Title": "Team Lead \u2013 Design",
+              "Core Skills": "Creative strategy, brand direction, design leadership",
+              "Key Deliverables": "Creative briefs, brand guidelines, design standards",
+              "Skill Source": "Brand Guardian (Agency)",
+              "Use Case Mapping": "AI image generation",
+              "KPI": "Brand consistency score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-brand-guardian.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Graphic Designer",
+              "Role / Title": "Visual Design Lead",
+              "Core Skills": "Adobe Suite, illustration, layout, print/digital design",
+              "Key Deliverables": "Marketing materials, social graphics, presentations",
+              "Skill Source": "Brand Guardian (Agency)",
+              "Use Case Mapping": "AI image generation + Automated infographics",
+              "KPI": "Design output quality",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-brand-guardian.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "UI/UX Designer",
+              "Role / Title": "Product Design Lead",
+              "Core Skills": "Figma, wireframing, prototyping, design systems",
+              "Key Deliverables": "UI designs, prototypes, design specs",
+              "Skill Source": "UX Researcher (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Design handoff efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-ux-researcher.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Motion Graphics Agent",
+              "Role / Title": "Animation & Motion",
+              "Core Skills": "After Effects, Lottie, CSS animation, motion design",
+              "Key Deliverables": "Animated assets, explainer visuals, social animations",
+              "Skill Source": "Whimsy Injector (Agency)",
+              "Use Case Mapping": "AI image generation",
+              "KPI": "Animation engagement rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-whimsy-injector.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Brand Identity Agent",
+              "Role / Title": "Brand Architecture",
+              "Core Skills": "Logo design, color systems, typography, brand books",
+              "Key Deliverables": "Brand identity systems, style guides",
+              "Skill Source": "Brand Guardian (Agency)",
+              "Use Case Mapping": "AI image generation",
+              "KPI": "Brand recognition score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-brand-guardian.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Presentation Designer",
+              "Role / Title": "Deck Specialist",
+              "Core Skills": "Pitch decks, keynotes, presentation storytelling",
+              "Key Deliverables": "Investor decks, client presentations",
+              "Skill Source": "Brand Guardian (Agency)",
+              "Use Case Mapping": "AI image generation",
+              "KPI": "Presentation impact score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-brand-guardian.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Thumbnail Designer",
+              "Role / Title": "Visual Hook Specialist",
+              "Core Skills": "YouTube thumbnails, social previews, click-bait design",
+              "Key Deliverables": "Thumbnails, social media preview images",
+              "Skill Source": "Brand Guardian (Agency)",
+              "Use Case Mapping": "Thumbnail ideation",
+              "KPI": "Thumbnail click-through rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-brand-guardian.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "3D & Spatial Design Agent",
+              "Role / Title": "Immersive Design",
+              "Core Skills": "Blender, 3D modeling, AR/VR assets",
+              "Key Deliverables": "3D models, spatial designs",
+              "Skill Source": "XR Interface Architect (Agency)",
+              "Use Case Mapping": "Blender \u2192 3D website",
+              "KPI": "Immersive experience quality",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/spatial-computing/spatial-xr-interface-architect.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: CONTENT & COPY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Copywriter",
+              "Role / Title": "Team Lead \u2013 Copy",
+              "Core Skills": "Advertising copy, UX writing, conversion copywriting",
+              "Key Deliverables": "Ad copy, landing page copy, email copy",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Product copy generation",
+              "KPI": "Copy conversion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Technical Writer",
+              "Role / Title": "Documentation Lead",
+              "Core Skills": "Technical documentation, API docs, user guides",
+              "Key Deliverables": "Tech docs, API references, user manuals",
+              "Skill Source": "technical-doc-generator + readme-generator",
+              "Use Case Mapping": "Documentation generation + API documentation",
+              "KPI": "Documentation completeness"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Brand Voice Agent",
+              "Role / Title": "Tone & Style Guardian",
+              "Core Skills": "Brand voice guidelines, tone adaptation, voice consistency",
+              "Key Deliverables": "Voice guidelines, tone templates",
+              "Skill Source": "Brand Guardian (Agency)",
+              "Use Case Mapping": "Writing-style cloning",
+              "KPI": "Voice consistency score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-brand-guardian.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Editing Agent",
+              "Role / Title": "Editorial Quality",
+              "Core Skills": "Copy editing, proofreading, style guide enforcement",
+              "Key Deliverables": "Edited content, style feedback",
+              "Skill Source": "adversarial-prompting",
+              "Use Case Mapping": "Transcript cleanup",
+              "KPI": "Error reduction rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Email Copywriter",
+              "Role / Title": "Email Marketing Copy",
+              "Core Skills": "Subject lines, email body, drip sequences",
+              "Key Deliverables": "Email campaigns, nurture sequences",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Newsletter writing + Email draft writing",
+              "KPI": "Email engagement rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Ad Scriptwriter",
+              "Role / Title": "Video/Audio Ad Copy",
+              "Core Skills": "Video scripts, radio spots, podcast ads",
+              "Key Deliverables": "Ad scripts, voiceover scripts",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "Ad script generation + YouTube scripts",
+              "KPI": "Ad engagement rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Press Release Agent",
+              "Role / Title": "PR Writing",
+              "Core Skills": "Press releases, media pitches, news articles",
+              "Key Deliverables": "Press releases, media kits",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Press release writing",
+              "KPI": "Media pickup rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Case Study Agent",
+              "Role / Title": "Success Story Writing",
+              "Core Skills": "Case study writing, client storytelling, ROI narratives",
+              "Key Deliverables": "Case studies, success stories, testimonials",
+              "Skill Source": "Content Strategist (Agency)",
+              "Use Case Mapping": "Blog post writing",
+              "KPI": "Case study conversion impact",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: MULTIMEDIA",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Video Producer",
+              "Role / Title": "Team Lead \u2013 Multimedia",
+              "Core Skills": "Video production, editing, post-production workflow",
+              "Key Deliverables": "Marketing videos, explainers, social video",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "24/7 marketing video agent + Remotion video pipeline",
+              "KPI": "Video view count",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Audio Agent",
+              "Role / Title": "Podcast & Audio Lead",
+              "Core Skills": "Podcast production, audio editing, music selection",
+              "Key Deliverables": "Podcasts, audio content, sound design",
+              "Skill Source": "ace-music",
+              "Use Case Mapping": "Podcast production pipeline + Podcast-to-blog",
+              "KPI": "Audio download/listen count",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Animation Specialist",
+              "Role / Title": "Motion & Explainer",
+              "Core Skills": "Animation, motion design, explainer videos",
+              "Key Deliverables": "Animated explainers, product demos",
+              "Skill Source": "Whimsy Injector (Agency)",
+              "Use Case Mapping": "Document \u2192 video \u2192 Slack",
+              "KPI": "Animation engagement",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-whimsy-injector.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Short-Form Video Agent",
+              "Role / Title": "Reels/TikTok Producer",
+              "Core Skills": "Short-form editing, hooks, viral formats",
+              "Key Deliverables": "TikTok/Reels/Shorts content",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "ClawdClipper TikTok editing + Short-video scripts",
+              "KPI": "Short-form video views",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Photography Director Agent",
+              "Role / Title": "Visual Content Strategy",
+              "Core Skills": "Photo direction, stock curation, visual storytelling",
+              "Key Deliverables": "Visual content libraries, photo briefs",
+              "Skill Source": "afame",
+              "Use Case Mapping": "AI image generation",
+              "KPI": "Visual content quality",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Webinar Producer",
+              "Role / Title": "Live Event Production",
+              "Core Skills": "Webinar setup, live streaming, Q&A management",
+              "Key Deliverables": "Webinar productions, live event content",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "ClawTube livestreaming",
+              "KPI": "Webinar attendance rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Video Chaptering Agent",
+              "Role / Title": "Post-Production Optimization",
+              "Core Skills": "Auto-chaptering, subtitles, video SEO",
+              "Key Deliverables": "Chaptered videos, subtitled content",
+              "Skill Source": "Content Production System",
+              "Use Case Mapping": "Video chaptering",
+              "KPI": "Video completion rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-content-strategist.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 23
+    },
+    {
+      "name": "IN-HOUSE PRODUCTS DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: PRODUCT STRATEGY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Product Manager Agent",
+              "Role / Title": "Team Lead \u2013 Product Strategy",
+              "Core Skills": "Product vision, roadmapping, stakeholder management",
+              "Key Deliverables": "Product roadmaps, feature specs, strategy docs",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Market research + product factory",
+              "KPI": "Product-market fit score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Market Research Analyst",
+              "Role / Title": "Market Intelligence",
+              "Core Skills": "Market sizing, competitor analysis, opportunity assessment",
+              "Key Deliverables": "Market reports, TAM/SAM/SOM analyses",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Market analysis + Idea pre-validation",
+              "KPI": "Market insight accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Roadmap Planner",
+              "Role / Title": "Strategic Planning",
+              "Core Skills": "Release planning, dependency mapping, timeline management",
+              "Key Deliverables": "Release roadmaps, dependency maps",
+              "Skill Source": "Project Shepherd (Agency)",
+              "Use Case Mapping": "Event-driven project tracking",
+              "KPI": "Roadmap delivery accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-project-shepherd.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Feature Prioritizer",
+              "Role / Title": "Prioritization Framework",
+              "Core Skills": "RICE scoring, user story mapping, impact analysis",
+              "Key Deliverables": "Prioritized backlogs, impact assessments",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Idea pre-validation",
+              "KPI": "Feature impact score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "User Research Agent",
+              "Role / Title": "Customer Discovery",
+              "Core Skills": "User interviews, surveys, persona development",
+              "Key Deliverables": "User personas, research reports",
+              "Skill Source": "UX Researcher (Agency)",
+              "Use Case Mapping": "Review insight extraction",
+              "KPI": "User insight quality",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/design/design-ux-researcher.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Pricing Strategy Agent",
+              "Role / Title": "Monetization Design",
+              "Core Skills": "Pricing models, competitive pricing, willingness-to-pay",
+              "Key Deliverables": "Pricing strategies, tier designs",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Price monitoring",
+              "KPI": "Revenue per user optimization",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: PRODUCT ENGINEERING",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Full-Stack Product Dev",
+              "Role / Title": "Team Lead \u2013 Product Engineering",
+              "Core Skills": "Full-stack development, rapid prototyping, MVP building",
+              "Key Deliverables": "Product builds, MVPs, feature implementations",
+              "Skill Source": "Rapid Prototyper (Agency)",
+              "Use Case Mapping": "Four-minute MVP + Build a social platform for $965",
+              "KPI": "Sprint velocity",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-rapid-prototyper.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Product Backend Agent",
+              "Role / Title": "Product Infrastructure",
+              "Core Skills": "Product APIs, data models, scalable architecture",
+              "Key Deliverables": "Backend services, API endpoints",
+              "Skill Source": "Backend Architect (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "API performance",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-backend-architect.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Product Frontend Agent",
+              "Role / Title": "Product UI Development",
+              "Core Skills": "React/Next.js, product UI, feature development",
+              "Key Deliverables": "Product UIs, interactive features",
+              "Skill Source": "Frontend Developer (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "UI polish score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-frontend-developer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Product QA Agent",
+              "Role / Title": "Product Quality",
+              "Core Skills": "Product testing, regression, user acceptance testing",
+              "Key Deliverables": "Test suites, quality reports",
+              "Skill Source": "Reality Checker (Agency)",
+              "Use Case Mapping": "Test writing",
+              "KPI": "Product bug count",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-reality-checker.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Product DevOps Agent",
+              "Role / Title": "Product Infrastructure",
+              "Core Skills": "Product deployment, scaling, monitoring",
+              "Key Deliverables": "Deployment pipelines, infrastructure configs",
+              "Skill Source": "DevOps Automator (Agency)",
+              "Use Case Mapping": "CI/CD pipelines",
+              "KPI": "Product uptime",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-devops-automator.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Open Source Agent",
+              "Role / Title": "OSS Strategy & Contribution",
+              "Core Skills": "Open source management, community building, licensing",
+              "Key Deliverables": "OSS projects, contribution guidelines",
+              "Skill Source": "readme-generator",
+              "Use Case Mapping": "GitHub automation",
+              "KPI": "OSS community growth",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: PRODUCT OPERATIONS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Release Manager",
+              "Role / Title": "Team Lead \u2013 Product Ops",
+              "Core Skills": "Release coordination, versioning, changelog management",
+              "Key Deliverables": "Release notes, changelogs, deployment schedules",
+              "Skill Source": "Project Shepherd (Agency)",
+              "Use Case Mapping": "Autonomous version control",
+              "KPI": "Release on-time delivery",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-project-shepherd.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Documentation Agent",
+              "Role / Title": "Product Documentation",
+              "Core Skills": "User docs, API docs, onboarding guides",
+              "Key Deliverables": "Product documentation, help center articles",
+              "Skill Source": "technical-doc-generator",
+              "Use Case Mapping": "Documentation generation",
+              "KPI": "Doc coverage %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Customer Feedback Analyst",
+              "Role / Title": "Product Feedback Loop",
+              "Core Skills": "Feedback collection, analysis, feature request tracking",
+              "Key Deliverables": "Feedback reports, feature request priorities",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Customer feedback aggregation",
+              "KPI": "Feedback-to-feature rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Growth Hacker Agent",
+              "Role / Title": "Product Growth",
+              "Core Skills": "Growth experiments, viral loops, activation optimization",
+              "Key Deliverables": "Growth experiments, A/B tests, acquisition strategies",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Viral-content research + Two-agent TikTok product + promotion",
+              "KPI": "Product growth rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-growth-hacker.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Product Analytics Agent",
+              "Role / Title": "Usage Analytics",
+              "Core Skills": "Product analytics, cohort analysis, funnel tracking",
+              "Key Deliverables": "Usage dashboards, cohort reports",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Feature adoption rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Localization Agent",
+              "Role / Title": "Product Internationalization",
+              "Core Skills": "i18n, l10n, translation management",
+              "Key Deliverables": "Localized product versions",
+              "Skill Source": "telegram-multilingual-voice-reply",
+              "Use Case Mapping": "Multilingual translation",
+              "KPI": "Market coverage",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        }
+      ],
+      "department_lead": "Product Director Agent",
+      "revenue_impact": "Direct (Subscription)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "MVP Stage",
+      "phase_2_target": "60+ agents",
+      "total_agents_target": "32",
+      "agents_populated": 18
+    },
+    {
+      "name": "OPERATIONS, FINANCE & GOVERNANCE DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: OPERATIONS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Operations Manager",
+              "Role / Title": "Team Lead \u2013 Operations",
+              "Core Skills": "Workflow management, process optimization, resource allocation",
+              "Key Deliverables": "Operations playbooks, process maps",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Solo founder with 22 cron jobs + DigitalMeld \u2013 909 tasks",
+              "KPI": "Operational efficiency",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Scheduling Coordinator",
+              "Role / Title": "Resource Scheduling",
+              "Core Skills": "Agent scheduling, capacity planning, load balancing",
+              "Key Deliverables": "Schedules, capacity reports",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Smart scheduling",
+              "KPI": "Resource utilization rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Resource Allocator",
+              "Role / Title": "Capacity Management",
+              "Core Skills": "Resource optimization, demand forecasting, allocation",
+              "Key Deliverables": "Allocation plans, utilization dashboards",
+              "Skill Source": "agent-team-orchestration",
+              "Use Case Mapping": "10-agent business team",
+              "KPI": "Utilization efficiency",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Policy Enforcer",
+              "Role / Title": "Governance & Compliance",
+              "Core Skills": "Policy enforcement, audit, compliance monitoring",
+              "Key Deliverables": "Compliance reports, policy documents",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Compliance score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Process Improvement Agent",
+              "Role / Title": "Continuous Optimization",
+              "Core Skills": "Process mining, bottleneck analysis, lean methodology",
+              "Key Deliverables": "Improvement recommendations, process redesigns",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Agent-run operations at $200/day",
+              "KPI": "Process cycle time reduction",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Vendor Management Agent",
+              "Role / Title": "External Relationships",
+              "Core Skills": "Vendor evaluation, contract management, cost negotiation",
+              "Key Deliverables": "Vendor scorecards, contract reviews",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "SaaS management",
+              "KPI": "Vendor cost optimization",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "SOP Agent",
+              "Role / Title": "Standard Operating Procedures",
+              "Core Skills": "SOP creation, documentation, training materials",
+              "Key Deliverables": "SOPs, process guides, training docs",
+              "Skill Source": "ZK Steward (Agency)",
+              "Use Case Mapping": "Agent onboarding SOP",
+              "KPI": "SOP coverage %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/specialized-zk-steward.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: FINANCE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Finance Analyst",
+              "Role / Title": "Team Lead \u2013 Finance",
+              "Core Skills": "Financial analysis, reporting, forecasting",
+              "Key Deliverables": "Financial models, reports, forecasts",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Finance operations + Data analysis automation",
+              "KPI": "Forecast accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Invoice Agent",
+              "Role / Title": "Billing & Collections",
+              "Core Skills": "Invoice generation, payment tracking, collections",
+              "Key Deliverables": "Invoices, payment reports, aging analysis",
+              "Skill Source": "receipt-subscription-cleaner",
+              "Use Case Mapping": "Finance operations + Bill payment reminders",
+              "KPI": "Collection efficiency",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Budget Planner",
+              "Role / Title": "Budget Management",
+              "Core Skills": "Budget creation, variance analysis, cost control",
+              "Key Deliverables": "Budget plans, variance reports",
+              "Skill Source": "Sales Data Extraction Agent",
+              "Use Case Mapping": "Finance operations",
+              "KPI": "Budget variance %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-sales-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Revenue Tracker",
+              "Role / Title": "Revenue Intelligence",
+              "Core Skills": "Revenue recognition, MRR/ARR tracking, cohort analysis",
+              "Key Deliverables": "Revenue dashboards, growth metrics",
+              "Skill Source": "Data Consolidation Agent",
+              "Use Case Mapping": "Indie developer revenue daily report",
+              "KPI": "Revenue growth rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-data-engineer.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Tax Compliance Agent",
+              "Role / Title": "Tax & Regulatory",
+              "Core Skills": "Tax compliance, filing, regulatory requirements",
+              "Key Deliverables": "Tax filings, compliance documentation",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Filing accuracy %",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Expense Tracker Agent",
+              "Role / Title": "Cost Management",
+              "Core Skills": "Expense tracking, categorization, receipt management",
+              "Key Deliverables": "Expense reports, cost breakdowns",
+              "Skill Source": "receipt-subscription-cleaner",
+              "Use Case Mapping": "SaaS management + Bill payment reminders",
+              "KPI": "Expense optimization %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Financial Reporting Agent",
+              "Role / Title": "Investor Relations Finance",
+              "Core Skills": "P&L, balance sheet, cash flow, investor reports",
+              "Key Deliverables": "Financial statements, investor updates",
+              "Skill Source": "Report Distribution Agent",
+              "Use Case Mapping": "Project status reports",
+              "KPI": "Report timeliness",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/sales/sales-report-distribution-agent.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: HR & AGENT LIFECYCLE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Agent Trainer",
+              "Role / Title": "Team Lead \u2013 Agent Lifecycle",
+              "Core Skills": "Agent training, capability development, onboarding",
+              "Key Deliverables": "Training programs, capability assessments",
+              "Skill Source": "adaptive-suite",
+              "Use Case Mapping": "Self-evolving content standards + Agent onboarding SOP",
+              "KPI": "Agent readiness score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Performance Reviewer",
+              "Role / Title": "Quality Benchmarking",
+              "Core Skills": "Performance evaluation, benchmarking, scoring",
+              "Key Deliverables": "Performance reports, rankings",
+              "Skill Source": "agent-team-orchestration",
+              "Use Case Mapping": "OKR tracker",
+              "KPI": "Agent performance improvement",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Onboarding Specialist",
+              "Role / Title": "New Agent Integration",
+              "Core Skills": "Agent onboarding, configuration, initial training",
+              "Key Deliverables": "Onboarded agents, setup documentation",
+              "Skill Source": "agent-spawner",
+              "Use Case Mapping": "Agent onboarding SOP",
+              "KPI": "Onboarding speed",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Capability Gap Analyst",
+              "Role / Title": "Skills Assessment",
+              "Core Skills": "Capability mapping, gap analysis, hiring recommendations",
+              "Key Deliverables": "Gap reports, new agent specifications",
+              "Skill Source": "agent-registry",
+              "Use Case Mapping": "Multi-agent expert team",
+              "KPI": "Gap closure rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Agent Health Monitor",
+              "Role / Title": "System Health & Uptime",
+              "Core Skills": "Agent monitoring, error detection, self-healing",
+              "Key Deliverables": "Health dashboards, incident reports",
+              "Skill Source": "agent-hq + agent-watcher",
+              "Use Case Mapping": "Self-healing home server",
+              "KPI": "Agent uptime %"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Knowledge Transfer Agent",
+              "Role / Title": "Institutional Memory",
+              "Core Skills": "Knowledge documentation, cross-training, skill sharing",
+              "Key Deliverables": "Knowledge bases, training materials",
+              "Skill Source": "ZK Steward (Agency)",
+              "Use Case Mapping": "Personal knowledge base (RAG) + Second brain",
+              "KPI": "Knowledge retention rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/specialized-zk-steward.md"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 20
+    },
+    {
+      "name": "R&D & INNOVATION DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: RESEARCH",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Research Analyst",
+              "Role / Title": "Team Lead \u2013 Research",
+              "Core Skills": "Academic research, industry analysis, systematic review",
+              "Key Deliverables": "Research papers, analysis reports",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Paper analysis + Literature review generation",
+              "KPI": "Research impact score",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Trend Scout",
+              "Role / Title": "Emerging Technology Watch",
+              "Core Skills": "Trend detection, signal analysis, technology radar",
+              "Key Deliverables": "Trend reports, technology radars",
+              "Skill Source": "agentcanary + scout",
+              "Use Case Mapping": "Technology trend analysis + AI industry breaking-news brief",
+              "KPI": "Trend detection lead time"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Competitive Intelligence Agent",
+              "Role / Title": "Market & Competitor Watch",
+              "Core Skills": "Competitor tracking, market intelligence, SWOT",
+              "Key Deliverables": "Competitive landscape reports, SWOT analyses",
+              "Skill Source": "agentcanary",
+              "Use Case Mapping": "Competitor research + Competitor feature matrix",
+              "KPI": "Intelligence freshness",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "White Paper Author",
+              "Role / Title": "Thought Leadership",
+              "Core Skills": "Research writing, data visualization, technical writing",
+              "Key Deliverables": "White papers, research publications",
+              "Skill Source": "technical-doc-generator",
+              "Use Case Mapping": "Blog post writing + Press release writing",
+              "KPI": "Publication citations",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Patent Analyst",
+              "Role / Title": "IP Intelligence",
+              "Core Skills": "Patent search, prior art, freedom-to-operate analysis",
+              "Key Deliverables": "Patent landscapes, FTO analyses",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Patent search",
+              "KPI": "IP protection coverage",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Academic Partnership Agent",
+              "Role / Title": "Research Collaboration",
+              "Core Skills": "University partnerships, grant applications, joint research",
+              "Key Deliverables": "Partnership agreements, research proposals",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "BIOS API research scientist",
+              "KPI": "Partnership productivity",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: INNOVATION LAB",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Innovation Lead",
+              "Role / Title": "Team Lead \u2013 Innovation Lab",
+              "Core Skills": "Innovation management, ideation, design thinking",
+              "Key Deliverables": "Innovation programs, ideation workshops",
+              "Skill Source": "Rapid Prototyper (Agency)",
+              "Use Case Mapping": "Market research + product factory + Four-minute MVP",
+              "KPI": "Ideas to production ratio",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-rapid-prototyper.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Prototype Builder",
+              "Role / Title": "Rapid Prototyping",
+              "Core Skills": "MVP development, rapid iteration, proof of concept",
+              "Key Deliverables": "Prototypes, MVPs, technical demos",
+              "Skill Source": "Rapid Prototyper (Agency)",
+              "Use Case Mapping": "Four-minute MVP + Build a social platform for $965",
+              "KPI": "Prototype-to-product conversion",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-rapid-prototyper.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Experiment Agent",
+              "Role / Title": "Hypothesis Testing",
+              "Core Skills": "A/B testing, experiment design, statistical analysis",
+              "Key Deliverables": "Experiment results, hypothesis validations",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Headline A/B testing",
+              "KPI": "Experiment velocity",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/marketing/marketing-growth-hacker.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Feasibility Analyst",
+              "Role / Title": "Technical & Business Viability",
+              "Core Skills": "Technical feasibility, cost-benefit, risk assessment",
+              "Key Deliverables": "Feasibility reports, risk assessments",
+              "Skill Source": "Product Trend Researcher (Agency)",
+              "Use Case Mapping": "Idea pre-validation",
+              "KPI": "Assessment accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/product/product-product-trend-researcher.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Emerging Tech Agent",
+              "Role / Title": "Bleeding Edge Technology",
+              "Core Skills": "Spatial computing, quantum, AR/VR, novel AI techniques",
+              "Key Deliverables": "Tech evaluations, integration assessments",
+              "Skill Source": "XR Interface Architect (Agency)",
+              "Use Case Mapping": "Blender \u2192 3D website + LUCI wearable AI",
+              "KPI": "Tech adoption readiness",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/spatial-computing/spatial-xr-interface-architect.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Hackathon Agent",
+              "Role / Title": "Innovation Sprint Lead",
+              "Core Skills": "Hackathon organization, rapid ideation, team formation",
+              "Key Deliverables": "Hackathon outputs, innovation sprint results",
+              "Skill Source": "Rapid Prototyper (Agency)",
+              "Use Case Mapping": "Autonomous game development",
+              "KPI": "Hackathon output quality",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-rapid-prototyper.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Open Innovation Agent",
+              "Role / Title": "External Innovation",
+              "Core Skills": "Open source strategy, community engagement, co-creation",
+              "Key Deliverables": "OSS strategies, community programs",
+              "Skill Source": "readme-generator",
+              "Use Case Mapping": "GitHub automation",
+              "KPI": "Community contribution rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 13
+    },
+    {
+      "name": "SECURITY & COMPLIANCE DEPARTMENT",
+      "mission": "",
+      "teams": [
+        {
+          "name": "TEAM 1: INFORMATION SECURITY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Security Director",
+              "Role / Title": "Department Lead \u2013 Security",
+              "Core Skills": "Security strategy, threat landscape, incident response",
+              "Key Deliverables": "Security strategies, incident response plans",
+              "Skill Source": "Security Engineer (Agency)",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Security incident count",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-security-engineer.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Threat Intelligence Agent",
+              "Role / Title": "Threat Detection Lead",
+              "Core Skills": "Threat monitoring, vulnerability intelligence, IOC tracking",
+              "Key Deliverables": "Threat reports, vulnerability alerts",
+              "Skill Source": "clawdefender",
+              "Use Case Mapping": "Phishing detection",
+              "KPI": "Threat detection speed",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Penetration Test Agent",
+              "Role / Title": "Offensive Security",
+              "Core Skills": "Penetration testing, red teaming, exploit development",
+              "Key Deliverables": "Pen test reports, remediation guides",
+              "Skill Source": "Security Engineer (Agency) + agentic-security-audit",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Vulnerabilities found",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-security-engineer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "IAM Agent",
+              "Role / Title": "Identity & Access Management",
+              "Core Skills": "SSO, SAML, OIDC, RBAC, zero-trust architecture",
+              "Key Deliverables": "IAM architectures, access policies",
+              "Skill Source": "Identity & Trust Architect (Agency)",
+              "Use Case Mapping": "Password audit",
+              "KPI": "Unauthorized access incidents",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/agentic-identity-trust.md"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Encryption Agent",
+              "Role / Title": "Data Protection",
+              "Core Skills": "Encryption at rest/transit, key management, data classification",
+              "Key Deliverables": "Encryption implementations, key management systems",
+              "Skill Source": "agentkeys",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "Data encryption coverage",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Incident Response Agent",
+              "Role / Title": "Security Operations",
+              "Core Skills": "Incident handling, forensics, root cause analysis",
+              "Key Deliverables": "Incident reports, post-mortems",
+              "Skill Source": "Security Engineer (Agency)",
+              "Use Case Mapping": "Security auditing",
+              "KPI": "MTTR for security incidents",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-security-engineer.md"
+            },
+            {
+              "#": "7",
+              "Agent Name": "Network Security Agent",
+              "Role / Title": "Infrastructure Security",
+              "Core Skills": "Firewall, VPN, network segmentation, DDoS protection",
+              "Key Deliverables": "Network security configs, architecture reviews",
+              "Skill Source": "Security Engineer (Agency)",
+              "Use Case Mapping": "Self-healing home server",
+              "KPI": "Network breach attempts blocked",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/engineering/engineering-security-engineer.md"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Secret Management Agent",
+              "Role / Title": "Credential Security",
+              "Core Skills": "Vault, secret rotation, credential management",
+              "Key Deliverables": "Secret management systems, rotation policies",
+              "Skill Source": "agentkeys + samma-suit",
+              "Use Case Mapping": "Password audit",
+              "KPI": "Secret exposure incidents"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: COMPLIANCE & AUDIT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Compliance Lead",
+              "Role / Title": "Team Lead \u2013 Compliance",
+              "Core Skills": "GDPR, SOC2, ISO 27001, regulatory compliance",
+              "Key Deliverables": "Compliance frameworks, audit readiness",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Compliance audit pass rate",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Audit Agent",
+              "Role / Title": "Internal Audit",
+              "Core Skills": "Process audit, control testing, evidence collection",
+              "Key Deliverables": "Audit reports, control assessments",
+              "Skill Source": "clauditor",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Audit finding closure rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Privacy Agent",
+              "Role / Title": "Data Privacy",
+              "Core Skills": "GDPR, CCPA, privacy impact assessments, data mapping",
+              "Key Deliverables": "Privacy policies, DPIA reports",
+              "Skill Source": "redacta",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Privacy compliance score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Agent Governance Agent",
+              "Role / Title": "AI Agent Oversight",
+              "Core Skills": "Agent behavior monitoring, policy enforcement, kill switches",
+              "Key Deliverables": "Governance dashboards, policy violations",
+              "Skill Source": "samma-suit + clauditor",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Agent policy violation rate"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Data Classification Agent",
+              "Role / Title": "Information Governance",
+              "Core Skills": "Data classification, handling rules, retention policies",
+              "Key Deliverables": "Classification schemas, retention schedules",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Automatic document classification",
+              "KPI": "Classification accuracy",
+              "Skill / Agent Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "6",
+              "Agent Name": "Security Training Agent",
+              "Role / Title": "Security Awareness",
+              "Core Skills": "Security training, phishing simulations, awareness programs",
+              "Key Deliverables": "Training materials, simulation results",
+              "Skill Source": "clawdefender",
+              "Use Case Mapping": "Phishing detection",
+              "KPI": "Security awareness score",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "7",
+              "Agent Name": "OTLP Monitor Agent",
+              "Role / Title": "Observability & Tracing",
+              "Core Skills": "OpenTelemetry, distributed tracing, log correlation",
+              "Key Deliverables": "Observability dashboards, trace analysis",
+              "Skill Source": "agentic-devops",
+              "Use Case Mapping": "Log analysis",
+              "KPI": "Trace coverage %",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            },
+            {
+              "#": "8",
+              "Agent Name": "Protocol Compliance Agent",
+              "Role / Title": "A2A/ACP/MCP Compliance",
+              "Core Skills": "Protocol standards, capability token audit, ICP enforcement",
+              "Key Deliverables": "Protocol compliance reports, token audit trails",
+              "Skill Source": "samma-suit",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Protocol compliance rate",
+              "Skill / Agent Source Link": "https://github.com/VoltAgent/awesome-openclaw-skills/"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 16
+    },
+    {
+      "name": "EXECUTIVE OFFICE & GOVERNANCE DEPARTMENT (D01)",
+      "mission": "Mission: Runs the company control tower \u2014 strategy, approvals, governance, identity, confidential handling, and cross-department orchestration.",
+      "teams": [
+        {
+          "name": "TEAM 1: STRATEGY & COMMAND",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Agents Orchestrator",
+              "Role / Title": "Department Lead \u2013 Strategy & Command",
+              "Core Skills": "Multi-agent coordination, workflow management, escalation control",
+              "Key Deliverables": "Cross-department orchestration, escalation routing, priority management",
+              "Skill Source": "agent-team-orchestration",
+              "Use Case Mapping": "Multi-agent expert team + n8n workflow orchestration",
+              "KPI": "Orchestration reliability",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/agents-orchestrator.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Executive Summary Generator",
+              "Role / Title": "Leadership Intelligence Agent",
+              "Core Skills": "C-suite communication, strategic summaries, decision support",
+              "Key Deliverables": "Executive briefings, strategic dashboards, decision memos",
+              "Skill Source": "agent-hq",
+              "Use Case Mapping": "Project status reports + Mission Control dashboard",
+              "KPI": "Decision support quality",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/support/support-executive-summary-generator.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Strategic Planning Agent",
+              "Role / Title": "Long-Term Vision Architect",
+              "Core Skills": "Market positioning, competitive strategy, OKR design",
+              "Key Deliverables": "Strategic plans, OKR frameworks, market position analysis",
+              "Skill Source": "scaling-strategy",
+              "Use Case Mapping": "Market analysis + OKR tracker",
+              "KPI": "Strategy execution score"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Cross-Department Liaison",
+              "Role / Title": "Inter-Department Coordinator",
+              "Core Skills": "A2A protocol, task routing, dependency management",
+              "Key Deliverables": "Cross-department task flows, dependency maps",
+              "Skill Source": "agent-orchestrator",
+              "Use Case Mapping": "10-agent business team",
+              "KPI": "Cross-department throughput"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: GOVERNANCE, IDENTITY & POLICY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Automation Governance Architect",
+              "Role / Title": "Team Lead \u2013 Governance",
+              "Core Skills": "Automation governance, n8n workflow auditing, approval gates, policy controls",
+              "Key Deliverables": "Governance frameworks, approval workflows, policy enforcement",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Legal compliance guardrails + Agent onboarding SOP",
+              "KPI": "Policy compliance rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/automation-governance-architect.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Agentic Identity & Trust Architect",
+              "Role / Title": "Identity & Access Lead",
+              "Core Skills": "Agent identity, authentication, trust verification, audit trails",
+              "Key Deliverables": "IAM architectures, trust boundaries, agent credentials",
+              "Skill Source": "Identity & Trust Architect (Agency)",
+              "Use Case Mapping": "Password audit + Security auditing",
+              "KPI": "Unauthorized access incidents",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/agentic-identity-trust.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Confidentiality Enforcer",
+              "Role / Title": "Information Control Agent",
+              "Core Skills": "Data classification, leakage prevention, external footprint monitoring",
+              "Key Deliverables": "Confidentiality policies, leakage alerts, clean audits",
+              "Skill Source": "samma-suit",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Zero external leakage"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Human Approval Gateway Agent",
+              "Role / Title": "Decision Routing",
+              "Core Skills": "CEO/CTO approval routing, contract review, pricing approval",
+              "Key Deliverables": "Approval queues, escalation paths, decision logs",
+              "Skill Source": "clauditor",
+              "Use Case Mapping": "Approval queue + Contract management",
+              "KPI": "Approval cycle time"
+            },
+            {
+              "#": "5",
+              "Agent Name": "Agent Lifecycle Governor",
+              "Role / Title": "New Agent Oversight",
+              "Core Skills": "Sandbox evaluation, permission review, onboarding gates",
+              "Key Deliverables": "Agent evaluations, permission matrices, onboarding reports",
+              "Skill Source": "agent-spawner + agent-registry",
+              "Use Case Mapping": "Agent onboarding SOP",
+              "KPI": "Onboarding compliance rate"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 9
+    },
+    {
+      "name": "DELIVERY PMO & OPERATIONS DEPARTMENT (D05)",
+      "mission": "Mission: Owns project flow, capacity, resource orchestration, workflow optimization, experiment tracking, and execution discipline.",
+      "teams": [
+        {
+          "name": "TEAM 1: PROGRAM & PROJECT MANAGEMENT",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Senior Project Manager",
+              "Role / Title": "Department Lead \u2013 PMO",
+              "Core Skills": "Sprint planning, resource allocation, risk management, milestone tracking",
+              "Key Deliverables": "Project plans, status reports, risk registers, milestone tracking",
+              "Skill Source": "Project Shepherd (Agency)",
+              "Use Case Mapping": "Autonomous project management + Event-driven project tracking",
+              "KPI": "On-time delivery rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-manager-senior.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Project Shepherd",
+              "Role / Title": "Agile Delivery Lead",
+              "Core Skills": "Agile methodology, sprint management, backlog grooming",
+              "Key Deliverables": "Sprint plans, velocity reports, retrospective notes",
+              "Skill Source": "taskflow",
+              "Use Case Mapping": "Todoist sync + Meeting notes \u2192 action items",
+              "KPI": "Sprint velocity",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-project-shepherd.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Studio Producer",
+              "Role / Title": "Creative Project Coordination",
+              "Core Skills": "Creative workflow management, timeline management, stakeholder coordination",
+              "Key Deliverables": "Production schedules, creative briefs, delivery timelines",
+              "Skill Source": "asana",
+              "Use Case Mapping": "Time tracking + Project status reports",
+              "KPI": "Creative project on-time rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-studio-producer.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Scope & Estimation Agent",
+              "Role / Title": "Project Scoping Lead",
+              "Core Skills": "Effort estimation, scope definition, SOW writing",
+              "Key Deliverables": "SOWs, estimates, scope documents",
+              "Skill Source": "scaling-strategy",
+              "Use Case Mapping": "Agent onboarding SOP",
+              "KPI": "Estimation accuracy"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: STUDIO & RESOURCE OPERATIONS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Data Consolidation Agent",
+              "Role / Title": "Resource Intelligence Lead",
+              "Core Skills": "Sales data aggregation, dashboard reports, territory summaries",
+              "Key Deliverables": "Capacity dashboards, resource utilization reports",
+              "Skill Source": "Data Consolidation Agent (Agency)",
+              "Use Case Mapping": "Dynamic dashboard + Three-screen interactive dashboard",
+              "KPI": "Resource utilization %",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/data-consolidation-agent.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Jira Workflow Steward",
+              "Role / Title": "Workflow Platform Lead",
+              "Core Skills": "Jira administration, workflow design, board management",
+              "Key Deliverables": "Jira configurations, workflow templates, board setups",
+              "Skill Source": "asana",
+              "Use Case Mapping": "Todoist sync + Claw Control board",
+              "KPI": "Workflow efficiency score",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-jira-workflow-steward.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Studio Operations",
+              "Role / Title": "Operations Coordinator",
+              "Core Skills": "Studio scheduling, resource booking, capacity planning",
+              "Key Deliverables": "Studio schedules, booking systems, capacity plans",
+              "Skill Source": "asana",
+              "Use Case Mapping": "Smart scheduling",
+              "KPI": "Studio utilization rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-studio-operations.md"
+            },
+            {
+              "#": "4",
+              "Agent Name": "SLA Compliance Agent",
+              "Role / Title": "Delivery SLA Monitoring",
+              "Core Skills": "SLA tracking, deadline management, breach prevention",
+              "Key Deliverables": "SLA dashboards, compliance reports, escalation alerts",
+              "Skill Source": "agent-hq",
+              "Use Case Mapping": "Mission Control dashboard",
+              "KPI": "SLA compliance rate"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: WORKFLOW OPTIMIZATION & EXPERIMENTS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Experiment Tracker",
+              "Role / Title": "A/B & Experiment Lead",
+              "Core Skills": "Experiment design, hypothesis testing, outcome measurement",
+              "Key Deliverables": "Experiment frameworks, test results, decision recommendations",
+              "Skill Source": "Growth Hacker (Agency)",
+              "Use Case Mapping": "Headline A/B testing + Autonomous version control",
+              "KPI": "Experiment velocity",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/project-management/project-management-experiment-tracker.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Workflow Optimizer",
+              "Role / Title": "Process Excellence Lead",
+              "Core Skills": "Process mining, bottleneck analysis, automation identification",
+              "Key Deliverables": "Process maps, optimization recommendations, automation specs",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Solo founder with 22 cron jobs + DigitalMeld 909 tasks",
+              "KPI": "Cycle time reduction",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/testing/testing-workflow-optimizer.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Throughput Analyst",
+              "Role / Title": "Delivery Metrics Intelligence",
+              "Core Skills": "Throughput analysis, lead time tracking, flow metrics",
+              "Key Deliverables": "Throughput reports, flow metrics dashboards",
+              "Skill Source": "agent-hq",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Throughput improvement"
+            },
+            {
+              "#": "4",
+              "Agent Name": "Retrospective Agent",
+              "Role / Title": "Continuous Improvement Facilitator",
+              "Core Skills": "Retrospective facilitation, lesson capture, improvement tracking",
+              "Key Deliverables": "Retro reports, improvement backlogs, learning databases",
+              "Skill Source": "adaptive-suite",
+              "Use Case Mapping": "Self-evolving content standards",
+              "KPI": "Improvement implementation rate"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 12
+    },
+    {
+      "name": "VERTICAL SOLUTIONS & ADVISORY DEPARTMENT (D12)",
+      "mission": "Mission: Packages sector-specific expertise for public sector, healthcare, education, international operations, and supply-chain work.",
+      "teams": [
+        {
+          "name": "TEAM 1: GOVERNMENT & PUBLIC SECTOR",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Government Digital Presales Consultant",
+              "Role / Title": "Team Lead \u2013 Gov & Public Sector",
+              "Core Skills": "Government procurement, compliance-aware presales, RFP response",
+              "Key Deliverables": "RFP responses, compliance frameworks, government proposals",
+              "Skill Source": "scaling-strategy",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Gov deal win rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/government-digital-presales-consultant.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Public Sector Compliance Agent",
+              "Role / Title": "Regulatory Compliance",
+              "Core Skills": "Government regulations, accessibility standards, public procurement",
+              "Key Deliverables": "Compliance checklists, regulatory reports",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Compliance pass rate"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Civic Tech Specialist",
+              "Role / Title": "Digital Government Solutions",
+              "Core Skills": "E-government platforms, citizen services, digital transformation",
+              "Key Deliverables": "Civic tech solutions, digital service blueprints",
+              "Skill Source": "Rapid Prototyper (Agency)",
+              "Use Case Mapping": "Full-stack vibe coding",
+              "KPI": "Solution deployment success"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 2: REGULATED MARKETS & HEALTHCARE",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Healthcare Marketing Compliance",
+              "Role / Title": "Team Lead \u2013 Healthcare",
+              "Core Skills": "HIPAA compliance, healthcare marketing, regulated messaging",
+              "Key Deliverables": "Compliant marketing materials, regulatory reviews",
+              "Skill Source": "redacta",
+              "Use Case Mapping": "Health symptom tracking + Legal compliance guardrails",
+              "KPI": "Compliance violation rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/healthcare-marketing-compliance.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Regulated Content Specialist",
+              "Role / Title": "Compliant Content Lead",
+              "Core Skills": "Financial services, pharma, legal sector content regulations",
+              "Key Deliverables": "Regulated content, compliance-reviewed copy",
+              "Skill Source": "adversarial-prompting",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Content approval rate"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Data Privacy Specialist",
+              "Role / Title": "Patient/Client Data Protection",
+              "Core Skills": "HIPAA, GDPR healthcare, data anonymization",
+              "Key Deliverables": "Privacy frameworks, anonymization pipelines",
+              "Skill Source": "redacta",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Privacy incident count"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 3: SUPPLY CHAIN & INTERNATIONAL OPERATIONS",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Supply Chain Strategist",
+              "Role / Title": "Team Lead \u2013 Supply Chain & Intl",
+              "Core Skills": "Supply chain optimization, logistics intelligence, inventory management",
+              "Key Deliverables": "Supply chain audits, optimization plans, logistics strategies",
+              "Skill Source": "scaling-strategy",
+              "Use Case Mapping": "Data analysis automation",
+              "KPI": "Supply chain efficiency",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/supply-chain-strategist.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "Cultural Intelligence Strategist",
+              "Role / Title": "International Operations Lead",
+              "Core Skills": "Cross-cultural business, localization strategy, international expansion",
+              "Key Deliverables": "Localization plans, cultural adaptation strategies",
+              "Skill Source": "telegram-multilingual-voice-reply",
+              "Use Case Mapping": "Multilingual translation + Chinese Marketing Stack",
+              "KPI": "International expansion success",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/specialized-cultural-intelligence-strategist.md"
+            },
+            {
+              "#": "3",
+              "Agent Name": "International Trade Compliance Agent",
+              "Role / Title": "Trade & Export Control",
+              "Core Skills": "Export regulations, trade compliance, sanctions screening",
+              "Key Deliverables": "Trade compliance reports, sanctions checks",
+              "Skill Source": "Automation Governance (Agency)",
+              "Use Case Mapping": "Legal compliance guardrails",
+              "KPI": "Trade compliance rate"
+            }
+          ]
+        },
+        {
+          "name": "TEAM 4: EDUCATION, MOBILITY & ADVISORY",
+          "agents": [
+            {
+              "#": "1",
+              "Agent Name": "Study Abroad Advisor",
+              "Role / Title": "Team Lead \u2013 Education & Mobility",
+              "Core Skills": "Education consulting, student mobility, visa guidance",
+              "Key Deliverables": "Student advising, program matching, application support",
+              "Skill Source": "scaling-strategy",
+              "Use Case Mapping": "Educational game development + High-school student building",
+              "KPI": "Student placement rate",
+              "Source Link": "https://github.com/msitarzewski/agency-agents/blob/main/specialized/study-abroad-advisor.md"
+            },
+            {
+              "#": "2",
+              "Agent Name": "EdTech Solutions Specialist",
+              "Role / Title": "Digital Education Lead",
+              "Core Skills": "LMS implementation, e-learning, educational content",
+              "Key Deliverables": "EdTech solutions, course platforms, learning analytics",
+              "Skill Source": "Rapid Prototyper (Agency)",
+              "Use Case Mapping": "Educational game development + Book/course outlines",
+              "KPI": "EdTech project success rate"
+            },
+            {
+              "#": "3",
+              "Agent Name": "Advisory Engagement Manager",
+              "Role / Title": "Consulting Engagement Lead",
+              "Core Skills": "Advisory methodology, engagement scoping, deliverable frameworks",
+              "Key Deliverables": "Advisory proposals, engagement frameworks, strategy decks",
+              "Skill Source": "Sales Engineer (Agency)",
+              "Use Case Mapping": "Consulting & Strategy",
+              "KPI": "Advisory client satisfaction"
+            }
+          ]
+        }
+      ],
+      "department_lead": "AI Director Agent",
+      "revenue_impact": "Direct (Project + SaaS)",
+      "scaling_priority": "CRITICAL",
+      "protocol_stack": "A2A + ACP + MCP",
+      "phase_1_status": "Fully Operational",
+      "phase_2_target": "100+ agents",
+      "total_agents_target": "48",
+      "agents_populated": 12
+    }
+  ]
+}
