@@ -23,7 +23,7 @@ import {
 } from './agent-detail-tabs'
 import { formatModelName, buildTaskStatParts } from '@/lib/agent-card-helpers'
 import { useMissionControl, type Agent } from '@/store'
-import { DndContext, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, type DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { DroppableZone, DraggableCard } from '@/components/ui/dnd-org-helpers'
 
 const log = createClientLogger('AgentSquadPhase3')
@@ -326,6 +326,7 @@ function AgentDepartmentGrid({
 }: Omit<Parameters<typeof AgentGroupedGrid>[0], 't'>) {
   const { departments, teams, agentTeamAssignments, assignAgentToTeam } = useMissionControl()
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
+  const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
 
   const genericBadgeClass = 'bg-surface-1 text-muted-foreground border-border'
   function GenericLogo() { return null }
@@ -353,7 +354,17 @@ function AgentDepartmentGrid({
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext
+      onDragStart={(event) => {
+        const agentId = Number(event.active.id)
+        const agent = agents.find(a => a.id === agentId)
+        setActiveDragAgent(agent ?? null)
+      }}
+      onDragEnd={(event) => {
+        handleDragEnd(event)
+        setActiveDragAgent(null)
+      }}
+    >
       <div className="space-y-2">
         {departments.map(dept => {
           const deptTeams = teams.filter(t => t.department_id === dept.id)
@@ -436,6 +447,20 @@ function AgentDepartmentGrid({
           </div>
         )}
       </div>
+      <DragOverlay>
+        {activeDragAgent ? (
+          <div className="bg-card border border-primary/50 rounded-lg p-2 shadow-lg opacity-90 flex items-center gap-2 text-sm">
+            <div className={`w-2 h-2 rounded-full ${
+              activeDragAgent.status === 'idle' ? 'bg-green-500'
+              : activeDragAgent.status === 'busy' ? 'bg-yellow-500'
+              : activeDragAgent.status === 'error' ? 'bg-red-500'
+              : 'bg-gray-500'
+            }`} />
+            <span className="font-medium">{activeDragAgent.name}</span>
+            <span className="text-xs text-muted-foreground">{activeDragAgent.role}</span>
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }

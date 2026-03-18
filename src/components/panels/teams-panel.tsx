@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Team, Agent } from '@/store'
 import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
@@ -21,6 +21,7 @@ interface TeamDetailProps {
 function TeamDetail({ team }: TeamDetailProps) {
   const [tab, setTab] = useState<TeamTab>('overview')
   const [showAddMember, setShowAddMember] = useState(false)
+  const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
 
   const departments = useMissionControl((s) => s.departments)
   const agents = useMissionControl((s) => s.agents)
@@ -142,7 +143,17 @@ function TeamDetail({ team }: TeamDetailProps) {
             )}
           </div>
 
-          <DndContext onDragEnd={handleDragEnd}>
+          <DndContext
+            onDragStart={(event) => {
+              const agentId = Number(event.active.id.toString().replace('member-', ''))
+              const agent = agents.find(a => a.id === agentId)
+              setActiveDragAgent(agent ?? null)
+            }}
+            onDragEnd={(event) => {
+              handleDragEnd(event)
+              setActiveDragAgent(null)
+            }}
+          >
             <DroppableZone id={`team-members-${team.id}`}>
               {members.length === 0 ? (
                 <div className="text-xs text-muted-foreground py-2 text-center">
@@ -191,6 +202,20 @@ function TeamDetail({ team }: TeamDetailProps) {
                 </div>
               )}
             </DroppableZone>
+            <DragOverlay>
+              {activeDragAgent ? (
+                <div className="bg-card border border-primary/50 rounded-lg p-2 shadow-lg opacity-90 flex items-center gap-2 text-sm">
+                  <div className={`w-2 h-2 rounded-full ${
+                    activeDragAgent.status === 'idle' ? 'bg-green-500'
+                    : activeDragAgent.status === 'busy' ? 'bg-yellow-500'
+                    : activeDragAgent.status === 'error' ? 'bg-red-500'
+                    : 'bg-gray-500'
+                  }`} />
+                  <span className="font-medium">{activeDragAgent.name}</span>
+                  <span className="text-xs text-muted-foreground">{activeDragAgent.role}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
         </div>
       )}
