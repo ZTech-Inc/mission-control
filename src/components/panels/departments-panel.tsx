@@ -1,61 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DndContext, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/core'
+import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Department, Team, Agent } from '@/store'
 import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
 import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
-
-// --- dnd-kit helpers ---
-
-function DroppableZone({ id, children }: { id: string; children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id })
-  return (
-    <div
-      ref={setNodeRef}
-      className={`border rounded-lg p-3 min-h-[60px] transition-colors ${
-        isOver ? 'border-primary border-dashed bg-primary/5' : 'border-border'
-      }`}
-    >
-      {children}
-    </div>
-  )
-}
-
-function DraggableCard({ id, children }: { id: string; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id })
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={
-        transform
-          ? { transform: `translate3d(${transform.x}px,${transform.y}px,0)` }
-          : undefined
-      }
-      className={isDragging ? 'opacity-50' : ''}
-    >
-      {children}
-    </div>
-  )
-}
-
-// --- Status dot ---
-
-function StatusDot({ status }: { status: Agent['status'] }) {
-  const color =
-    status === 'idle'
-      ? 'bg-green-500'
-      : status === 'busy'
-      ? 'bg-yellow-500'
-      : status === 'error'
-      ? 'bg-red-500'
-      : 'bg-gray-500'
-  return <span className={`inline-block w-2 h-2 rounded-full ${color}`} />
-}
+import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
 
 // --- Department Detail ---
 
@@ -89,8 +41,9 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
     e.preventDefault()
     if (!newTeamName.trim()) return
     const now = Math.floor(Date.now() / 1000)
+    const newId = Math.max(0, ...teams.map((t) => t.id)) + 1
     addTeam({
-      id: Date.now(),
+      id: newId,
       name: newTeamName.trim(),
       description: newTeamDesc.trim(),
       department_id: dept.id,
@@ -310,6 +263,29 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
                 </div>
               )
             })}
+            {/* Unassigned agents */}
+            {(() => {
+              const unassignedAgents = agents.filter(
+                (a) => !agentTeamAssignments.some((x) => x.agent_id === a.id)
+              )
+              return unassignedAgents.length > 0 ? (
+                <div className="mt-4">
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">Unassigned</h4>
+                  <div className="flex flex-col gap-1">
+                    {unassignedAgents.map((agent) => (
+                      <div
+                        key={agent.id}
+                        className="flex items-center gap-2 p-2 rounded bg-[hsl(var(--surface-1))]"
+                      >
+                        <StatusDot status={agent.status} />
+                        <span className="text-sm">{agent.name}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">{agent.role}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null
+            })()}
           </div>
         </DndContext>
       )}
@@ -411,7 +387,7 @@ export function DepartmentsPanel() {
   function handleCreate(name: string, color: string) {
     const now = Math.floor(Date.now() / 1000)
     const newDept: Department = {
-      id: Date.now(),
+      id: Math.max(0, ...departments.map((d) => d.id)) + 1,
       name,
       color,
       created_at: now,

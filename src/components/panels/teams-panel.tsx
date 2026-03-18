@@ -1,62 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DndContext, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/core'
+import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Team, Agent } from '@/store'
 import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
 import { AgentMultiSelect } from '@/components/ui/agent-multi-select'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
 import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
-
-// --- dnd-kit helpers ---
-
-function DroppableZone({ id, children }: { id: string; children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id })
-  return (
-    <div
-      ref={setNodeRef}
-      className={`border rounded-lg p-3 min-h-[60px] transition-colors ${
-        isOver ? 'border-primary border-dashed bg-primary/5' : 'border-border'
-      }`}
-    >
-      {children}
-    </div>
-  )
-}
-
-function DraggableCard({ id, children }: { id: string; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id })
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={
-        transform
-          ? { transform: `translate3d(${transform.x}px,${transform.y}px,0)` }
-          : undefined
-      }
-      className={isDragging ? 'opacity-50' : ''}
-    >
-      {children}
-    </div>
-  )
-}
-
-// --- Status dot ---
-
-function StatusDot({ status }: { status: Agent['status'] }) {
-  const color =
-    status === 'idle'
-      ? 'bg-green-500'
-      : status === 'busy'
-      ? 'bg-yellow-500'
-      : status === 'error'
-      ? 'bg-red-500'
-      : 'bg-gray-500'
-  return <span className={`inline-block w-2 h-2 rounded-full ${color}`} />
-}
+import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
 
 // --- Team Detail ---
 
@@ -218,6 +170,7 @@ function TeamDetail({ team }: TeamDetailProps) {
                         {role !== 'lead' && (
                           <button
                             onClick={() => handleSetLead(agent.id)}
+                            onPointerDown={(e) => e.stopPropagation()}
                             className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
                             title="Set as lead"
                           >
@@ -226,6 +179,7 @@ function TeamDetail({ team }: TeamDetailProps) {
                         )}
                         <button
                           onClick={() => removeAgentFromTeam(agent.id, team.id)}
+                          onPointerDown={(e) => e.stopPropagation()}
                           className="text-xs text-muted-foreground hover:text-red-500 transition-colors px-1"
                           title="Remove from team"
                         >
@@ -260,6 +214,7 @@ export function TeamsPanel() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [deptFilter, setDeptFilter] = useState<number | null>(null)
+  const [showNewTeamHint, setShowNewTeamHint] = useState(false)
 
   useEffect(() => {
     if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
@@ -313,7 +268,7 @@ export function TeamsPanel() {
         )}
         createLabel="New Team"
         onCreate={() => {
-          // Teams are created from departments panel; just deselect
+          setShowNewTeamHint(true)
           setSelectedTeam(null)
         }}
         sidebarOpen={sidebarOpen}
@@ -339,14 +294,21 @@ export function TeamsPanel() {
       />
 
       {/* Detail Pane */}
-      <div className="flex-1 min-w-0 overflow-y-auto p-6">
-        {selectedTeam ? (
-          <TeamDetail team={selectedTeam} />
-        ) : (
-          <div className="text-muted-foreground text-sm">
-            Select a team from the sidebar
+      <div className="flex-1 min-w-0 overflow-y-auto">
+        {showNewTeamHint && (
+          <div className="text-xs text-muted-foreground p-3 border-b border-border bg-[hsl(var(--surface-1))]">
+            Create teams from the Departments panel
           </div>
         )}
+        <div className="p-6">
+          {selectedTeam ? (
+            <TeamDetail team={selectedTeam} />
+          ) : (
+            <div className="text-muted-foreground text-sm">
+              Select a team from the sidebar
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
