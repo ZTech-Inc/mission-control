@@ -30,6 +30,8 @@ const navGroups: NavGroup[] = [
     items: [
       { id: 'overview', label: 'Overview', icon: <OverviewIcon />, priority: true, essential: true },
       { id: 'agents', label: 'Agents', icon: <AgentsIcon />, priority: true, essential: true },
+      { id: 'departments', label: 'Departments', icon: <DepartmentsIcon />, priority: false },
+      { id: 'teams', label: 'Teams', icon: <TeamsIcon />, priority: false },
       { id: 'tasks', label: 'Tasks', icon: <TasksIcon />, priority: true, essential: true },
       { id: 'chat', label: 'Chat', icon: <ChatIcon />, priority: false, essential: true },
       { id: 'channels', label: 'Channels', icon: <ChannelsIcon />, priority: false },
@@ -84,6 +86,8 @@ const navGroups: NavGroup[] = [
 const navItemTranslationKeys: Record<string, string> = {
   overview: 'overview',
   agents: 'agents',
+  departments: 'departments',
+  teams: 'teams',
   tasks: 'tasks',
   chat: 'chat',
   channels: 'channels',
@@ -1497,6 +1501,31 @@ function PluginIcon() {
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2v3M10 2v3M4 5h8a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
       <circle cx="8" cy="10" r="1.5" />
+    </svg>
+  )
+}
+
+function DepartmentsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="9" width="4" height="6" rx="0.5" />
+      <rect x="6" y="1" width="4" height="14" rx="0.5" />
+      <rect x="11" y="6" width="4" height="9" rx="0.5" />
+      <line x1="3" y1="9" x2="8" y2="8" />
+      <line x1="13" y1="6" x2="8" y2="4" />
+    </svg>
+  )
+}
+
+function TeamsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="4" r="2" />
+      <circle cx="3" cy="11" r="2" />
+      <circle cx="13" cy="11" r="2" />
+      <line x1="8" y1="6" x2="3" y2="9" />
+      <line x1="8" y1="6" x2="13" y2="9" />
+      <line x1="5" y1="11" x2="11" y2="11" />
     </svg>
   )
 }

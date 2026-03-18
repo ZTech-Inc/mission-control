@@ -36,6 +36,8 @@ import { SecurityAuditPanel } from '@/components/panels/security-audit-panel'
 import { NodesPanel } from '@/components/panels/nodes-panel'
 import { ExecApprovalPanel } from '@/components/panels/exec-approval-panel'
 import { ChatPagePanel } from '@/components/panels/chat-page-panel'
+import { DepartmentsPanel } from '@/components/panels/departments-panel'
+import { TeamsPanel } from '@/components/panels/teams-panel'
 import { ChatPanel } from '@/components/chat/chat-panel'
 import { getPluginPanel } from '@/lib/plugins'
 import { shouldRedirectDashboardToHttps } from '@/lib/browser-security'
@@ -512,6 +514,10 @@ function ContentRouter({ tab }: { tab: string }) {
           <AgentSquadPanelPhase3 />
         </>
       )
+    case 'departments':
+      return <DepartmentsPanel />
+    case 'teams':
+      return <TeamsPanel />
     case 'notifications':
       return <NotificationsPanel />
     case 'standup':

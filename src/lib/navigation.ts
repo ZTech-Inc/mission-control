@@ -15,6 +15,8 @@ const DEFAULT_PREFETCH_PANELS = [
   'chat',
   'tasks',
   'agents',
+  'departments',
+  'teams',
   'activity',
   'notifications',
   'tokens',
