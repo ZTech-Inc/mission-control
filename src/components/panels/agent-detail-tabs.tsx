@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
 import { createClientLogger } from '@/lib/client-logger'
 import Link from 'next/link'
+import { useMissionControl } from '@/store'
+import type { Team, Department } from '@/store'
 
 const log = createClientLogger('AgentDetailTabs')
 
@@ -99,6 +101,10 @@ export function OverviewTab({
   const [directMessage, setDirectMessage] = useState('')
   const [messageStatus, setMessageStatus] = useState<string | null>(null)
   const [availableModels, setAvailableModels] = useState<Array<{ alias: string; description?: string }>>([])
+  const { departments, teams, agentTeamAssignments, assignAgentToTeam, removeAgentFromTeam } = useMissionControl()
+  const currentAssignment = agentTeamAssignments.find(a => a.agent_id === agent.id)
+  const currentTeam: Team | null = currentAssignment ? teams.find(t => t.id === currentAssignment.team_id) ?? null : null
+  const currentDept: Department | null = currentTeam ? departments.find(d => d.id === currentTeam.department_id) ?? null : null
 
   useEffect(() => {
     fetch('/api/status?action=models')
@@ -267,6 +273,46 @@ export function OverviewTab({
               </div>
             </div>
           )}
+
+          {/* Team Assignment */}
+          <div className="border border-border rounded-lg p-3">
+            <div className="text-xs font-medium text-muted-foreground mb-2">Team</div>
+            {currentTeam ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm text-foreground">{currentTeam.name}</span>
+                  {currentDept && <span className="text-xs text-muted-foreground ml-2">{currentDept.name}</span>}
+                  <span className="text-xs ml-2 px-1.5 py-0.5 rounded bg-surface-1 border border-border text-muted-foreground">
+                    {currentAssignment?.role}
+                  </span>
+                </div>
+                <button
+                  onClick={() => removeAgentFromTeam(agent.id, currentTeam.id)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Not assigned</span>
+                <select
+                  onChange={e => { if (e.target.value) assignAgentToTeam(agent.id, Number(e.target.value), 'member') }}
+                  value=""
+                  className="text-xs bg-surface-1 border border-border rounded px-2 py-1 text-foreground focus:outline-none"
+                >
+                  <option value="">Assign to team...</option>
+                  {departments.map(dept => (
+                    <optgroup key={dept.id} label={dept.name}>
+                      {teams.filter(t => t.department_id === dept.id).map(team => (
+                        <option key={team.id} value={team.id}>{team.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           {/* Edit / Save */}
           <div className="flex gap-2 pt-1">

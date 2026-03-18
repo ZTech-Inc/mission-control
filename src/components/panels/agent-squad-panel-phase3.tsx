@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
@@ -23,6 +23,8 @@ import {
 } from './agent-detail-tabs'
 import { formatModelName, buildTaskStatParts } from '@/lib/agent-card-helpers'
 import { useMissionControl, type Agent } from '@/store'
+import { DndContext, type DragEndEvent } from '@dnd-kit/core'
+import { DroppableZone, DraggableCard } from '@/components/ui/dnd-org-helpers'
 
 const log = createClientLogger('AgentSquadPhase3')
 
@@ -145,6 +147,109 @@ const agentTypeConfig: Record<AgentTypeName, { label: string; badgeClass: string
 
 const GROUP_ORDER: AgentTypeName[] = ['openclaw', 'claude-code', 'codex', 'generic']
 
+function AgentCard({
+  agent,
+  badgeClass,
+  Logo,
+  hasRecentHeartbeat,
+  formatLastSeen,
+  onSelectAgent,
+  onWakeAgent,
+  onUpdateStatus,
+  onSpawnAgent,
+  t,
+}: {
+  agent: Agent
+  badgeClass: string
+  Logo: React.FC
+  hasRecentHeartbeat: (agent: Agent) => boolean
+  formatLastSeen: (ts?: number) => string
+  onSelectAgent: (agent: Agent) => void
+  onWakeAgent: (name: string, key: string) => Promise<void>
+  onUpdateStatus: (name: string, status: Agent['status'], activity?: string) => Promise<void>
+  onSpawnAgent: (agent: Agent) => void
+  t: ReturnType<typeof useTranslations<'agentSquadPhase3'>>
+}) {
+  const modelName = formatModelName(agent.config)
+  const taskStatsLine = buildTaskStatParts(agent.taskStats)
+  return (
+    <div
+      className="group relative overflow-hidden rounded-xl border border-border/70 bg-card p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-lg cursor-pointer"
+      onClick={() => onSelectAgent(agent)}
+    >
+      <div className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${(statusCardStyles[agent.status] || defaultCardStyle).edge}`} />
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <AgentAvatar name={agent.name} size="md" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-semibold text-foreground truncate">{agent.name}</h3>
+              <span className={`inline-flex items-center gap-1 text-2xs px-1.5 py-0.5 rounded-full border ${badgeClass}`}>
+                <Logo />
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
+              {agent.role}{modelName && <> · <span className="font-mono text-muted-foreground/80">{modelName}</span></>}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {hasRecentHeartbeat(agent) && (
+            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" title="Recent heartbeat" />
+          )}
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs capitalize ${statusBadgeStyles[agent.status]}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${(statusCardStyles[agent.status] || defaultCardStyle).dot}`} />
+            {agent.status}
+          </span>
+        </div>
+      </div>
+      {taskStatsLine && (
+        <div className="text-xs text-muted-foreground mb-2 pl-0.5">
+          {taskStatsLine.map((part, i) => (
+            <span key={part.label}>
+              {i > 0 && <span className="mx-1 text-muted-foreground/40">·</span>}
+              <span className={part.color || 'text-foreground/80'}>{part.count}</span>
+              {' '}{part.label}
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+        <span className="text-[11px] text-muted-foreground/70">
+          {formatLastSeen(agent.last_seen)}
+        </span>
+        <div className="flex gap-1">
+          {agent.session_key ? (
+            <Button
+              onClick={(e) => { e.stopPropagation(); onWakeAgent(agent.name, agent.session_key!) }}
+              size="xs" variant="ghost"
+              className="h-6 px-2 text-xs text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200"
+              title="Wake agent via session"
+            >
+              {t('wake')}
+            </Button>
+          ) : (
+            <Button
+              onClick={(e) => { e.stopPropagation(); onUpdateStatus(agent.name, 'idle', 'Manually activated') }}
+              disabled={agent.status === 'idle'}
+              size="xs" variant="ghost" className="h-6 px-2 text-xs"
+            >
+              {t('wake')}
+            </Button>
+          )}
+          <Button
+            onClick={(e) => { e.stopPropagation(); onSpawnAgent(agent) }}
+            size="xs" variant="ghost"
+            className="h-6 px-2 text-xs text-blue-300 hover:bg-blue-500/15 hover:text-blue-200"
+          >
+            {t('spawn')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AgentGroupedGrid({
   agents,
   hasRecentHeartbeat,
@@ -187,92 +292,154 @@ function AgentGroupedGrid({
               <span className="text-xs text-muted-foreground/50">{groupAgents.length}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupAgents.map(agent => {
-                const modelName = formatModelName(agent.config)
-                const taskStatsLine = buildTaskStatParts(agent.taskStats)
-                return (
-                  <div
-                    key={agent.id}
-                    className="group relative overflow-hidden rounded-xl border border-border/70 bg-card p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-lg cursor-pointer"
-                    onClick={() => onSelectAgent(agent)}
-                  >
-                    <div className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${(statusCardStyles[agent.status] || defaultCardStyle).edge}`} />
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <AgentAvatar name={agent.name} size="md" />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <h3 className="font-semibold text-foreground truncate">{agent.name}</h3>
-                            <span className={`inline-flex items-center gap-1 text-2xs px-1.5 py-0.5 rounded-full border ${badgeClass}`} title={groupKey}>
-                              <Logo />
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {agent.role}{modelName && <> · <span className="font-mono text-muted-foreground/80">{modelName}</span></>}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {hasRecentHeartbeat(agent) && (
-                          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" title="Recent heartbeat" />
-                        )}
-                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs capitalize ${statusBadgeStyles[agent.status]}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${(statusCardStyles[agent.status] || defaultCardStyle).dot}`} />
-                          {agent.status}
-                        </span>
-                      </div>
-                    </div>
-                    {taskStatsLine && (
-                      <div className="text-xs text-muted-foreground mb-2 pl-0.5">
-                        {taskStatsLine.map((part, i) => (
-                          <span key={part.label}>
-                            {i > 0 && <span className="mx-1 text-muted-foreground/40">·</span>}
-                            <span className={part.color || 'text-foreground/80'}>{part.count}</span>
-                            {' '}{part.label}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                      <span className="text-[11px] text-muted-foreground/70">
-                        {formatLastSeen(agent.last_seen)}
-                      </span>
-                      <div className="flex gap-1">
-                        {agent.session_key ? (
-                          <Button
-                            onClick={(e) => { e.stopPropagation(); onWakeAgent(agent.name, agent.session_key!) }}
-                            size="xs" variant="ghost"
-                            className="h-6 px-2 text-xs text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200"
-                            title="Wake agent via session"
-                          >
-                            {t('wake')}
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={(e) => { e.stopPropagation(); onUpdateStatus(agent.name, 'idle', 'Manually activated') }}
-                            disabled={agent.status === 'idle'}
-                            size="xs" variant="ghost" className="h-6 px-2 text-xs"
-                          >
-                            {t('wake')}
-                          </Button>
-                        )}
-                        <Button
-                          onClick={(e) => { e.stopPropagation(); onSpawnAgent(agent) }}
-                          size="xs" variant="ghost"
-                          className="h-6 px-2 text-xs text-blue-300 hover:bg-blue-500/15 hover:text-blue-200"
-                        >
-                          {t('spawn')}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+              {groupAgents.map(agent => (
+                <AgentCard
+                  key={agent.id}
+                  agent={agent}
+                  badgeClass={badgeClass}
+                  Logo={Logo}
+                  hasRecentHeartbeat={hasRecentHeartbeat}
+                  formatLastSeen={formatLastSeen}
+                  onSelectAgent={onSelectAgent}
+                  onWakeAgent={onWakeAgent}
+                  onUpdateStatus={onUpdateStatus}
+                  onSpawnAgent={onSpawnAgent}
+                  t={t}
+                />
+              ))}
             </div>
           </div>
         )
       })}
     </div>
+  )
+}
+
+function AgentDepartmentGrid({
+  agents,
+  hasRecentHeartbeat,
+  formatLastSeen,
+  onSelectAgent,
+  onWakeAgent,
+  onUpdateStatus,
+  onSpawnAgent,
+}: Omit<Parameters<typeof AgentGroupedGrid>[0], 't'>) {
+  const { departments, teams, agentTeamAssignments, assignAgentToTeam } = useMissionControl()
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
+
+  const genericBadgeClass = 'bg-surface-1 text-muted-foreground border-border'
+  function GenericLogo() { return null }
+
+  const t = useTranslations('agentSquadPhase3')
+
+  const assignmentsByAgent = new Map(agentTeamAssignments.map(a => [a.agent_id, a]))
+  const teamAgents = new Map<number, Agent[]>()
+  const unassigned: Agent[] = []
+  for (const agent of agents) {
+    const assignment = assignmentsByAgent.get(agent.id)
+    if (assignment) {
+      const list = teamAgents.get(assignment.team_id) ?? []
+      list.push(agent)
+      teamAgents.set(assignment.team_id, list)
+    } else {
+      unassigned.push(agent)
+    }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over) return
+    const agentId = Number(active.id)
+    const teamId = parseInt(String(over.id).replace('team-', ''))
+    if (isNaN(teamId)) return
+    assignAgentToTeam(agentId, teamId, 'member')
+  }
+
+  return (
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="space-y-2">
+        {departments.map(dept => {
+          const deptTeams = teams.filter(t => t.department_id === dept.id)
+          const deptAgentCount = deptTeams.reduce((n, t) => n + (teamAgents.get(t.id)?.length ?? 0), 0)
+          const isCollapsed = collapsed.has(dept.id)
+          return (
+            <div key={dept.id} className="mb-6">
+              <button
+                className="flex items-center gap-2 mb-2 group w-full"
+                onClick={() => setCollapsed(prev => {
+                  const next = new Set(prev)
+                  if (next.has(dept.id)) next.delete(dept.id)
+                  else next.add(dept.id)
+                  return next
+                })}
+              >
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: dept.color ?? '#888' }} />
+                <span className="font-medium text-sm">{dept.name}</span>
+                <span className="text-xs text-muted-foreground">{deptAgentCount}</span>
+                <span className="text-xs text-muted-foreground ml-auto">{isCollapsed ? '▶' : '▼'}</span>
+              </button>
+              {!isCollapsed && (
+                <div className="pl-4 space-y-3">
+                  {deptTeams.map(team => {
+                    const tAgents = teamAgents.get(team.id) ?? []
+                    return (
+                      <DroppableZone key={team.id} id={`team-${team.id}`}>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">{team.name}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {tAgents.map(agent => (
+                            <DraggableCard key={agent.id} id={String(agent.id)}>
+                              <AgentCard
+                                agent={agent}
+                                badgeClass={genericBadgeClass}
+                                Logo={GenericLogo}
+                                hasRecentHeartbeat={hasRecentHeartbeat}
+                                formatLastSeen={formatLastSeen}
+                                onSelectAgent={onSelectAgent}
+                                onWakeAgent={onWakeAgent}
+                                onUpdateStatus={onUpdateStatus}
+                                onSpawnAgent={onSpawnAgent}
+                                t={t}
+                              />
+                            </DraggableCard>
+                          ))}
+                          {tAgents.length === 0 && <div className="text-xs text-muted-foreground/50 py-2">No agents</div>}
+                        </div>
+                      </DroppableZone>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+        {unassigned.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-medium text-sm text-muted-foreground">Unassigned</span>
+              <span className="text-xs text-muted-foreground">{unassigned.length}</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {unassigned.map(agent => (
+                <DraggableCard key={agent.id} id={String(agent.id)}>
+                  <AgentCard
+                    agent={agent}
+                    badgeClass={genericBadgeClass}
+                    Logo={GenericLogo}
+                    hasRecentHeartbeat={hasRecentHeartbeat}
+                    formatLastSeen={formatLastSeen}
+                    onSelectAgent={onSelectAgent}
+                    onWakeAgent={onWakeAgent}
+                    onUpdateStatus={onUpdateStatus}
+                    onSpawnAgent={onSpawnAgent}
+                    t={t}
+                  />
+                </DraggableCard>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </DndContext>
   )
 }
 
@@ -287,6 +454,9 @@ export function AgentSquadPanelPhase3() {
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncToast, setSyncToast] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'type' | 'department'>('type')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'offline' | 'idle' | 'busy' | 'error'>('all')
 
   // Sync agents from gateway config or local disk
   const syncFromConfig = async (source?: 'local') => {
@@ -462,6 +632,16 @@ export function AgentSquadPanelPhase3() {
     return acc
   }, {} as Record<string, number>)
 
+  const filteredAgents = useMemo(() => {
+    return agents.filter(agent => {
+      const matchesSearch = !searchQuery ||
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.role.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesStatus = statusFilter === 'all' || agent.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [agents, searchQuery, statusFilter])
+
   if (loading && agents.length === 0) {
     return <Loader variant="panel" label="Loading agents" />
   }
@@ -554,6 +734,42 @@ export function AgentSquadPanelPhase3() {
         </div>
       )}
 
+      {/* View Mode + Search Toolbar */}
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-border flex-shrink-0">
+        {/* View toggle */}
+        <div className="flex gap-1 border-b border-transparent">
+          <button onClick={() => setViewMode('type')}
+            className={`px-3 py-1.5 text-xs transition-colors rounded ${viewMode === 'type' ? 'bg-surface-1 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            By Type
+          </button>
+          <button onClick={() => setViewMode('department')}
+            className={`px-3 py-1.5 text-xs transition-colors rounded ${viewMode === 'department' ? 'bg-surface-1 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            By Department
+          </button>
+        </div>
+        <div className="flex-1" />
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search agents..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="bg-surface-1 border border-border rounded px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 w-52"
+        />
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
+          className="bg-surface-1 border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+        >
+          <option value="all">All Status</option>
+          <option value="idle">Idle</option>
+          <option value="busy">Busy</option>
+          <option value="offline">Offline</option>
+          <option value="error">Error</option>
+        </select>
+      </div>
+
       {/* Agent Grid */}
       <div className="flex-1 p-4 overflow-y-auto">
         {agents.length === 0 ? (
@@ -569,9 +785,9 @@ export function AgentSquadPanelPhase3() {
               {t('noAgentsHint')}
             </p>
           </div>
-        ) : (
+        ) : viewMode === 'type' ? (
           <AgentGroupedGrid
-            agents={agents}
+            agents={filteredAgents}
             hasRecentHeartbeat={hasRecentHeartbeat}
             formatLastSeen={formatLastSeen}
             onSelectAgent={setSelectedAgent}
@@ -579,6 +795,16 @@ export function AgentSquadPanelPhase3() {
             onUpdateStatus={updateAgentStatus}
             onSpawnAgent={(agent) => { setSelectedAgent(agent); setShowQuickSpawnModal(true) }}
             t={t}
+          />
+        ) : (
+          <AgentDepartmentGrid
+            agents={filteredAgents}
+            hasRecentHeartbeat={hasRecentHeartbeat}
+            formatLastSeen={formatLastSeen}
+            onSelectAgent={setSelectedAgent}
+            onWakeAgent={wakeAgent}
+            onUpdateStatus={updateAgentStatus}
+            onSpawnAgent={(agent) => { setSelectedAgent(agent); setShowQuickSpawnModal(true) }}
           />
         )}
       </div>
