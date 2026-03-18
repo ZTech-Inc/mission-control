@@ -333,18 +333,15 @@ function AgentDepartmentGrid({
   const t = useTranslations('agentSquadPhase3')
 
   const assignmentsByAgent = new Map(agentTeamAssignments.map(a => [a.agent_id, a]))
-  const teamAgents = new Map<number, Agent[]>()
-  const unassigned: Agent[] = []
-  for (const agent of agents) {
+  const teamAgents = agents.reduce((map, agent) => {
     const assignment = assignmentsByAgent.get(agent.id)
     if (assignment) {
-      const list = teamAgents.get(assignment.team_id) ?? []
-      list.push(agent)
-      teamAgents.set(assignment.team_id, list)
-    } else {
-      unassigned.push(agent)
+      const list = map.get(assignment.team_id) ?? []
+      map.set(assignment.team_id, [...list, agent])
     }
-  }
+    return map
+  }, new Map<number, Agent[]>())
+  const unassigned = agents.filter(agent => !assignmentsByAgent.has(agent.id))
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
