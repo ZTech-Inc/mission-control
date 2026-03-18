@@ -75,6 +75,43 @@ export interface MemoryFile {
   children?: MemoryFile[]
 }
 
+export interface Department {
+  id: number
+  name: string
+  description?: string
+  manager_agent_id?: number
+  color?: string
+  created_at: number
+  updated_at: number
+}
+
+export interface Team {
+  id: number
+  name: string
+  description?: string
+  department_id: number
+  lead_agent_id?: number
+  color?: string
+  created_at: number
+  updated_at: number
+}
+
+export interface AgentTeamAssignment {
+  agent_id: number
+  team_id: number
+  role: 'member' | 'lead'
+  assigned_at: number
+}
+
+export interface DocFile {
+  path: string
+  name: string
+  type: 'file' | 'directory'
+  size?: number
+  modified?: number
+  children?: DocFile[]
+}
+
 export interface TokenUsage {
   model: string
   sessionId: string
@@ -594,6 +631,42 @@ interface MissionControlStore {
   toggleGroup: (groupId: string) => void
   toggleLiveFeed: () => void
   setHeaderDensity: (mode: 'focus' | 'compact') => void
+
+  // Departments
+  departments: Department[]
+  selectedDepartment: Department | null
+  setDepartments: (departments: Department[]) => void
+  addDepartment: (department: Department) => void
+  updateDepartment: (departmentId: number, updates: Partial<Department>) => void
+  deleteDepartment: (departmentId: number) => void
+  setSelectedDepartment: (department: Department | null) => void
+
+  // Teams
+  teams: Team[]
+  selectedTeam: Team | null
+  setTeams: (teams: Team[]) => void
+  addTeam: (team: Team) => void
+  updateTeam: (teamId: number, updates: Partial<Team>) => void
+  deleteTeam: (teamId: number) => void
+  setSelectedTeam: (team: Team | null) => void
+
+  // Agent Team Assignments
+  agentTeamAssignments: AgentTeamAssignment[]
+  setAgentTeamAssignments: (assignments: AgentTeamAssignment[]) => void
+  assignAgentToTeam: (agentId: number, teamId: number, role: 'member' | 'lead') => void
+  removeAgentFromTeam: (agentId: number, teamId: number) => void
+
+  // Org Docs
+  departmentDocs: Record<number, DocFile[]>
+  teamDocs: Record<number, DocFile[]>
+  selectedDocFile: string | null
+  docContent: string | null
+  docFileLinks: { wikiLinks: string[]; incoming: string[]; outgoing: string[] } | null
+  setDepartmentDocs: (departmentId: number, docs: DocFile[]) => void
+  setTeamDocs: (teamId: number, docs: DocFile[]) => void
+  setSelectedDocFile: (path: string | null) => void
+  setDocContent: (content: string | null) => void
+  setDocFileLinks: (links: { wikiLinks: string[]; incoming: string[]; outgoing: string[] } | null) => void
 }
 
 export const useMissionControl = create<MissionControlStore>()(
@@ -1149,5 +1222,135 @@ export const useMissionControl = create<MissionControlStore>()(
     currentStandupReport: null,
     setStandupReports: (reports) => set({ standupReports: reports }),
     setCurrentStandupReport: (report) => set({ currentStandupReport: report }),
+
+    // Departments
+    departments: (() => {
+      if (typeof window === 'undefined') return []
+      try {
+        const raw = localStorage.getItem('mc-departments')
+        return raw ? JSON.parse(raw) as Department[] : []
+      } catch { return [] }
+    })(),
+    selectedDepartment: null,
+    setDepartments: (departments) => {
+      try { localStorage.setItem('mc-departments', JSON.stringify(departments)) } catch {}
+      set({ departments })
+    },
+    addDepartment: (department) =>
+      set((state) => {
+        const next = [...state.departments, department]
+        try { localStorage.setItem('mc-departments', JSON.stringify(next)) } catch {}
+        return { departments: next }
+      }),
+    updateDepartment: (departmentId, updates) =>
+      set((state) => {
+        const next = state.departments.map((d) =>
+          d.id === departmentId ? { ...d, ...updates } : d
+        )
+        try { localStorage.setItem('mc-departments', JSON.stringify(next)) } catch {}
+        return {
+          departments: next,
+          selectedDepartment: state.selectedDepartment?.id === departmentId
+            ? { ...state.selectedDepartment, ...updates }
+            : state.selectedDepartment,
+        }
+      }),
+    deleteDepartment: (departmentId) =>
+      set((state) => {
+        const next = state.departments.filter((d) => d.id !== departmentId)
+        try { localStorage.setItem('mc-departments', JSON.stringify(next)) } catch {}
+        return {
+          departments: next,
+          selectedDepartment: state.selectedDepartment?.id === departmentId ? null : state.selectedDepartment,
+        }
+      }),
+    setSelectedDepartment: (department) => set({ selectedDepartment: department }),
+
+    // Teams
+    teams: (() => {
+      if (typeof window === 'undefined') return []
+      try {
+        const raw = localStorage.getItem('mc-teams')
+        return raw ? JSON.parse(raw) as Team[] : []
+      } catch { return [] }
+    })(),
+    selectedTeam: null,
+    setTeams: (teams) => {
+      try { localStorage.setItem('mc-teams', JSON.stringify(teams)) } catch {}
+      set({ teams })
+    },
+    addTeam: (team) =>
+      set((state) => {
+        const next = [...state.teams, team]
+        try { localStorage.setItem('mc-teams', JSON.stringify(next)) } catch {}
+        return { teams: next }
+      }),
+    updateTeam: (teamId, updates) =>
+      set((state) => {
+        const next = state.teams.map((t) =>
+          t.id === teamId ? { ...t, ...updates } : t
+        )
+        try { localStorage.setItem('mc-teams', JSON.stringify(next)) } catch {}
+        return {
+          teams: next,
+          selectedTeam: state.selectedTeam?.id === teamId
+            ? { ...state.selectedTeam, ...updates }
+            : state.selectedTeam,
+        }
+      }),
+    deleteTeam: (teamId) =>
+      set((state) => {
+        const next = state.teams.filter((t) => t.id !== teamId)
+        try { localStorage.setItem('mc-teams', JSON.stringify(next)) } catch {}
+        return {
+          teams: next,
+          selectedTeam: state.selectedTeam?.id === teamId ? null : state.selectedTeam,
+        }
+      }),
+    setSelectedTeam: (team) => set({ selectedTeam: team }),
+
+    // Agent Team Assignments
+    agentTeamAssignments: (() => {
+      if (typeof window === 'undefined') return []
+      try {
+        const raw = localStorage.getItem('mc-agent-team-assignments')
+        return raw ? JSON.parse(raw) as AgentTeamAssignment[] : []
+      } catch { return [] }
+    })(),
+    setAgentTeamAssignments: (assignments) => {
+      try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(assignments)) } catch {}
+      set({ agentTeamAssignments: assignments })
+    },
+    assignAgentToTeam: (agentId, teamId, role) =>
+      set((state) => {
+        const filtered = state.agentTeamAssignments.filter(
+          (a) => !(a.agent_id === agentId && a.team_id === teamId)
+        )
+        const next = [...filtered, { agent_id: agentId, team_id: teamId, role, assigned_at: Math.floor(Date.now() / 1000) }]
+        try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(next)) } catch {}
+        return { agentTeamAssignments: next }
+      }),
+    removeAgentFromTeam: (agentId, teamId) =>
+      set((state) => {
+        const next = state.agentTeamAssignments.filter(
+          (a) => !(a.agent_id === agentId && a.team_id === teamId)
+        )
+        try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(next)) } catch {}
+        return { agentTeamAssignments: next }
+      }),
+
+    // Org Docs
+    departmentDocs: {},
+    teamDocs: {},
+    selectedDocFile: null,
+    docContent: null,
+    docFileLinks: null,
+    setDepartmentDocs: (departmentId, docs) =>
+      set((state) => ({ departmentDocs: { ...state.departmentDocs, [departmentId]: docs } })),
+    setTeamDocs: (teamId, docs) =>
+      set((state) => ({ teamDocs: { ...state.teamDocs, [teamId]: docs } })),
+    setSelectedDocFile: (path) => set({ selectedDocFile: path }),
+    setDocContent: (content) => set({ docContent: content }),
+    setDocFileLinks: (links) => set({ docFileLinks: links }),
   }))
 )
