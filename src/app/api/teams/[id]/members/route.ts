@@ -8,6 +8,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params
   const teamId = Number(id)
+  if (!Number.isInteger(teamId) || teamId <= 0) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+  }
   const { agentTeamAssignments, orgAgents } = getOrgData()
 
   const members = agentTeamAssignments
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return {
         ...a,
         agent_name: agent?.name,
-        agent_role: agent?.role,
+        agent_title: agent?.role,
       }
     })
 

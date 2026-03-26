@@ -147,6 +147,7 @@ function scanZTechAgents(): ScanResult {
       id: deptId,
       name: formatName(deptDirName),
       color,
+      dir_name: deptDirName,
       created_at: now,
       updated_at: now,
     })
@@ -177,6 +178,7 @@ function scanZTechAgents(): ScanResult {
         name: formatName(teamDirName),
         department_id: deptId,
         color,
+        dir_name: teamDirName,
         created_at: now,
         updated_at: now,
       })

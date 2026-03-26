@@ -7,7 +7,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const { id } = await params
-  return NextResponse.json({ team: getOrgData().teams.find(t => t.id === Number(id)) ?? null })
+  const teamId = Number(id)
+  if (!Number.isInteger(teamId) || teamId <= 0) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+  }
+  return NextResponse.json({ team: getOrgData().teams.find(t => t.id === teamId) ?? null })
 }
 
 export async function PUT(request: NextRequest, { params: _params }: { params: Promise<{ id: string }> }) {

@@ -81,6 +81,7 @@ export interface Department {
   description?: string
   manager_agent_id?: number
   color?: string
+  dir_name?: string
   created_at: number
   updated_at: number
 }
@@ -92,6 +93,7 @@ export interface Team {
   department_id: number
   lead_agent_id?: number
   color?: string
+  dir_name?: string
   created_at: number
   updated_at: number
 }

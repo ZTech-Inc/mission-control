@@ -8,14 +8,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params
   const deptId = Number(id)
-  const { departments, orgAgents } = getOrgData()
+  if (!Number.isInteger(deptId) || deptId <= 0) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+  }
+  const { departments } = getOrgData()
   const dept = departments.find(d => d.id === deptId)
-  if (!dept) return NextResponse.json({ docs: [] })
+  if (!dept || !dept.dir_name) return NextResponse.json({ docs: [] })
 
-  // Derive the original directory name from an agent's dir_path (first path segment)
-  const agentInDept = orgAgents.find(a => a.department_id === deptId)
-  const deptDirName = agentInDept ? agentInDept.dir_path.split('/')[0] : null
-  if (!deptDirName) return NextResponse.json({ docs: [] })
+  const deptDirName = dept.dir_name
+  if (deptDirName.includes('/') || deptDirName.includes('..') || deptDirName.startsWith('.')) {
+    return NextResponse.json({ docs: [] })
+  }
 
   const docs = buildDocTree(deptDirName)
   return NextResponse.json({ docs })

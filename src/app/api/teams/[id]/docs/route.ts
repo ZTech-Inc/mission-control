@@ -8,18 +8,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params
   const teamId = Number(id)
-  const { teams, orgAgents } = getOrgData()
+  if (!Number.isInteger(teamId) || teamId <= 0) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+  }
+  const { teams, departments } = getOrgData()
   const team = teams.find(t => t.id === teamId)
-  if (!team) return NextResponse.json({ docs: [] })
+  if (!team || !team.dir_name) return NextResponse.json({ docs: [] })
 
-  // Derive dir names from an agent's dir_path (format: deptDirName/teamDirName/agentDirName)
-  const agentInTeam = orgAgents.find(a => a.team_id === teamId)
-  if (!agentInTeam) return NextResponse.json({ docs: [] })
+  const dept = departments.find(d => d.id === team.department_id)
+  if (!dept || !dept.dir_name) return NextResponse.json({ docs: [] })
 
-  const parts = agentInTeam.dir_path.split('/')
-  const deptDirName = parts[0]
-  const teamDirName = parts[1]
-  if (!deptDirName || !teamDirName) return NextResponse.json({ docs: [] })
+  const deptDirName = dept.dir_name
+  const teamDirName = team.dir_name
+  if (deptDirName.includes('/') || deptDirName.includes('..') || deptDirName.startsWith('.')) {
+    return NextResponse.json({ docs: [] })
+  }
+  if (teamDirName.includes('/') || teamDirName.includes('..') || teamDirName.startsWith('.')) {
+    return NextResponse.json({ docs: [] })
+  }
 
   const docs = buildDocTree(deptDirName, teamDirName)
   return NextResponse.json({ docs })
