@@ -2,7 +2,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { GraphCanvas, type GraphCanvasRef, type Theme, type GraphNode as ReagraphNode, type GraphEdge as ReagraphEdge } from 'reagraph'
 import type { DocFile } from '@/store'
-import { MOCK_DEPARTMENT_DOCS, MOCK_TEAM_DOCS, MOCK_DOC_CONTENT } from '@/lib/mock-org-data'
 
 interface OrgDocsPanelProps {
   entityType: 'department' | 'team'
@@ -125,32 +124,44 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const graphRef = useRef<GraphCanvasRef | null>(null)
 
-  function loadContent(path: string) {
-    setSelectedPath(path)
-    const filename = path.split('/').pop() ?? ''
-    const mockContent = MOCK_DOC_CONTENT[filename]
-    if (mockContent) {
-      setContent(mockContent)
-      setWikiLinks(parseWikiLinks(mockContent))
-    } else {
-      setContent('# Not found\n\nDocument not found.')
+  async function loadContent(docPath: string) {
+    setSelectedPath(docPath)
+    const url = entityType === 'department'
+      ? `/api/departments/${entityId}/docs/content?path=${encodeURIComponent(docPath)}`
+      : `/api/teams/${entityId}/docs/content?path=${encodeURIComponent(docPath)}`
+    try {
+      const res = await fetch(url)
+      if (!res.ok) { setContent('# Not found\n'); setWikiLinks([]); return }
+      const { content: c } = await res.json()
+      setContent(c ?? '')
+      setWikiLinks(parseWikiLinks(c ?? ''))
+    } catch {
+      setContent('# Not found\n')
       setWikiLinks([])
     }
   }
 
   useEffect(() => {
-    const mockDocs =
-      entityType === 'department'
-        ? MOCK_DEPARTMENT_DOCS[entityId] ?? []
-        : MOCK_TEAM_DOCS[entityId] ?? []
-    setDocs(mockDocs)
-    setSelectedPath(null)
-    setContent(null)
-    setWikiLinks([])
-    const firstFile = mockDocs.find(d => d.type === 'file')
-    if (firstFile) {
-      loadContent(firstFile.path)
+    async function loadDocs() {
+      const url = entityType === 'department'
+        ? `/api/departments/${entityId}/docs`
+        : `/api/teams/${entityId}/docs`
+      try {
+        const res = await fetch(url)
+        if (!res.ok) { setDocs([]); return }
+        const { docs } = await res.json()
+        setDocs(docs ?? [])
+        setSelectedPath(null)
+        setContent(null)
+        setWikiLinks([])
+        const firstFile = (docs ?? []).find((d: DocFile) => d.type === 'file')
+        if (firstFile) loadContent(firstFile.path)
+      } catch {
+        setDocs([])
+      }
     }
+    loadDocs()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityType, entityId])
 
   function handleWikiLinkClick(target: string) {
@@ -189,24 +200,22 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
     }))
 
     const edges: ReagraphEdge[] = []
-    flatFiles.forEach(doc => {
-      const filename = doc.path.split('/').pop() ?? ''
-      const docContent = MOCK_DOC_CONTENT[filename] ?? ''
-      const links = parseWikiLinks(docContent)
+    if (selectedPath && content) {
+      const links = parseWikiLinks(content)
       links.forEach(link => {
         const target = docs.find(d => d.name === link + '.md' || d.name === link)
         if (target) {
           edges.push({
-            id: `${doc.path}->${target.path}`,
-            source: doc.path,
+            id: `${selectedPath}->${target.path}`,
+            source: selectedPath,
             target: target.path,
           })
         }
       })
-    })
+    }
 
     return { graphNodes: nodes, graphEdges: edges }
-  }, [docs, selectedPath])
+  }, [docs, selectedPath, content])
 
   const filteredDocs = useMemo(() => {
     if (!searchQuery) return docs

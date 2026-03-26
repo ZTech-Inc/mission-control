@@ -6,7 +6,6 @@ import { useMissionControl } from '@/store'
 import type { Department, Team, Agent } from '@/store'
 import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
-import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
 
 // --- Department Detail ---
@@ -396,10 +395,26 @@ export function DepartmentsPanel() {
   const [showCreateForm, setShowCreateForm] = useState(false)
 
   useEffect(() => {
-    if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
-    if (teams.length === 0) setTeams(MOCK_TEAMS)
-    if (agentTeamAssignments.length === 0) setAgentTeamAssignments(MOCK_AGENT_ASSIGNMENTS)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    async function loadOrg() {
+      const [deptRes, teamRes, assignRes] = await Promise.all([
+        fetch('/api/departments'),
+        fetch('/api/teams'),
+        fetch('/api/org/assignments'),
+      ])
+      if (deptRes.ok) {
+        const { departments: d } = await deptRes.json()
+        setDepartments(d)
+      }
+      if (teamRes.ok) {
+        const { teams: t } = await teamRes.json()
+        setTeams(t)
+      }
+      if (assignRes.ok) {
+        const { assignments: a } = await assignRes.json()
+        setAgentTeamAssignments(a)
+      }
+    }
+    loadOrg()
   }, [])
 
   // Auto-select first department
