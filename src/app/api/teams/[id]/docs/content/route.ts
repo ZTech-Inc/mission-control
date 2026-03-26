@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { MOCK_DOC_CONTENT } from '@/lib/mock-org-data'
+import { readDocContent } from '@/lib/ztech-scanner'
 
 export async function GET(request: NextRequest, { params: _params }: { params: Promise<{ id: string }> }) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const { searchParams } = new URL(request.url)
-  const fileName = searchParams.get('path')?.split('/').pop() ?? ''
-  const content = MOCK_DOC_CONTENT[fileName] ?? '# Not found\n'
+  const filePath = searchParams.get('path') ?? ''
+  const content = filePath ? readDocContent(filePath) : '# Not found\n'
 
   return NextResponse.json({
-    content,
+    content: content || '# Not found\n',
     links: { wikiLinks: [], incoming: [], outgoing: [] },
   })
 }

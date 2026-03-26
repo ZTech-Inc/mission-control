@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { MOCK_DEPARTMENTS } from '@/lib/mock-org-data'
+import { getOrgData } from '@/lib/ztech-scanner'
 
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  return NextResponse.json({ departments: MOCK_DEPARTMENTS })
+  return NextResponse.json({ departments: getOrgData().departments })
 }
 
 export async function POST(request: NextRequest) {
