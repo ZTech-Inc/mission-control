@@ -396,22 +396,17 @@ export function DepartmentsPanel() {
 
   useEffect(() => {
     async function loadOrg() {
-      const [deptRes, teamRes, assignRes] = await Promise.all([
-        fetch('/api/departments'),
-        fetch('/api/teams'),
-        fetch('/api/org/assignments'),
-      ])
-      if (deptRes.ok) {
-        const { departments: d } = await deptRes.json()
-        setDepartments(d)
-      }
-      if (teamRes.ok) {
-        const { teams: t } = await teamRes.json()
-        setTeams(t)
-      }
-      if (assignRes.ok) {
-        const { assignments: a } = await assignRes.json()
-        setAgentTeamAssignments(a)
+      try {
+        const [deptRes, teamRes, assignRes] = await Promise.all([
+          fetch('/api/departments'),
+          fetch('/api/teams'),
+          fetch('/api/org/assignments'),
+        ])
+        if (deptRes.ok) { const { departments: d } = await deptRes.json(); setDepartments(d) }
+        if (teamRes.ok) { const { teams: t } = await teamRes.json(); setTeams(t) }
+        if (assignRes.ok) { const { assignments: a } = await assignRes.json(); setAgentTeamAssignments(a) }
+      } catch {
+        // Network error — keep existing store state
       }
     }
     loadOrg()

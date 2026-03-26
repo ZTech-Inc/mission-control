@@ -30,6 +30,12 @@ const obsidianTheme: Theme = {
   lasso: { background: 'rgba(203, 166, 247, 0.08)', border: 'rgba(203, 166, 247, 0.25)' }
 }
 
+function flattenDocs(items: DocFile[]): DocFile[] {
+  return items.flatMap(item =>
+    item.type === 'file' ? [item] : flattenDocs(item.children ?? [])
+  )
+}
+
 function parseWikiLinks(content: string): string[] {
   const matches = content.match(/\[\[([^\]]+)\]\]/g) ?? []
   return matches.map(m => m.slice(2, -2))
@@ -123,46 +129,70 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
   const [editContent, setEditContent] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const graphRef = useRef<GraphCanvasRef | null>(null)
+  const loadContentAbortRef = useRef<AbortController | null>(null)
 
   async function loadContent(docPath: string) {
+    // Cancel any in-flight request
+    loadContentAbortRef.current?.abort()
+    const controller = new AbortController()
+    loadContentAbortRef.current = controller
+
     setSelectedPath(docPath)
     const url = entityType === 'department'
       ? `/api/departments/${entityId}/docs/content?path=${encodeURIComponent(docPath)}`
       : `/api/teams/${entityId}/docs/content?path=${encodeURIComponent(docPath)}`
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: controller.signal })
       if (!res.ok) { setContent('# Not found\n'); setWikiLinks([]); return }
       const { content: c } = await res.json()
       setContent(c ?? '')
       setWikiLinks(parseWikiLinks(c ?? ''))
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return // cancelled, ignore
       setContent('# Not found\n')
       setWikiLinks([])
     }
   }
 
   useEffect(() => {
+    let cancelled = false
+
     async function loadDocs() {
       const url = entityType === 'department'
         ? `/api/departments/${entityId}/docs`
         : `/api/teams/${entityId}/docs`
       try {
         const res = await fetch(url)
+        if (cancelled) return
         if (!res.ok) { setDocs([]); return }
-        const { docs } = await res.json()
-        setDocs(docs ?? [])
+        const { docs: d } = await res.json()
+        if (cancelled) return
+        setDocs(d ?? [])
         setSelectedPath(null)
         setContent(null)
         setWikiLinks([])
-        const firstFile = (docs ?? []).find((d: DocFile) => d.type === 'file')
-        if (firstFile) loadContent(firstFile.path)
+        // Auto-select first file — inline the fetch to avoid stale closure
+        const firstFile = (d ?? []).find((f: DocFile) => f.type === 'file')
+        if (!firstFile) return
+        setSelectedPath(firstFile.path)
+        const contentUrl = entityType === 'department'
+          ? `/api/departments/${entityId}/docs/content?path=${encodeURIComponent(firstFile.path)}`
+          : `/api/teams/${entityId}/docs/content?path=${encodeURIComponent(firstFile.path)}`
+        const contentRes = await fetch(contentUrl)
+        if (cancelled) return
+        if (contentRes.ok) {
+          const { content: c } = await contentRes.json()
+          setContent(c ?? '')
+          setWikiLinks(parseWikiLinks(c ?? ''))
+        }
       } catch {
-        setDocs([])
+        if (!cancelled) setDocs([])
       }
     }
+
     loadDocs()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityType, entityId])
+    return () => { cancelled = true }
+  }, [entityType, entityId]) // no eslint-disable needed now
 
   function handleWikiLinkClick(target: string) {
     const found = docs.find(d => d.name === target + '.md' || d.name === target)
@@ -191,7 +221,7 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
   }
 
   const { graphNodes, graphEdges } = useMemo(() => {
-    const flatFiles = docs.filter(d => d.type === 'file')
+    const flatFiles = flattenDocs(docs).filter(d => d.type === 'file')
     const nodes: ReagraphNode[] = flatFiles.map(d => ({
       id: d.path,
       label: d.name,
