@@ -1,24 +1,9 @@
 import 'server-only'
 import fs from 'fs'
 import path from 'path'
-import type { Department, Team, AgentTeamAssignment, DocFile } from '@/store/index'
+import type { Department, Team, AgentTeamAssignment, DocFile, OrgAgent } from '@/store/index'
 
 // ─── Public Types ────────────────────────────────────────────────────────────
-
-export interface OrgAgent {
-  id: number
-  name: string
-  role: string
-  department_id: number
-  team_id: number
-  dir_path: string
-  skills: string[]
-  deliverables: string[]
-  kpi?: string
-  status: 'idle'
-  created_at: number
-  updated_at: number
-}
 
 export interface ScanResult {
   departments: Department[]
@@ -336,6 +321,22 @@ export function buildDocTree(deptDirName: string, teamDirName?: string): DocFile
     return result
   }
 
+  // Validate deptDirName stays within resolvedRoot
+  const resolvedDept = path.resolve(resolvedRoot, deptDirName)
+  if (!resolvedDept.startsWith(resolvedRoot + path.sep)) {
+    console.warn(`[ztech-scanner] buildDocTree: path traversal attempt blocked for dept: ${deptDirName}`)
+    return []
+  }
+
+  // Validate teamDirName stays within resolvedRoot
+  if (teamDirName !== undefined) {
+    const resolvedTeam = path.resolve(resolvedDept, teamDirName)
+    if (!resolvedTeam.startsWith(resolvedRoot + path.sep)) {
+      console.warn(`[ztech-scanner] buildDocTree: path traversal attempt blocked for team: ${teamDirName}`)
+      return []
+    }
+  }
+
   try {
     if (teamDirName) {
       const teamAbs = path.join(resolvedRoot, deptDirName, teamDirName)
@@ -378,6 +379,13 @@ export function readDocContent(relativePath: string): string {
     // Path traversal protection
     if (!resolvedFile.startsWith(resolvedRoot + path.sep) && resolvedFile !== resolvedRoot) {
       console.warn(`[ztech-scanner] readDocContent: path traversal attempt blocked: ${relativePath}`)
+      return ''
+    }
+
+    // Symlink traversal protection — lstat does not follow symlinks
+    const lstat = fs.lstatSync(resolvedFile)
+    if (lstat.isSymbolicLink()) {
+      console.warn(`[ztech-scanner] readDocContent: symlink traversal attempt blocked: ${relativePath}`)
       return ''
     }
 
