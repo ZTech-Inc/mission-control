@@ -103,6 +103,21 @@ export interface AgentTeamAssignment {
   assigned_at: number
 }
 
+export interface OrgAgent {
+  id: number
+  name: string
+  role: string
+  department_id: number
+  team_id: number
+  dir_path: string
+  skills: string[]
+  deliverables: string[]
+  kpi?: string
+  status: 'idle'
+  created_at: number
+  updated_at: number
+}
+
 export interface DocFile {
   path: string
   name: string
@@ -655,6 +670,10 @@ interface MissionControlStore {
   setAgentTeamAssignments: (assignments: AgentTeamAssignment[]) => void
   assignAgentToTeam: (agentId: number, teamId: number, role: 'member' | 'lead') => void
   removeAgentFromTeam: (agentId: number, teamId: number) => void
+
+  // Org Agents (from ZTech scanner)
+  orgAgents: OrgAgent[]
+  setOrgAgents: (agents: OrgAgent[]) => void
 
   // Org Docs
   departmentDocs: Record<number, DocFile[]>
@@ -1338,6 +1357,10 @@ export const useMissionControl = create<MissionControlStore>()(
         try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(next)) } catch {}
         return { agentTeamAssignments: next }
       }),
+
+    // Org Agents (from ZTech scanner)
+    orgAgents: [],
+    setOrgAgents: (agents) => set({ orgAgents: agents }),
 
     // Org Docs
     departmentDocs: {},
