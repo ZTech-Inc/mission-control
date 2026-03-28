@@ -1,9 +1,14 @@
 {
   "name": "mission-control",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "OpenClaw Mission Control — open-source agent orchestration dashboard",
   "scripts": {
     "verify:node": "node scripts/check-node-version.mjs",
+    "api:parity": "node scripts/check-api-contract-parity.mjs --root . --openapi openapi.json --ignore-file scripts/api-contract-parity.ignore",
+    "api:parity:json": "node scripts/check-api-contract-parity.mjs --root . --openapi openapi.json --ignore-file scripts/api-contract-parity.ignore --json",
+    "mc": "node scripts/mc-cli.cjs",
+    "mc:mcp": "node scripts/mc-mcp-server.cjs",
+    "mc:tui": "node scripts/mc-tui.cjs",
     "dev": "pnpm run verify:node && next dev --hostname 127.0.0.1 --port ${PORT:-3000}",
     "build": "pnpm run verify:node && next build",
     "start": "pnpm run verify:node && next start --hostname 0.0.0.0 --port ${PORT:-3000}",
@@ -19,7 +24,8 @@
     "test:e2e:openclaw:gateway": "pnpm run verify:node && E2E_GATEWAY_EXPECTED=1 playwright test -c playwright.openclaw.gateway.config.ts",
     "test:e2e:openclaw": "pnpm test:e2e:openclaw:local && pnpm test:e2e:openclaw:gateway",
     "test:all": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e",
-    "quality:gate": "pnpm test:all"
+    "quality:gate": "pnpm test:all",
+    "postinstall": "node -e \"try{require('better-sqlite3')}catch(e){if(e.code==='ERR_DLOPEN_FAILED'||/NODE_MODULE_VERSION/.test(e.message)){console.error('\\n⚠  better-sqlite3 compiled for wrong Node version. Run: pnpm rebuild better-sqlite3\\n');process.exit(1)}}\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

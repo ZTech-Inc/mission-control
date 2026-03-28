@@ -23,7 +23,7 @@ RUN pnpm build
 FROM node:22.22.0-slim AS runtime
 
 ARG MC_VERSION=dev
-LABEL org.opencontainers.image.source="https://github.com/openclaw/mission-control"
+LABEL org.opencontainers.image.source="https://github.com/builderz-labs/mission-control"
 LABEL org.opencontainers.image.description="Mission Control - operations dashboard"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.version="${MC_VERSION}"
@@ -40,7 +40,8 @@ COPY --from=build /app/src/lib/schema.sql ./src/lib/schema.sql
 RUN mkdir -p .data && chown nextjs:nodejs .data
 RUN echo 'const http=require("http");const r=http.get("http://localhost:"+(process.env.PORT||3000)+"/api/status?action=health",s=>{process.exit(s.statusCode===200?0:1)});r.on("error",()=>process.exit(1));r.setTimeout(4000,()=>{r.destroy();process.exit(1)})' > /app/healthcheck.js
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+RUN chmod 755 /app/docker-entrypoint.sh && \
+    chmod -R a+rX /app/public/ /app/src/
 USER nextjs
 ENV PORT=3000
 EXPOSE 3000

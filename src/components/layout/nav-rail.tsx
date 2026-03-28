@@ -49,6 +49,7 @@ const navGroups: NavGroup[] = [
       { id: 'nodes', label: 'Nodes', icon: <NodesIcon />, priority: false },
       { id: 'exec-approvals', label: 'Approvals', icon: <ApprovalsIcon />, priority: false },
       { id: 'office', label: 'Office', icon: <OfficeIcon />, priority: false },
+      { id: 'monitor', label: 'Monitor', icon: <MonitorIcon />, priority: false },
     ],
   },
   {
@@ -1526,6 +1527,12 @@ function TeamsIcon() {
       <line x1="8" y1="6" x2="3" y2="9" />
       <line x1="8" y1="6" x2="13" y2="9" />
       <line x1="5" y1="11" x2="11" y2="11" />
+function MonitorIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="2" width="14" height="10" rx="1.5" />
+      <polyline points="4,9 6,6 8,8 12,4" />
+      <path d="M5 14h6" />
     </svg>
   )
 }
