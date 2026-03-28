@@ -1527,6 +1527,10 @@ function TeamsIcon() {
       <line x1="8" y1="6" x2="3" y2="9" />
       <line x1="8" y1="6" x2="13" y2="9" />
       <line x1="5" y1="11" x2="11" y2="11" />
+    </svg>
+  )
+}
+
 function MonitorIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
