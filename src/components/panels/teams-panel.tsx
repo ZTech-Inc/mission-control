@@ -6,7 +6,7 @@ import { useMissionControl } from '@/store'
 import type { Agent, Team } from '@/store'
 import { AgentMultiSelect } from '@/components/ui/agent-multi-select'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
-import { MOCK_AGENT_ASSIGNMENTS, MOCK_DEPARTMENTS, MOCK_TEAMS } from '@/lib/mock-org-data'
+import { useOrgData } from '@/lib/use-org-data'
 import { DraggableCard, DroppableZone, StatusDot } from '@/components/ui/dnd-org-helpers'
 
 type TeamView = 'overview' | 'members' | 'docs'
@@ -14,9 +14,10 @@ type TeamView = 'overview' | 'members' | 'docs'
 interface TeamDetailProps {
   team: Team
   view: TeamView
+  isReadOnly: boolean
 }
 
-function TeamDetail({ team, view }: TeamDetailProps) {
+function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   const [showAddMember, setShowAddMember] = useState(false)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
 
@@ -40,11 +41,13 @@ function TeamDetail({ team, view }: TeamDetailProps) {
   const busyCount = members.filter(({ agent }) => agent.status === 'busy').length
 
   function handleAddMembers(agentIds: number[]) {
+    if (isReadOnly) return
     agentIds.forEach((agentId) => assignAgentToTeam(agentId, team.id, 'member'))
     setShowAddMember(false)
   }
 
   function handleSetLead(agentId: number) {
+    if (isReadOnly) return
     const existingLead = teamAssignments.find((assignment) => assignment.role === 'lead')
     if (existingLead && existingLead.agent_id !== agentId) {
       assignAgentToTeam(existingLead.agent_id, team.id, 'member')
@@ -53,6 +56,7 @@ function TeamDetail({ team, view }: TeamDetailProps) {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    if (isReadOnly) return
     const { active, over } = event
     if (!over) return
     const agentId = Number.parseInt(String(active.id).replace('member-', ''), 10)
@@ -285,7 +289,10 @@ function TeamDetail({ team, view }: TeamDetailProps) {
                                   </button>
                                 )}
                                 <button
-                                  onClick={() => removeAgentFromTeam(agent.id, team.id)}
+                                  onClick={() => {
+                                    if (isReadOnly) return
+                                    removeAgentFromTeam(agent.id, team.id)
+                                  }}
                                   onPointerDown={(event) => event.stopPropagation()}
                                   className="px-2 py-1 rounded text-[11px] font-mono text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                   title="Remove from team"
@@ -321,12 +328,10 @@ function TeamDetail({ team, view }: TeamDetailProps) {
 }
 
 export function TeamsPanel() {
+  const { isReadOnly } = useOrgData()
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
-  const setDepartments = useMissionControl((s) => s.setDepartments)
-  const setTeams = useMissionControl((s) => s.setTeams)
-  const setAgentTeamAssignments = useMissionControl((s) => s.setAgentTeamAssignments)
 
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -334,12 +339,6 @@ export function TeamsPanel() {
   const [teamSearch, setTeamSearch] = useState('')
   const [activeView, setActiveView] = useState<TeamView>('overview')
   const [showNewTeamHint, setShowNewTeamHint] = useState(false)
-
-  useEffect(() => {
-    if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
-    if (teams.length === 0) setTeams(MOCK_TEAMS)
-    if (agentTeamAssignments.length === 0) setAgentTeamAssignments(MOCK_AGENT_ASSIGNMENTS)
-  }, [agentTeamAssignments.length, departments.length, setAgentTeamAssignments, setDepartments, setTeams, teams.length])
 
   const filteredTeams = useMemo(() => {
     const query = teamSearch.trim().toLowerCase()
@@ -405,6 +404,7 @@ export function TeamsPanel() {
         <div className="w-px h-4 bg-border mx-1" />
         <button
           onClick={() => {
+            if (isReadOnly) return
             setShowNewTeamHint(true)
             setSelectedTeamId(null)
           }}
@@ -512,7 +512,7 @@ export function TeamsPanel() {
           ) : null}
 
           {selectedTeam ? (
-            <TeamDetail key={`${selectedTeam.id}-${activeView}`} team={selectedTeam} view={activeView} />
+            <TeamDetail key={`${selectedTeam.id}-${activeView}`} team={selectedTeam} view={activeView} isReadOnly={isReadOnly} />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">

@@ -34,6 +34,48 @@ CREATE TABLE IF NOT EXISTS agents (
     config TEXT -- JSON for agent-specific configuration
 );
 
+-- Org structure tables - persisted mirror of filesystem scanner state
+CREATE TABLE IF NOT EXISTS departments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workspace_id INTEGER NOT NULL DEFAULT 1,
+    external_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT,
+    source TEXT NOT NULL DEFAULT 'manual',
+    source_path TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE(workspace_id, external_id)
+);
+
+CREATE TABLE IF NOT EXISTS teams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workspace_id INTEGER NOT NULL DEFAULT 1,
+    external_id INTEGER NOT NULL,
+    department_external_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT,
+    source TEXT NOT NULL DEFAULT 'manual',
+    source_path TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE(workspace_id, external_id)
+);
+
+CREATE TABLE IF NOT EXISTS agent_team_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workspace_id INTEGER NOT NULL DEFAULT 1,
+    agent_id INTEGER NOT NULL,
+    team_external_id INTEGER NOT NULL,
+    role TEXT NOT NULL DEFAULT 'member',
+    assigned_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    source TEXT NOT NULL DEFAULT 'manual',
+    FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+    UNIQUE(workspace_id, agent_id, team_external_id)
+);
+
 -- Comments Table - Task discussion threads
 CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -124,6 +166,14 @@ CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipien
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
 CREATE INDEX IF NOT EXISTS idx_agents_session_key ON agents(session_key);
 CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
+CREATE INDEX IF NOT EXISTS idx_departments_workspace_id ON departments(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_departments_source ON departments(source);
+CREATE INDEX IF NOT EXISTS idx_teams_workspace_id ON teams(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_teams_department_external_id ON teams(workspace_id, department_external_id);
+CREATE INDEX IF NOT EXISTS idx_teams_source ON teams(source);
+CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_workspace_id ON agent_team_assignments(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_agent_id ON agent_team_assignments(agent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_team_external_id ON agent_team_assignments(workspace_id, team_external_id);
 CREATE INDEX IF NOT EXISTS idx_task_subscriptions_task_id ON task_subscriptions(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_subscriptions_agent_name ON task_subscriptions(agent_name);
 CREATE INDEX IF NOT EXISTS idx_standup_reports_created_at ON standup_reports(created_at);

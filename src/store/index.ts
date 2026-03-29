@@ -1225,22 +1225,12 @@ export const useMissionControl = create<MissionControlStore>()(
     setCurrentStandupReport: (report) => set({ currentStandupReport: report }),
 
     // Departments
-    departments: (() => {
-      if (typeof window === 'undefined') return []
-      try {
-        const raw = localStorage.getItem('mc-departments')
-        return raw ? JSON.parse(raw) as Department[] : []
-      } catch { return [] }
-    })(),
+    departments: [],
     selectedDepartment: null,
-    setDepartments: (departments) => {
-      try { localStorage.setItem('mc-departments', JSON.stringify(departments)) } catch {}
-      set({ departments })
-    },
+    setDepartments: (departments) => set({ departments }),
     addDepartment: (department) =>
       set((state) => {
         const next = [...state.departments, department]
-        try { localStorage.setItem('mc-departments', JSON.stringify(next)) } catch {}
         return { departments: next }
       }),
     updateDepartment: (departmentId, updates) =>
@@ -1248,7 +1238,6 @@ export const useMissionControl = create<MissionControlStore>()(
         const next = state.departments.map((d) =>
           d.id === departmentId ? { ...d, ...updates } : d
         )
-        try { localStorage.setItem('mc-departments', JSON.stringify(next)) } catch {}
         return {
           departments: next,
           selectedDepartment: state.selectedDepartment?.id === departmentId
@@ -1259,7 +1248,6 @@ export const useMissionControl = create<MissionControlStore>()(
     deleteDepartment: (departmentId) =>
       set((state) => {
         const next = state.departments.filter((d) => d.id !== departmentId)
-        try { localStorage.setItem('mc-departments', JSON.stringify(next)) } catch {}
         return {
           departments: next,
           selectedDepartment: state.selectedDepartment?.id === departmentId ? null : state.selectedDepartment,
@@ -1268,22 +1256,12 @@ export const useMissionControl = create<MissionControlStore>()(
     setSelectedDepartment: (department) => set({ selectedDepartment: department }),
 
     // Teams
-    teams: (() => {
-      if (typeof window === 'undefined') return []
-      try {
-        const raw = localStorage.getItem('mc-teams')
-        return raw ? JSON.parse(raw) as Team[] : []
-      } catch { return [] }
-    })(),
+    teams: [],
     selectedTeam: null,
-    setTeams: (teams) => {
-      try { localStorage.setItem('mc-teams', JSON.stringify(teams)) } catch {}
-      set({ teams })
-    },
+    setTeams: (teams) => set({ teams }),
     addTeam: (team) =>
       set((state) => {
         const next = [...state.teams, team]
-        try { localStorage.setItem('mc-teams', JSON.stringify(next)) } catch {}
         return { teams: next }
       }),
     updateTeam: (teamId, updates) =>
@@ -1291,7 +1269,6 @@ export const useMissionControl = create<MissionControlStore>()(
         const next = state.teams.map((t) =>
           t.id === teamId ? { ...t, ...updates } : t
         )
-        try { localStorage.setItem('mc-teams', JSON.stringify(next)) } catch {}
         return {
           teams: next,
           selectedTeam: state.selectedTeam?.id === teamId
@@ -1302,7 +1279,6 @@ export const useMissionControl = create<MissionControlStore>()(
     deleteTeam: (teamId) =>
       set((state) => {
         const next = state.teams.filter((t) => t.id !== teamId)
-        try { localStorage.setItem('mc-teams', JSON.stringify(next)) } catch {}
         return {
           teams: next,
           selectedTeam: state.selectedTeam?.id === teamId ? null : state.selectedTeam,
@@ -1311,24 +1287,14 @@ export const useMissionControl = create<MissionControlStore>()(
     setSelectedTeam: (team) => set({ selectedTeam: team }),
 
     // Agent Team Assignments
-    agentTeamAssignments: (() => {
-      if (typeof window === 'undefined') return []
-      try {
-        const raw = localStorage.getItem('mc-agent-team-assignments')
-        return raw ? JSON.parse(raw) as AgentTeamAssignment[] : []
-      } catch { return [] }
-    })(),
-    setAgentTeamAssignments: (assignments) => {
-      try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(assignments)) } catch {}
-      set({ agentTeamAssignments: assignments })
-    },
+    agentTeamAssignments: [],
+    setAgentTeamAssignments: (assignments) => set({ agentTeamAssignments: assignments }),
     assignAgentToTeam: (agentId, teamId, role) =>
       set((state) => {
         const filtered = state.agentTeamAssignments.filter(
           (a) => !(a.agent_id === agentId && a.team_id === teamId)
         )
         const next = [...filtered, { agent_id: agentId, team_id: teamId, role, assigned_at: Math.floor(Date.now() / 1000) }]
-        try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(next)) } catch {}
         return { agentTeamAssignments: next }
       }),
     removeAgentFromTeam: (agentId, teamId) =>
@@ -1336,7 +1302,6 @@ export const useMissionControl = create<MissionControlStore>()(
         const next = state.agentTeamAssignments.filter(
           (a) => !(a.agent_id === agentId && a.team_id === teamId)
         )
-        try { localStorage.setItem('mc-agent-team-assignments', JSON.stringify(next)) } catch {}
         return { agentTeamAssignments: next }
       }),
 

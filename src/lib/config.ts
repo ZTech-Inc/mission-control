@@ -67,6 +67,10 @@ const resolvedGnapRepoPath =
   process.env.GNAP_REPO_PATH || path.join(configuredDataDir, '.gnap')
 
 export const config = {
+  agentsDir:
+    process.env.AGENTS_DIR ||
+    process.env.MISSION_CONTROL_AGENTS_DIR ||
+    '',
   claudeHome:
     process.env.MC_CLAUDE_HOME ||
     path.join(os.homedir(), '.claude'),

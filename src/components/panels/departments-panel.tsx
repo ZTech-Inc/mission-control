@@ -5,7 +5,7 @@ import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Department, Agent } from '@/store'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
-import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
+import { useOrgData } from '@/lib/use-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
 
 type DeptTab = 'overview' | 'teams' | 'agents' | 'docs'
@@ -13,6 +13,7 @@ type DepartmentFilter = 'all' | 'staffed' | 'empty'
 
 interface DepartmentDetailProps {
   dept: Department
+  isReadOnly: boolean
 }
 
 function extractAgentId(value: string | number): number {
@@ -66,7 +67,7 @@ function EmptyState({
   )
 }
 
-function DepartmentDetail({ dept }: DepartmentDetailProps) {
+function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   const [tab, setTab] = useState<DeptTab>('overview')
   const [showAddTeam, setShowAddTeam] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
@@ -99,6 +100,7 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
 
   function handleAddTeam(e: React.FormEvent) {
     e.preventDefault()
+    if (isReadOnly) return
     if (!newTeamName.trim()) return
     const now = Math.floor(Date.now() / 1000)
     const newId = Math.max(0, ...teams.map((team) => team.id)) + 1
@@ -118,6 +120,7 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    if (isReadOnly) return
     const { active, over } = event
     if (!over) return
     const agentId = extractAgentId(active.id)
@@ -571,13 +574,11 @@ function CreateDeptForm({ onSubmit, onCancel }: CreateDeptFormProps) {
 }
 
 export function DepartmentsPanel() {
+  const { isReadOnly } = useOrgData()
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agents = useMissionControl((s) => s.agents)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
-  const setDepartments = useMissionControl((s) => s.setDepartments)
-  const setTeams = useMissionControl((s) => s.setTeams)
-  const setAgentTeamAssignments = useMissionControl((s) => s.setAgentTeamAssignments)
   const addDepartment = useMissionControl((s) => s.addDepartment)
 
   const [selectedDept, setSelectedDept] = useState<Department | null>(null)
@@ -585,13 +586,6 @@ export function DepartmentsPanel() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [deptFilter, setDeptFilter] = useState<DepartmentFilter>('all')
-
-  useEffect(() => {
-    if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
-    if (teams.length === 0) setTeams(MOCK_TEAMS)
-    if (agentTeamAssignments.length === 0) setAgentTeamAssignments(MOCK_AGENT_ASSIGNMENTS)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     if (!selectedDept && departments.length > 0 && !showCreateForm) {
@@ -616,6 +610,7 @@ export function DepartmentsPanel() {
   const totalAssignedAgents = new Set(agentTeamAssignments.map((assignment) => assignment.agent_id)).size
 
   function handleCreate(name: string, color: string) {
+    if (isReadOnly) return
     const now = Math.floor(Date.now() / 1000)
     const newDepartment: Department = {
       id: Math.max(0, ...departments.map((department) => department.id)) + 1,
@@ -650,6 +645,7 @@ export function DepartmentsPanel() {
         <div className="w-px h-4 bg-border mx-1" />
         <button
           onClick={() => {
+            if (isReadOnly) return
             setShowCreateForm(true)
             setSelectedDept(null)
           }}
@@ -771,7 +767,7 @@ export function DepartmentsPanel() {
               <CreateDeptForm onSubmit={handleCreate} onCancel={() => setShowCreateForm(false)} />
             </>
           ) : selectedDept ? (
-            <DepartmentDetail dept={selectedDept} />
+            <DepartmentDetail dept={selectedDept} isReadOnly={isReadOnly} />
           ) : (
             <EmptyState
               title="Select a department"
