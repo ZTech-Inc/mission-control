@@ -20,12 +20,14 @@ interface TeamDetailProps {
 
 function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   const [showAddMember, setShowAddMember] = useState(false)
+  const [confirmingPromote, setConfirmingPromote] = useState<number | null>(null)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
 
   const departments = useMissionControl((s) => s.departments)
   const agents = useMissionControl((s) => s.agents)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
   const assignAgentToTeam = useMissionControl((s) => s.assignAgentToTeam)
+  const promoteToLead = useMissionControl((s) => s.promoteToLead)
   const removeAgentFromTeam = useMissionControl((s) => s.removeAgentFromTeam)
 
   const dept = departments.find((d) => d.id === team.department_id)
@@ -47,13 +49,8 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
     setShowAddMember(false)
   }
 
-  function handleSetLead(agentId: number) {
-    if (isReadOnly) return
-    const existingLead = teamAssignments.find((assignment) => assignment.role === 'lead')
-    if (existingLead && existingLead.agent_id !== agentId) {
-      assignAgentToTeam(existingLead.agent_id, team.id, 'member')
-    }
-    assignAgentToTeam(agentId, team.id, 'lead')
+  async function handleSetLead(agentId: number) {
+    await promoteToLead(agentId, team.id)
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -285,7 +282,14 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
                               <div className="flex items-center gap-3 p-3 bg-[hsl(var(--surface-0))] border border-border/50 rounded-md cursor-grab">
                                 <StatusDot status={agent.status} />
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm text-foreground truncate font-mono">{agent.name}</div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-sm text-foreground truncate font-mono">{agent.name}</div>
+                                    {role === 'lead' && (
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                                        lead
+                                      </span>
+                                    )}
+                                  </div>
                                   <div className="text-[11px] text-muted-foreground/55 truncate font-mono">
                                     {agent.role}
                                   </div>
@@ -300,14 +304,39 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
                                   {role}
                                 </span>
                                 {role !== 'lead' && (
-                                  <button
-                                    onClick={() => handleSetLead(agent.id)}
-                                    onPointerDown={(event) => event.stopPropagation()}
-                                    className="px-2 py-1 rounded text-[11px] font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
-                                    title="Set as lead"
-                                  >
-                                    promote
-                                  </button>
+                                  confirmingPromote === agent.id ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[11px] font-mono text-amber-500/80">
+                                        promote to lead?
+                                      </span>
+                                      <button
+                                        onClick={async () => {
+                                          await handleSetLead(agent.id)
+                                          setConfirmingPromote(null)
+                                        }}
+                                        onPointerDown={(event) => event.stopPropagation()}
+                                        className="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                      >
+                                        yes
+                                      </button>
+                                      <button
+                                        onClick={() => setConfirmingPromote(null)}
+                                        onPointerDown={(event) => event.stopPropagation()}
+                                        className="px-2 py-0.5 rounded text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors"
+                                      >
+                                        no
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setConfirmingPromote(agent.id)}
+                                      onPointerDown={(event) => event.stopPropagation()}
+                                      className="px-2 py-1 rounded text-[11px] font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+                                      title="Set as lead"
+                                    >
+                                      promote
+                                    </button>
+                                  )
                                 )}
                                 <button
                                   onClick={() => {

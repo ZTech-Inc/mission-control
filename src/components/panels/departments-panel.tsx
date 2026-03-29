@@ -80,6 +80,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
   const addTeam = useMissionControl((s) => s.addTeam)
   const assignAgentToTeam = useMissionControl((s) => s.assignAgentToTeam)
+  const setDepartmentLead = useMissionControl((s) => s.setDepartmentLead)
 
   const deptTeams = useMemo(
     () => teams.filter((team) => team.department_id === dept.id),
@@ -194,6 +195,30 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
               <OverviewMetric label="teams" value={deptTeams.length} tone="accent" />
               <OverviewMetric label="agents" value={deptAgentCount} />
               <OverviewMetric label="team leads" value={leadCount} />
+            </div>
+
+            <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
+              <div className="mb-2">
+                <h3 className="text-sm font-semibold font-mono text-foreground">Department Lead</h3>
+                <p className="text-[11px] font-mono text-muted-foreground/50">
+                  Agent who receives messages in the department chat tab.
+                </p>
+              </div>
+              <select
+                value={dept.manager_agent_id?.toString() ?? ''}
+                onChange={async (event) => {
+                  const value = event.target.value
+                  await setDepartmentLead(dept.id, value ? Number(value) : null)
+                }}
+                className="w-full max-w-xs px-3 py-1.5 rounded border border-border/50 bg-[hsl(var(--surface-0))] text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+              >
+                <option value="">Unassigned</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
