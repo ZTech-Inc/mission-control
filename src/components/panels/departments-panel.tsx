@@ -1,24 +1,72 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
-import type { Department, Team, Agent } from '@/store'
-import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
+import type { Department, Agent } from '@/store'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
+import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
-import { useOrgData } from '@/lib/use-org-data'
-
-// --- Department Detail ---
 
 type DeptTab = 'overview' | 'teams' | 'agents' | 'docs'
+type DepartmentFilter = 'all' | 'staffed' | 'empty'
 
 interface DepartmentDetailProps {
   dept: Department
-  readOnly: boolean
 }
 
-function DepartmentDetail({ dept, readOnly }: DepartmentDetailProps) {
+function extractAgentId(value: string | number): number {
+  const match = String(value).match(/(\d+)$/)
+  return match ? Number(match[1]) : NaN
+}
+
+function formatShortDate(timestamp?: number): string {
+  if (!timestamp) return 'n/a'
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  }).format(timestamp * 1000)
+}
+
+function OverviewMetric({
+  label,
+  value,
+  tone = 'default',
+}: {
+  label: string
+  value: string | number
+  tone?: 'default' | 'accent'
+}) {
+  return (
+    <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
+      <div className={`text-xl font-mono tabular-nums ${tone === 'accent' ? 'text-primary' : 'text-foreground'}`}>
+        {value}
+      </div>
+      <div className="mt-1 text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground/50">
+        {label}
+      </div>
+    </div>
+  )
+}
+
+function EmptyState({
+  title,
+  subtitle,
+}: {
+  title: string
+  subtitle: string
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30">
+      <span className="text-4xl font-mono mb-3">/</span>
+      <span className="text-sm font-mono">{title}</span>
+      <span className="text-xs font-mono mt-1 text-muted-foreground/20">{subtitle}</span>
+    </div>
+  )
+}
+
+function DepartmentDetail({ dept }: DepartmentDetailProps) {
   const [tab, setTab] = useState<DeptTab>('overview')
   const [showAddTeam, setShowAddTeam] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
@@ -31,20 +79,29 @@ function DepartmentDetail({ dept, readOnly }: DepartmentDetailProps) {
   const addTeam = useMissionControl((s) => s.addTeam)
   const assignAgentToTeam = useMissionControl((s) => s.assignAgentToTeam)
 
-  const deptTeams = teams.filter((t) => t.department_id === dept.id)
-  const deptAgentIds = new Set(
-    agentTeamAssignments
-      .filter((a) => deptTeams.some((t) => t.id === a.team_id))
-      .map((a) => a.agent_id)
+  const deptTeams = useMemo(
+    () => teams.filter((team) => team.department_id === dept.id),
+    [dept.id, teams]
+  )
+
+  const deptTeamIds = useMemo(() => new Set(deptTeams.map((team) => team.id)), [deptTeams])
+  const deptAssignments = useMemo(
+    () => agentTeamAssignments.filter((assignment) => deptTeamIds.has(assignment.team_id)),
+    [agentTeamAssignments, deptTeamIds]
+  )
+  const deptAgentIds = useMemo(
+    () => new Set(deptAssignments.map((assignment) => assignment.agent_id)),
+    [deptAssignments]
   )
   const deptAgentCount = deptAgentIds.size
+  const leadCount = deptAssignments.filter((assignment) => assignment.role === 'lead').length
+  const updatedLabel = formatShortDate(dept.updated_at)
 
   function handleAddTeam(e: React.FormEvent) {
     e.preventDefault()
-    if (readOnly) return
     if (!newTeamName.trim()) return
     const now = Math.floor(Date.now() / 1000)
-    const newId = Math.max(0, ...teams.map((t) => t.id)) + 1
+    const newId = Math.max(0, ...teams.map((team) => team.id)) + 1
     addTeam({
       id: newId,
       name: newTeamName.trim(),
@@ -57,275 +114,381 @@ function DepartmentDetail({ dept, readOnly }: DepartmentDetailProps) {
     setNewTeamName('')
     setNewTeamDesc('')
     setShowAddTeam(false)
+    setTab('teams')
   }
 
   function handleDragEnd(event: DragEndEvent) {
-    if (readOnly) return
     const { active, over } = event
     if (!over) return
-    const agentId = parseInt(String(active.id).replace('agent-', ''), 10)
+    const agentId = extractAgentId(active.id)
     const teamId = parseInt(String(over.id).replace('team-drop-', ''), 10)
-    if (!isNaN(agentId) && !isNaN(teamId)) {
+    if (!Number.isNaN(agentId) && !Number.isNaN(teamId)) {
       assignAgentToTeam(agentId, teamId, 'member')
     }
   }
 
+  const viewTabs: DeptTab[] = ['overview', 'teams', 'agents', 'docs']
+  const unassignedAgents = agents.filter((agent) => !agentTeamAssignments.some((assignment) => assignment.agent_id === agent.id))
+
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="w-4 h-4 rounded-full"
-          style={{ backgroundColor: dept.color ?? '#888' }}
-        />
-        <h2 className="text-xl font-semibold text-foreground">{dept.name}</h2>
-      </div>
-      {dept.description && (
-        <p className="text-sm text-muted-foreground mb-4">{dept.description}</p>
-      )}
-
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border mb-4">
-        {(['overview', 'teams', 'agents', 'docs'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-3 py-1.5 text-sm capitalize transition-colors ${
-              tab === t
-                ? 'text-foreground border-b-2 border-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {/* Overview */}
-      {tab === 'overview' && (
-        <div>
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="text-2xl font-bold text-foreground">{deptTeams.length}</div>
-              <div className="text-sm text-muted-foreground">Teams</div>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="text-2xl font-bold text-foreground">{deptAgentCount}</div>
-              <div className="text-sm text-muted-foreground">Agents</div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {deptTeams.map((team) => {
-              const memberCount = agentTeamAssignments.filter(
-                (a) => a.team_id === team.id
-              ).length
-              return (
-                <div
-                  key={team.id}
-                  className="bg-card border border-border rounded-lg p-3 flex items-center gap-3"
-                >
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: team.color ?? '#888' }}
-                  />
-                  <span className="flex-1 text-sm text-foreground">{team.name}</span>
-                  <span className="text-xs text-muted-foreground">{memberCount} agents</span>
-                </div>
-              )
-            })}
-          </div>
+    <>
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-[hsl(var(--surface-0))]">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: dept.color ?? '#888' }} />
+          <span className="text-xs font-mono text-foreground truncate">{dept.name}</span>
+          <span className="text-[10px] font-mono text-muted-foreground/30 tabular-nums shrink-0">
+            {deptTeams.length} teams / {deptAgentCount} agents
+          </span>
         </div>
-      )}
-
-      {/* Teams */}
-      {tab === 'teams' && (
-        <div>
-          <div className="flex justify-end mb-3">
+        <div className="flex items-center gap-1 shrink-0">
+          {viewTabs.map((view) => (
             <button
-              disabled={readOnly}
-              onClick={() => setShowAddTeam((v) => !v)}
-              className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              key={view}
+              onClick={() => setTab(view)}
+              className={`px-2 py-0.5 text-[11px] font-mono rounded transition-colors capitalize ${
+                tab === view
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))]'
+              }`}
             >
-              + Add Team
+              {view}
             </button>
-          </div>
-          {showAddTeam && (
-            <form onSubmit={handleAddTeam} className="bg-card border border-border rounded-lg p-4 mb-4 space-y-3">
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Team Name</label>
-                <input
-                  type="text"
-                  value={newTeamName}
-                  onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="Team name"
-                  className="w-full px-2 py-1.5 text-sm bg-[hsl(var(--surface-0))] border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Description</label>
-                <input
-                  type="text"
-                  value={newTeamDesc}
-                  onChange={(e) => setNewTeamDesc(e.target.value)}
-                  placeholder="Optional description"
-                  className="w-full px-2 py-1.5 text-sm bg-[hsl(var(--surface-0))] border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity"
-                >
-                  Create Team
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddTeam(false)}
-                  className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {deptTeams.map((team) => {
-              const memberCount = agentTeamAssignments.filter(
-                (a) => a.team_id === team.id
-              ).length
-              return (
-                <div
-                  key={team.id}
-                  className="bg-card border border-border rounded-lg p-4"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: team.color ?? '#888' }}
-                    />
-                    <span className="font-medium text-sm text-foreground">{team.name}</span>
-                  </div>
-                  {team.description && (
-                    <p className="text-xs text-muted-foreground mb-2">{team.description}</p>
-                  )}
-                  <div className="text-xs text-muted-foreground">{memberCount} agents</div>
-                </div>
-              )
-            })}
-          </div>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* Agents */}
-      {tab === 'agents' && (
-        <DndContext
-          onDragStart={(event) => {
-            const agentId = Number(event.active.id)
-            const agent = agents.find(a => a.id === agentId)
-            setActiveDragAgent(agent ?? null)
-          }}
-          onDragEnd={(event) => {
-            handleDragEnd(event)
-            setActiveDragAgent(null)
-          }}
-        >
-          <div className="space-y-4">
-            {deptTeams.map((team) => {
-              const teamAssignments = agentTeamAssignments.filter(
-                (a) => a.team_id === team.id
-              )
-              const teamAgents = teamAssignments
-                .map((a) => ({
-                  agent: agents.find((ag) => ag.id === a.agent_id),
-                  role: a.role,
-                }))
-                .filter((x): x is { agent: Agent; role: 'member' | 'lead' } => !!x.agent)
-
-              return (
-                <div key={team.id}>
+      <div className="flex-1 overflow-auto">
+        {tab === 'overview' && (
+          <div className="p-6 max-w-5xl space-y-6">
+            <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-5">
+              <div className="flex flex-wrap items-start gap-4 justify-between">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: team.color ?? '#888' }}
-                    />
-                    <h3 className="text-sm font-medium text-foreground">{team.name}</h3>
-                    <span className="text-xs text-muted-foreground">
-                      ({teamAgents.length})
+                    <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: dept.color ?? '#888' }} />
+                    <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-muted-foreground/50">
+                      Department
                     </span>
                   </div>
-                  <DroppableZone id={`team-drop-${team.id}`}>
-                    {teamAgents.length === 0 ? (
-                      <div className="text-xs text-muted-foreground py-2 text-center">
-                        No agents — drag here to assign
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {teamAgents.map(({ agent, role }) => (
-                          <DraggableCard key={agent.id} id={`agent-${agent.id}`}>
-                            <div className="flex items-center gap-2 p-2 bg-[hsl(var(--surface-0))] rounded cursor-grab">
-                              <StatusDot status={agent.status} />
-                              <span className="flex-1 text-sm text-foreground truncate">
-                                {agent.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{role}</span>
-                            </div>
-                          </DraggableCard>
-                        ))}
-                      </div>
-                    )}
-                  </DroppableZone>
+                  <h2 className="text-lg font-semibold font-mono text-foreground">{dept.name}</h2>
+                  <p className="mt-2 text-sm text-foreground/80 leading-relaxed">
+                    {dept.description || 'No department summary has been written yet.'}
+                  </p>
                 </div>
-              )
-            })}
-            {/* Unassigned agents */}
-            {(() => {
-              const unassignedAgents = agents.filter(
-                (a) => !agentTeamAssignments.some((x) => x.agent_id === a.id)
-              )
-              return unassignedAgents.length > 0 ? (
-                <div className="mt-4">
-                  <h4 className="text-xs font-medium text-muted-foreground mb-2">Unassigned</h4>
-                  <div className="flex flex-col gap-1">
-                    {unassignedAgents.map((agent) => (
+                <div className="text-right">
+                  <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground/40">
+                    Updated
+                  </div>
+                  <div className="mt-1 text-xs font-mono text-muted-foreground/70">{updatedLabel}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <OverviewMetric label="teams" value={deptTeams.length} tone="accent" />
+              <OverviewMetric label="agents" value={deptAgentCount} />
+              <OverviewMetric label="team leads" value={leadCount} />
+            </div>
+
+            <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold font-mono text-foreground">Roster</h3>
+                  <p className="text-[11px] font-mono text-muted-foreground/50">
+                    Live team distribution inside this department.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setTab('teams')}
+                  className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+                >
+                  view teams
+                </button>
+              </div>
+              {deptTeams.length === 0 ? (
+                <div className="text-center text-muted-foreground/40 text-xs font-mono py-8">
+                  No teams in this department yet.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {deptTeams.map((team) => {
+                    const teamAssignments = agentTeamAssignments.filter((assignment) => assignment.team_id === team.id)
+                    const teamLead = teamAssignments.find((assignment) => assignment.role === 'lead')
+                    const leadAgent = teamLead ? agents.find((agent) => agent.id === teamLead.agent_id) : null
+                    return (
                       <div
-                        key={agent.id}
-                        className="flex items-center gap-2 p-2 rounded bg-[hsl(var(--surface-1))]"
+                        key={team.id}
+                        className="flex items-center gap-3 rounded-md border border-border/40 bg-[hsl(var(--surface-0))] px-3 py-2"
                       >
-                        <StatusDot status={agent.status} />
-                        <span className="text-sm">{agent.name}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">{agent.role}</span>
+                        <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: team.color ?? dept.color ?? '#888' }} />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-mono text-foreground truncate">{team.name}</div>
+                          <div className="text-[11px] font-mono text-muted-foreground/50 truncate">
+                            {team.description || 'No team description.'}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-[11px] font-mono text-muted-foreground/60 tabular-nums">
+                            {teamAssignments.length} assigned
+                          </div>
+                          <div className="text-[10px] font-mono text-primary/70 truncate max-w-36">
+                            {leadAgent ? `lead: ${leadAgent.name}` : 'lead: unassigned'}
+                          </div>
+                        </div>
                       </div>
-                    ))}
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === 'teams' && (
+          <div className="p-6 max-w-5xl space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold font-mono text-foreground">Teams</h2>
+                <p className="text-xs font-mono text-muted-foreground/50">
+                  Department team registry and creation controls.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddTeam((value) => !value)}
+                className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+              >
+                {showAddTeam ? 'close form' : 'new team'}
+              </button>
+            </div>
+
+            {showAddTeam && (
+              <form
+                onSubmit={handleAddTeam}
+                className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4 space-y-3"
+              >
+                <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground/50">
+                  Create Team
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-mono text-muted-foreground/60 mb-1">name</label>
+                    <input
+                      type="text"
+                      value={newTeamName}
+                      onChange={(e) => setNewTeamName(e.target.value)}
+                      placeholder="Team name"
+                      className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-mono text-muted-foreground/60 mb-1">description</label>
+                    <input
+                      type="text"
+                      value={newTeamDesc}
+                      onChange={(e) => setNewTeamDesc(e.target.value)}
+                      placeholder="Optional description"
+                      className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
+                    />
                   </div>
                 </div>
-              ) : null
-            })()}
-          </div>
-          <DragOverlay>
-            {activeDragAgent ? (
-              <div className="bg-card border border-primary/50 rounded-lg p-2 shadow-lg opacity-90 flex items-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${
-                  activeDragAgent.status === 'idle' ? 'bg-green-500'
-                  : activeDragAgent.status === 'busy' ? 'bg-yellow-500'
-                  : activeDragAgent.status === 'error' ? 'bg-red-500'
-                  : 'bg-gray-500'
-                }`} />
-                <span className="font-medium">{activeDragAgent.name}</span>
-                <span className="text-xs text-muted-foreground">{activeDragAgent.role}</span>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="px-2 py-1 rounded text-xs font-mono text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    create
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddTeam(false)}
+                    className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+                  >
+                    cancel
+                  </button>
+                </div>
+              </form>
+            )}
 
-      {/* Docs */}
-      {tab === 'docs' && <OrgDocsPanel entityType="department" entityId={dept.id} />}
-    </div>
+            {deptTeams.length === 0 ? (
+              <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-8 text-center text-muted-foreground/40 text-xs font-mono">
+                No teams in this department yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {deptTeams.map((team) => {
+                  const teamAssignments = agentTeamAssignments.filter((assignment) => assignment.team_id === team.id)
+                  const leadAssignment = teamAssignments.find((assignment) => assignment.role === 'lead')
+                  const leadAgent = leadAssignment ? agents.find((agent) => agent.id === leadAssignment.agent_id) : null
+                  return (
+                    <div key={team.id} className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
+                      <div className="flex items-start gap-3 justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: team.color ?? dept.color ?? '#888' }} />
+                            <span className="text-sm font-mono text-foreground truncate">{team.name}</span>
+                          </div>
+                          <p className="text-[11px] font-mono text-muted-foreground/55 leading-relaxed">
+                            {team.description || 'No team description.'}
+                          </p>
+                        </div>
+                        <span className="text-[10px] font-mono text-muted-foreground/40 tabular-nums">
+                          {teamAssignments.length} assigned
+                        </span>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="rounded-md border border-border/40 bg-[hsl(var(--surface-0))] px-3 py-2">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground/40">
+                            Lead
+                          </div>
+                          <div className="mt-1 text-xs font-mono text-foreground truncate">
+                            {leadAgent?.name || 'Unassigned'}
+                          </div>
+                        </div>
+                        <div className="rounded-md border border-border/40 bg-[hsl(var(--surface-0))] px-3 py-2">
+                          <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground/40">
+                            Updated
+                          </div>
+                          <div className="mt-1 text-xs font-mono text-foreground truncate">
+                            {formatShortDate(team.updated_at)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'agents' && (
+          <DndContext
+            onDragStart={(event) => {
+              const agentId = extractAgentId(event.active.id)
+              const agent = agents.find((item) => item.id === agentId)
+              setActiveDragAgent(agent ?? null)
+            }}
+            onDragEnd={(event) => {
+              handleDragEnd(event)
+              setActiveDragAgent(null)
+            }}
+          >
+            <div className="p-6 max-w-6xl space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold font-mono text-foreground">Agents</h2>
+                <p className="text-xs font-mono text-muted-foreground/50">
+                  Drag agents between the unassigned pool and department teams.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_18rem] gap-4">
+                <div className="space-y-4">
+                  {deptTeams.length === 0 ? (
+                    <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-8 text-center text-muted-foreground/40 text-xs font-mono">
+                      Create a team first to assign agents.
+                    </div>
+                  ) : (
+                    deptTeams.map((team) => {
+                      const teamAssignments = agentTeamAssignments.filter((assignment) => assignment.team_id === team.id)
+                      const teamAgents = teamAssignments
+                        .map((assignment) => ({
+                          agent: agents.find((agent) => agent.id === assignment.agent_id),
+                          role: assignment.role,
+                        }))
+                        .filter((value): value is { agent: Agent; role: 'member' | 'lead' } => Boolean(value.agent))
+
+                      return (
+                        <div key={team.id} className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
+                          <div className="flex items-center justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: team.color ?? dept.color ?? '#888' }} />
+                              <h3 className="text-sm font-semibold font-mono text-foreground truncate">{team.name}</h3>
+                            </div>
+                            <span className="text-[10px] font-mono text-muted-foreground/40 tabular-nums">
+                              {teamAgents.length} agents
+                            </span>
+                          </div>
+                          <DroppableZone id={`team-drop-${team.id}`}>
+                            {teamAgents.length === 0 ? (
+                              <div className="text-center text-muted-foreground/40 text-xs font-mono py-6">
+                                No agents assigned. Drag agents here.
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {teamAgents.map(({ agent, role }) => (
+                                  <DraggableCard key={agent.id} id={`agent-${agent.id}`}>
+                                    <div className="flex items-center gap-2 p-2 bg-[hsl(var(--surface-0))] rounded cursor-grab">
+                                      <StatusDot status={agent.status} />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-mono text-foreground truncate">{agent.name}</div>
+                                        <div className="text-[11px] font-mono text-muted-foreground/50 truncate">{agent.role}</div>
+                                      </div>
+                                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${role === 'lead' ? 'bg-primary/10 text-primary' : 'bg-[hsl(var(--surface-2))] text-muted-foreground'}`}>
+                                        {role}
+                                      </span>
+                                    </div>
+                                  </DraggableCard>
+                                ))}
+                              </div>
+                            )}
+                          </DroppableZone>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+
+                <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4 h-fit">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <h3 className="text-sm font-semibold font-mono text-foreground">Unassigned</h3>
+                    <span className="text-[10px] font-mono text-muted-foreground/40 tabular-nums">
+                      {unassignedAgents.length}
+                    </span>
+                  </div>
+                  {unassignedAgents.length === 0 ? (
+                    <div className="text-center text-muted-foreground/40 text-xs font-mono py-6">
+                      No unassigned agents.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {unassignedAgents.map((agent) => (
+                        <DraggableCard key={agent.id} id={`agent-${agent.id}`}>
+                          <div className="flex items-center gap-2 p-2 rounded bg-[hsl(var(--surface-0))] cursor-grab">
+                            <StatusDot status={agent.status} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-mono text-foreground truncate">{agent.name}</div>
+                              <div className="text-[11px] font-mono text-muted-foreground/50 truncate">{agent.role}</div>
+                            </div>
+                          </div>
+                        </DraggableCard>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <DragOverlay>
+              {activeDragAgent ? (
+                <div className="bg-[hsl(var(--surface-1))] border border-primary/30 rounded-lg p-2 shadow-lg opacity-90 flex items-center gap-2 text-sm">
+                  <StatusDot status={activeDragAgent.status} />
+                  <span className="font-mono text-foreground">{activeDragAgent.name}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground/60">{activeDragAgent.role}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+
+        {tab === 'docs' && (
+          <div className="p-6">
+            <OrgDocsPanel entityType="department" entityId={dept.id} />
+          </div>
+        )}
+      </div>
+    </>
   )
 }
-
-// --- Create Department Form ---
 
 interface CreateDeptFormProps {
   onSubmit: (name: string, color: string) => void
@@ -343,142 +506,279 @@ function CreateDeptForm({ onSubmit, onCancel }: CreateDeptFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-4 mb-6 space-y-3">
-      <h3 className="text-sm font-medium text-foreground">New Department</h3>
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1">Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Department name"
-          className="w-full px-2 py-1.5 text-sm bg-[hsl(var(--surface-0))] border border-border rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-          autoFocus
-        />
-      </div>
-      <div>
-        <label className="block text-xs text-muted-foreground mb-1">Color</label>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="w-10 h-8 rounded border border-border cursor-pointer"
-        />
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity"
+    <div className="flex-1 overflow-auto">
+      <div className="p-6 max-w-3xl">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-5 space-y-4"
         >
-          Create
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors"
-        >
-          Cancel
-        </button>
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground/40">
+              Department
+            </div>
+            <h2 className="mt-2 text-lg font-semibold font-mono text-foreground">Create department</h2>
+            <p className="mt-1 text-xs font-mono text-muted-foreground/50">
+              Add a new department to the organization registry.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_7rem] gap-4">
+            <div>
+              <label className="block text-[11px] font-mono text-muted-foreground/60 mb-1">name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Department name"
+                className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-mono text-muted-foreground/60 mb-1">color</label>
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-8 w-full rounded border border-border/50 bg-[hsl(var(--surface-0))] cursor-pointer"
+              />
+            </div>
+          </div>
+
+          <div className="text-[10px] font-mono text-muted-foreground/40 bg-[hsl(var(--surface-0))] px-2 py-1 rounded">
+            preview: {name || 'new-department'}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              className="px-2 py-1 rounded text-xs font-mono text-primary hover:bg-primary/10 transition-colors"
+            >
+              create
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+            >
+              cancel
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   )
 }
-
-// --- Main Panel ---
 
 export function DepartmentsPanel() {
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
+  const agents = useMissionControl((s) => s.agents)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
+  const setDepartments = useMissionControl((s) => s.setDepartments)
+  const setTeams = useMissionControl((s) => s.setTeams)
+  const setAgentTeamAssignments = useMissionControl((s) => s.setAgentTeamAssignments)
   const addDepartment = useMissionControl((s) => s.addDepartment)
-  const { isReadOnly, isLoading, syncError } = useOrgData()
 
   const [selectedDept, setSelectedDept] = useState<Department | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [deptFilter, setDeptFilter] = useState<DepartmentFilter>('all')
 
-  // Auto-select first department
   useEffect(() => {
-    if (!selectedDept && departments.length > 0) {
+    if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
+    if (teams.length === 0) setTeams(MOCK_TEAMS)
+    if (agentTeamAssignments.length === 0) setAgentTeamAssignments(MOCK_AGENT_ASSIGNMENTS)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!selectedDept && departments.length > 0 && !showCreateForm) {
       setSelectedDept(departments[0])
     }
-  }, [departments, selectedDept])
+  }, [departments, selectedDept, showCreateForm])
+
+  const filteredDepartments = useMemo(() => {
+    return departments.filter((department) => {
+      const teamCount = teams.filter((team) => team.department_id === department.id).length
+      const matchesQuery = department.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesFilter =
+        deptFilter === 'all' ? true : deptFilter === 'staffed' ? teamCount > 0 : teamCount === 0
+      return matchesQuery && matchesFilter
+    })
+  }, [departments, teams, searchQuery, deptFilter])
+
+  const totalTeamCount = teams.length
+  const staffedDepartmentCount = departments.filter((department) =>
+    teams.some((team) => team.department_id === department.id)
+  ).length
+  const totalAssignedAgents = new Set(agentTeamAssignments.map((assignment) => assignment.agent_id)).size
 
   function handleCreate(name: string, color: string) {
-    if (isReadOnly) return
     const now = Math.floor(Date.now() / 1000)
-    const newDept: Department = {
-      id: Math.max(0, ...departments.map((d) => d.id)) + 1,
+    const newDepartment: Department = {
+      id: Math.max(0, ...departments.map((department) => department.id)) + 1,
       name,
       color,
       created_at: now,
       updated_at: now,
     }
-    addDepartment(newDept)
-    setSelectedDept(newDept)
+    addDepartment(newDepartment)
+    setSelectedDept(newDepartment)
     setShowCreateForm(false)
   }
 
-  const teamCountByDept = (deptId: number) =>
-    teams.filter((t) => t.department_id === deptId).length
-
   return (
-    <div className="flex h-full">
-      {/* Left Sidebar */}
-      <EntityListSidebar
-        items={departments}
-        selectedId={selectedDept?.id ?? null}
-        onSelect={(dept) => {
-          setSelectedDept(dept)
-          setShowCreateForm(false)
-        }}
-        renderItem={(dept, _isSelected) => (
-          <div className="flex items-center gap-2 px-3 py-2">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: dept.color ?? '#888' }}
-            />
-            <span className="flex-1 text-sm truncate">{dept.name}</span>
-            <span className="text-xs text-muted-foreground">{teamCountByDept(dept.id)}</span>
-          </div>
-        )}
-        createLabel="New Department"
-        onCreate={() => {
-          if (isReadOnly) return
-          setShowCreateForm(true)
-          setSelectedDept(null)
-        }}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((v) => !v)}
-      />
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden">
+      <div className="flex items-center gap-1 px-3 py-2 border-b border-border bg-[hsl(var(--surface-0))]">
+        <button
+          onClick={() => setSidebarOpen((value) => !value)}
+          className="p-1.5 rounded hover:bg-[hsl(var(--surface-2))] text-muted-foreground text-xs font-mono"
+          title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+        >
+          |||
+        </button>
+        <div className="w-px h-4 bg-border mx-1" />
+        <span className="px-2.5 py-1 rounded text-xs font-mono bg-[hsl(var(--surface-2))] text-foreground">
+          departments
+        </span>
+        <div className="flex-1" />
+        <span className="text-[10px] font-mono text-muted-foreground/50 tabular-nums">
+          {departments.length} depts / {totalTeamCount} teams / {totalAssignedAgents} assigned
+        </span>
+        <div className="w-px h-4 bg-border mx-1" />
+        <button
+          onClick={() => {
+            setShowCreateForm(true)
+            setSelectedDept(null)
+          }}
+          className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+        >
+          new department
+        </button>
+      </div>
 
-      {/* Detail Pane */}
-      <div className="flex-1 min-w-0 overflow-y-auto p-6">
-        {isLoading ? (
-          <div className="mb-4 text-sm text-muted-foreground">Loading org structure…</div>
-        ) : null}
-        {syncError ? (
-          <div className="mb-4 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-            {syncError}
-          </div>
-        ) : null}
-        {isReadOnly ? (
-          <div className="mb-4 rounded border border-border bg-[hsl(var(--surface-1))] px-3 py-2 text-xs text-muted-foreground">
-            Department and team structure is synced from `AGENTS_DIR` and is read-only in Mission Control.
-          </div>
-        ) : null}
-        {showCreateForm ? (
-          <CreateDeptForm
-            onSubmit={handleCreate}
-            onCancel={() => setShowCreateForm(false)}
-          />
-        ) : selectedDept ? (
-          <DepartmentDetail dept={selectedDept} readOnly={isReadOnly} />
-        ) : (
-          <div className="text-muted-foreground text-sm">
-            Select a department from the sidebar
+      <div className="flex flex-1 min-h-0">
+        {sidebarOpen && (
+          <div className="w-60 shrink-0 border-r border-border bg-[hsl(var(--surface-0))] flex flex-col min-h-0">
+            <div className="p-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search departments"
+                className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-1))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
+              />
+            </div>
+            <div className="flex gap-0.5 px-2 pb-2">
+              {(['all', 'staffed', 'empty'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setDeptFilter(filter)}
+                  className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
+                    deptFilter === filter
+                      ? 'bg-[hsl(var(--surface-2))] text-foreground'
+                      : 'text-muted-foreground/60 hover:text-muted-foreground'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+            <div className="px-2 pb-2 border-b border-border/50">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded border border-border/40 bg-[hsl(var(--surface-1))] px-2 py-1.5">
+                  <div className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-[0.14em]">
+                    staffed
+                  </div>
+                  <div className="text-xs font-mono text-foreground tabular-nums">{staffedDepartmentCount}</div>
+                </div>
+                <div className="rounded border border-border/40 bg-[hsl(var(--surface-1))] px-2 py-1.5">
+                  <div className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-[0.14em]">
+                    agents
+                  </div>
+                  <div className="text-xs font-mono text-foreground tabular-nums">{agents.length}</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto py-1">
+              {filteredDepartments.length === 0 ? (
+                <div className="text-center text-muted-foreground/40 text-xs font-mono py-8">
+                  No departments found.
+                </div>
+              ) : (
+                filteredDepartments.map((department) => {
+                  const departmentTeams = teams.filter((team) => team.department_id === department.id)
+                  const departmentAgentIds = new Set(
+                    agentTeamAssignments
+                      .filter((assignment) => departmentTeams.some((team) => team.id === assignment.team_id))
+                      .map((assignment) => assignment.agent_id)
+                  )
+                  const selected = selectedDept?.id === department.id && !showCreateForm
+                  return (
+                    <button
+                      key={department.id}
+                      onClick={() => {
+                        setSelectedDept(department)
+                        setShowCreateForm(false)
+                      }}
+                      className={`w-full text-left px-2 py-1.5 transition-colors ${
+                        selected ? 'bg-[hsl(var(--surface-2))]' : 'hover:bg-[hsl(var(--surface-2))]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full mt-1 shrink-0" style={{ backgroundColor: department.color ?? '#888' }} />
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-xs font-mono truncate ${selected ? 'text-foreground' : 'text-muted-foreground'}`}>
+                            {department.name}
+                          </div>
+                          <div className="text-[10px] font-mono text-muted-foreground/35 truncate">
+                            {department.description || 'No description'}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-[10px] font-mono text-muted-foreground/40 tabular-nums">
+                            {departmentTeams.length}t
+                          </div>
+                          <div className="text-[10px] font-mono text-muted-foreground/30 tabular-nums">
+                            {departmentAgentIds.size}a
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
           </div>
         )}
+
+        <div className="flex-1 min-w-0 flex flex-col bg-[hsl(var(--surface-0))]">
+          {showCreateForm ? (
+            <>
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-[hsl(var(--surface-0))]">
+                <span className="text-xs font-mono text-muted-foreground/60 truncate flex-1">
+                  /departments/new
+                </span>
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="px-2 py-0.5 text-[11px] font-mono text-muted-foreground hover:text-foreground rounded hover:bg-[hsl(var(--surface-2))] transition-colors"
+                >
+                  cancel
+                </button>
+              </div>
+              <CreateDeptForm onSubmit={handleCreate} onCancel={() => setShowCreateForm(false)} />
+            </>
+          ) : selectedDept ? (
+            <DepartmentDetail dept={selectedDept} />
+          ) : (
+            <EmptyState
+              title="Select a department"
+              subtitle="Use the sidebar or create a new department."
+            />
+          )}
+        </div>
       </div>
     </div>
   )

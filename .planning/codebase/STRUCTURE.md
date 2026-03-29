@@ -154,4 +154,115 @@ mission-control/
 
 ---
 
-*Structure analysis: 2026-03-28*
+## Memory Page Deep-Dive
+
+**Analysis Date:** 2026-03-29
+
+### Route & Entry Point
+
+`src/app/[[...panel]]/page.tsx` → `ContentRouter` maps `activeTab === 'memory'` → `<MemoryBrowserPanel />`
+
+### Components
+
+| File | Purpose |
+|------|---------|
+| `src/components/panels/memory-browser-panel.tsx` | Main panel (~16K lines) — file tree, content editor, search, health, pipeline tabs |
+| `src/components/panels/memory-graph.tsx` | Force-directed graph visualization (Reagraph); Obsidian-style agent/file drill-down |
+
+**Panel tabs:** Files · Graph · Health · Pipeline
+
+### API Routes
+
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `src/app/api/memory/route.ts` | GET/POST/DELETE | File tree (`action=tree`), content (`action=content`), search (`action=search`), save, delete |
+| `src/app/api/memory/graph/route.ts` | GET | Agent SQLite DB stats for graph visualization |
+| `src/app/api/memory/search/route.ts` | GET/POST | FTS5 search + manual index rebuild |
+| `src/app/api/memory/health/route.ts` | GET | 8-category diagnostic report (schema, connectivity, freshness, atomicity, naming, etc.) |
+| `src/app/api/memory/links/route.ts` | GET | Wiki-link graph — single file or full graph with orphan detection |
+| `src/app/api/memory/process/route.ts` | POST | Pipeline: `reflect` / `reweave` / `generate-moc` / `gap-detect` / `consolidate` |
+| `src/app/api/agents/[id]/memory/route.ts` | GET/PUT/DELETE | Per-agent working memory scratchpad (syncs to WORKING.md in workspace) |
+
+### Data Layer
+
+| File | Purpose |
+|------|---------|
+| `src/lib/memory-utils.ts` | Wiki-link extraction, schema validation, health diagnostics, file scanning, MOC generation, pipeline passes |
+| `src/lib/memory-search.ts` | SQLite FTS5 index (porter tokenizer), BM25 search, incremental per-file indexing |
+| `src/lib/memory-path.ts` | Path security: allowlist prefix checks, symlink escape prevention via realpath validation |
+
+### Zustand State (`src/store/index.ts`)
+
+```typescript
+memoryFiles: MemoryFile[]
+selectedMemoryFile: string | null
+memoryContent: string | null
+memoryFileLinks: { wikiLinks, incoming, outgoing }
+memoryHealth: unknown | null
+memoryGraphAgents: AgentGraphData[] | null  // persisted across tab switches
+```
+
+### UI Style & Visual Patterns
+
+**Layout:**
+- Full-height panel: `h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden`
+- Top bar: `flex items-center gap-1 px-3 py-2 border-b border-border bg-[hsl(var(--surface-0))]`
+- Sidebar: fixed `w-60`, `border-r border-border`, collapsible via `|||` button
+- Main content: `flex-1 min-w-0 bg-[hsl(var(--surface-0))]`
+
+**Color tokens (CSS vars, not raw colors):**
+- Surfaces: `bg-[hsl(var(--surface-0))]` (base), `bg-[hsl(var(--surface-1))]` (inset), `bg-[hsl(var(--surface-2))]` (hover/selected)
+- Text: `text-foreground`, `text-muted-foreground`, `text-muted-foreground/60`, `text-muted-foreground/40`, `text-muted-foreground/30`
+- Borders: `border-border`, `border-border/50`
+- Accent: `text-primary`, `text-primary/80`, `bg-primary/10`
+
+**Typography:**
+- All UI chrome is `font-mono` — tabs, tree nodes, badges, buttons, inputs
+- Sizes: `text-xs` (12px) for most UI, `text-[13px]` for tree nodes, `text-[11px]` for secondary labels, `text-[10px]` for metadata/badges
+- Rendered markdown headings: `text-xl font-bold` (H1), `text-lg font-semibold` (H2), `text-base font-semibold` (H3) — all `font-mono`
+
+**Buttons (inline, no `<Button>` component):**
+- Tab / toggle: `px-2.5 py-1 rounded text-xs font-mono transition-colors`; active = `bg-[hsl(var(--surface-2))] text-foreground`; inactive = `text-muted-foreground hover:text-foreground`
+- Action buttons: `px-2 py-0.5 text-[11px] font-mono rounded hover:bg-[hsl(var(--surface-2))] transition-colors`
+- Destructive: `text-red-400/60 hover:text-red-400 hover:bg-red-500/10`
+- Save/confirm: `text-green-400/80 hover:text-green-400 hover:bg-green-500/10`
+
+**Inputs:**
+- `px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-1))] border border-border/50 rounded placeholder-muted-foreground/40 focus:outline-none focus:border-primary/30`
+
+**File tree:**
+- Node row: `flex items-center gap-1 py-[3px] pr-2 rounded-sm hover:bg-[hsl(var(--surface-2))] transition-colors duration-75`
+- Indent: `paddingLeft: 8 + depth * 14` px (inline style)
+- Icons: raw text symbols — `#` for `.md`, `{}` for JSON, `|` for txt/log, `~` default, `/` for directories
+- Size badge: `text-[10px] text-muted-foreground/40 tabular-nums`
+
+**Status indicators (health):**
+- Colors via helper functions: healthy=`text-green-400`/`bg-green-500`, warning=`text-amber-400`/`bg-amber-500`, critical=`text-red-400`/`bg-red-500`
+- Schema warnings banner: `bg-amber-500/5 border-b border-amber-500/15`, text `text-amber-400`
+
+**Empty states:**
+- Large text symbol (`/`, `~`) in `text-4xl font-mono`, followed by `text-sm font-mono text-muted-foreground/30`
+
+**Code blocks (markdown renderer):**
+- `bg-[hsl(var(--surface-1))] border border-border/50 rounded-md px-3 py-2 my-2 text-xs font-mono`
+
+**Inline code (markdown):**
+- `bg-[hsl(var(--surface-2))] px-1 py-0.5 rounded text-[12px] font-mono text-primary/80`
+
+**Wiki-links (inline):**
+- `text-primary/80 hover:text-primary underline underline-offset-2 decoration-primary/30 hover:decoration-primary/60 transition-colors font-mono text-[12px]`
+
+### Key Patterns
+
+- **Auth guards:** viewer=GET, operator=POST/PUT, admin=DELETE
+- **File tree:** lazy-loaded — depth=1 on mount, full tree fetched async
+- **Search:** SQLite FTS5 with porter tokenizer; single word → `word*` (prefix), multi-word → AND with prefix; BM25 ranking
+- **No data-fetching library:** all API calls via raw `fetch()` inside the panel component
+- **Translations:** `useTranslations('memoryBrowser')` / `useTranslations('memoryGraph')`
+- **Logging:** `createClientLogger('MemoryBrowser')`
+- **File scan limits:** max 2000 files, skip files >1MB, `.md`/`.txt` only
+- **Path safety:** every file op checks allowlist + resolves realpath to block traversal
+
+---
+
+*Structure analysis: 2026-03-28 | Memory page added: 2026-03-29*
