@@ -84,10 +84,20 @@ function colorForKey(key: string): string {
   return COLOR_PALETTE[stableNumber(`color:${key}`) % COLOR_PALETTE.length] ?? COLOR_PALETTE[0]
 }
 
+const IGNORED_DIRECTORIES = new Set([
+  '.git',
+  '.github',
+  '.vscode',
+  '.idea',
+  'node_modules',
+  '__pycache__',
+  '.DS_Store',
+])
+
 function safeDirectories(dir: string): string[] {
   try {
     return readdirSync(dir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && !IGNORED_DIRECTORIES.has(entry.name))
       .map((entry) => entry.name)
       .sort((a, b) => a.localeCompare(b))
   } catch {
