@@ -27,10 +27,11 @@
 
 ### Phase 2: Add way to promote agents to team lead
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add API-backed persistence for promoting/demoting agents to team lead roles and assigning department leads, with inline confirmation UX and visual feedback.
+**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20
 **Depends on:** Phase 1
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 2 to break down)
+- [ ] 02-01-PLAN.md — Data foundation: migration, scanner fix, snapshot propagation, API routes
+- [ ] 02-02-PLAN.md — Store actions and panel UX: promote confirmation, lead badge, department lead selector
