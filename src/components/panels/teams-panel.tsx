@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Agent, Team } from '@/store'
+import { EmbeddedChat } from '@/components/chat/embedded-chat'
 import { AgentMultiSelect } from '@/components/ui/agent-multi-select'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
 import { useOrgData } from '@/lib/use-org-data'
 import { DraggableCard, DroppableZone, StatusDot } from '@/components/ui/dnd-org-helpers'
 
-type TeamView = 'overview' | 'members' | 'docs'
+type TeamView = 'overview' | 'members' | 'docs' | 'chat'
 
 interface TeamDetailProps {
   team: Team
@@ -85,6 +86,26 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
       {view === 'docs' ? (
         <div className="flex-1 min-h-0">
           <OrgDocsPanel entityType="team" entityId={team.id} />
+        </div>
+      ) : view === 'chat' ? (
+        <div className="flex-1 min-h-0">
+          {lead?.agent ? (
+            <EmbeddedChat
+              conversationId={`team:${team.id}`}
+              targetAgentName={lead.agent.name}
+              targetAgentStatus={lead.agent.status}
+              entityLabel={team.name}
+              entityColor={team.color ?? dept?.color}
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center text-muted-foreground/30">
+              <span className="mb-3 text-4xl font-mono">/</span>
+              <span className="text-sm font-mono">No team lead assigned</span>
+              <span className="mt-1 text-xs font-mono text-muted-foreground/20">
+                Promote an agent to lead to enable chat
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex-1 overflow-auto p-4">
@@ -379,7 +400,7 @@ export function TeamsPanel() {
           |||
         </button>
         <div className="w-px h-4 bg-border mx-1" />
-        {(['overview', 'members', 'docs'] as const).map((view) => (
+        {(['overview', 'members', 'docs', 'chat'] as const).map((view) => (
           <button
             key={view}
             onClick={() => setActiveView(view)}
