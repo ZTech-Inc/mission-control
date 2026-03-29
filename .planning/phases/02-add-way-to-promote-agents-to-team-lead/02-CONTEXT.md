@@ -18,7 +18,7 @@ This phase adds API-backed persistence for promoting/demoting agents to team lea
 - **D-02:** New API route for department lead assignment: `PUT /api/departments/:id/lead` to set `manager_agent_id`
 - **D-03:** Zustand actions should call API first, then update local state on success (optimistic update with rollback on failure)
 - **D-04:** Existing `agent_team_assignments` table already has `role` column — no schema migration needed for team leads
-- **D-05:** Department `manager_agent_id` column already exists — no schema migration needed for department leads
+- **D-05:** Department `manager_agent_id` column does NOT exist in DB schema (confirmed by research — migration 049 DDL omits it). Migration 050 is required to add `ALTER TABLE departments ADD COLUMN manager_agent_id INTEGER`
 
 ### Scope — Team Leads + Department Leads
 - **D-06:** Both team lead promotion and department lead assignment are in scope for this phase
