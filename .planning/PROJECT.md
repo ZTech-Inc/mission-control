@@ -15,6 +15,7 @@ See which agent is working on what, delegate tasks to the right agent, and manag
 - ✓ Dashboard overview with system stats, agent counts, session info — existing
 - ✓ Agent registry and squad panel with status tracking — existing
 - ✓ Department and team panels with drag-and-drop organization — existing
+- ✓ Embedded department/team chat tabs with lead-aware routing and queue-aware status messaging — Phase 01
 - ✓ Task board with kanban-style management — existing
 - ✓ Live feed with real-time event streaming (SSE) — existing
 - ✓ Chat/session management panel — existing
@@ -99,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after initialization*
+*Last updated: 2026-03-30 after Phase 01 completion*
