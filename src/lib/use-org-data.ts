@@ -61,19 +61,22 @@ export function useOrgData() {
     const eventSource = new EventSource('/api/org/stream')
     eventSourceRef.current = eventSource
 
-    eventSource.onmessage = (event) => {
+    const handleConnected = (event: MessageEvent<string>) => {
       if (!mounted) return
-
       try {
         const payload = JSON.parse(event.data) as ServerEvent
-        if (payload.type === 'connected' || payload.type === 'org.updated') {
-          applySnapshot(payload.data)
-        }
+        applySnapshot(payload.data)
       } catch {
         // Ignore malformed payloads.
       }
     }
 
+    const handleUpdate = () => {
+      void loadSnapshot()
+    }
+
+    eventSource.addEventListener('connected', handleConnected as EventListener)
+    eventSource.addEventListener('org-update', handleUpdate as EventListener)
     eventSource.onerror = () => {
       if (!mounted) return
       setSyncError('Org stream disconnected')
@@ -81,6 +84,8 @@ export function useOrgData() {
 
     return () => {
       mounted = false
+      eventSource.removeEventListener('connected', handleConnected as EventListener)
+      eventSource.removeEventListener('org-update', handleUpdate as EventListener)
       if (eventSourceRef.current) {
         eventSourceRef.current.close()
         eventSourceRef.current = null

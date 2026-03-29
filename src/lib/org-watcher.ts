@@ -96,8 +96,10 @@ class OrgWatcher {
       if (!this.rootPath) return
       this.syncDirectoryWatchers(this.rootPath)
       invalidateOrgSnapshot()
-      const snapshot = getOrgSnapshot({ force: true })
-      eventBus.broadcast('org.updated', snapshot)
+      eventBus.broadcast('org.updated', {
+        rootPath: this.rootPath,
+        changedAt: Date.now(),
+      })
     }, 500)
   }
 }

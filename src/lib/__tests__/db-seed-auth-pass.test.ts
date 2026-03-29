@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveSeedAuthPassword } from '../db'
+import { DEFAULT_SEED_AUTH_PASS, resolveSeedAuthPassword } from '../db'
 
 describe('resolveSeedAuthPassword', () => {
   it('returns AUTH_PASS when AUTH_PASS_B64 is not set', () => {
@@ -24,8 +24,8 @@ describe('resolveSeedAuthPassword', () => {
     expect(password).toBe('fallback-value')
   })
 
-  it('returns null when no password env var is set', () => {
+  it('returns the built-in default when no password env var is set', () => {
     const password = resolveSeedAuthPassword({} as unknown as NodeJS.ProcessEnv)
-    expect(password).toBeNull()
+    expect(password).toBe(DEFAULT_SEED_AUTH_PASS)
   })
 })

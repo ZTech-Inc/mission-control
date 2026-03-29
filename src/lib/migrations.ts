@@ -1410,6 +1410,66 @@ const migrations: Migration[] = [
         )
       `)
     }
+  },
+  {
+    id: '049_org_sync_tables',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS departments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          external_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          color TEXT,
+          source TEXT NOT NULL DEFAULT 'manual',
+          source_path TEXT,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          UNIQUE(workspace_id, external_id)
+        )
+      `)
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS teams (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          external_id INTEGER NOT NULL,
+          department_external_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          color TEXT,
+          source TEXT NOT NULL DEFAULT 'manual',
+          source_path TEXT,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          UNIQUE(workspace_id, external_id)
+        )
+      `)
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS agent_team_assignments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          agent_id INTEGER NOT NULL,
+          team_external_id INTEGER NOT NULL,
+          role TEXT NOT NULL DEFAULT 'member',
+          assigned_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          source TEXT NOT NULL DEFAULT 'manual',
+          FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+          UNIQUE(workspace_id, agent_id, team_external_id)
+        )
+      `)
+
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_departments_workspace_id ON departments(workspace_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_departments_source ON departments(source)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_teams_workspace_id ON teams(workspace_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_teams_department_external_id ON teams(workspace_id, department_external_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_teams_source ON teams(source)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_workspace_id ON agent_team_assignments(workspace_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_agent_id ON agent_team_assignments(agent_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_team_external_id ON agent_team_assignments(workspace_id, team_external_id)`)
+    }
   }
 ]
 
