@@ -33,6 +33,6 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-00-PLAN.md — Wave 0: test stubs for API routes and org-scanner source priority
+- [x] 02-00-PLAN.md — Wave 0: test stubs for API routes and org-scanner source priority
 - [ ] 02-01-PLAN.md — Data foundation: migration, scanner fix, snapshot propagation, API routes
 - [ ] 02-02-PLAN.md — Store actions and panel UX: promote confirmation, lead badge, department lead selector
