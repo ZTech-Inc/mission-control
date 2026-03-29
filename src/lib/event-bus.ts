@@ -32,6 +32,7 @@ export type EventType =
   | 'connection.created'
   | 'connection.disconnected'
   | 'github.synced'
+  | 'org.updated'
   | 'run.created'
   | 'run.updated'
   | 'run.completed'

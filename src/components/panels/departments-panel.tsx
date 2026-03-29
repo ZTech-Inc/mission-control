@@ -6,8 +6,8 @@ import { useMissionControl } from '@/store'
 import type { Department, Team, Agent } from '@/store'
 import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
-import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
+import { useOrgData } from '@/lib/use-org-data'
 
 // --- Department Detail ---
 
@@ -15,9 +15,10 @@ type DeptTab = 'overview' | 'teams' | 'agents' | 'docs'
 
 interface DepartmentDetailProps {
   dept: Department
+  readOnly: boolean
 }
 
-function DepartmentDetail({ dept }: DepartmentDetailProps) {
+function DepartmentDetail({ dept, readOnly }: DepartmentDetailProps) {
   const [tab, setTab] = useState<DeptTab>('overview')
   const [showAddTeam, setShowAddTeam] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
@@ -40,6 +41,7 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
 
   function handleAddTeam(e: React.FormEvent) {
     e.preventDefault()
+    if (readOnly) return
     if (!newTeamName.trim()) return
     const now = Math.floor(Date.now() / 1000)
     const newId = Math.max(0, ...teams.map((t) => t.id)) + 1
@@ -58,6 +60,7 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    if (readOnly) return
     const { active, over } = event
     if (!over) return
     const agentId = parseInt(String(active.id).replace('agent-', ''), 10)
@@ -139,8 +142,9 @@ function DepartmentDetail({ dept }: DepartmentDetailProps) {
         <div>
           <div className="flex justify-end mb-3">
             <button
+              disabled={readOnly}
               onClick={() => setShowAddTeam((v) => !v)}
-              className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors"
+              className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               + Add Team
             </button>
@@ -386,21 +390,12 @@ export function DepartmentsPanel() {
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
-  const setDepartments = useMissionControl((s) => s.setDepartments)
-  const setTeams = useMissionControl((s) => s.setTeams)
-  const setAgentTeamAssignments = useMissionControl((s) => s.setAgentTeamAssignments)
   const addDepartment = useMissionControl((s) => s.addDepartment)
+  const { isReadOnly, isLoading, syncError } = useOrgData()
 
   const [selectedDept, setSelectedDept] = useState<Department | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
-
-  useEffect(() => {
-    if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
-    if (teams.length === 0) setTeams(MOCK_TEAMS)
-    if (agentTeamAssignments.length === 0) setAgentTeamAssignments(MOCK_AGENT_ASSIGNMENTS)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Auto-select first department
   useEffect(() => {
@@ -410,6 +405,7 @@ export function DepartmentsPanel() {
   }, [departments, selectedDept])
 
   function handleCreate(name: string, color: string) {
+    if (isReadOnly) return
     const now = Math.floor(Date.now() / 1000)
     const newDept: Department = {
       id: Math.max(0, ...departments.map((d) => d.id)) + 1,
@@ -448,6 +444,7 @@ export function DepartmentsPanel() {
         )}
         createLabel="New Department"
         onCreate={() => {
+          if (isReadOnly) return
           setShowCreateForm(true)
           setSelectedDept(null)
         }}
@@ -457,13 +454,26 @@ export function DepartmentsPanel() {
 
       {/* Detail Pane */}
       <div className="flex-1 min-w-0 overflow-y-auto p-6">
+        {isLoading ? (
+          <div className="mb-4 text-sm text-muted-foreground">Loading org structure…</div>
+        ) : null}
+        {syncError ? (
+          <div className="mb-4 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            {syncError}
+          </div>
+        ) : null}
+        {isReadOnly ? (
+          <div className="mb-4 rounded border border-border bg-[hsl(var(--surface-1))] px-3 py-2 text-xs text-muted-foreground">
+            Department and team structure is synced from `AGENTS_DIR` and is read-only in Mission Control.
+          </div>
+        ) : null}
         {showCreateForm ? (
           <CreateDeptForm
             onSubmit={handleCreate}
             onCancel={() => setShowCreateForm(false)}
           />
         ) : selectedDept ? (
-          <DepartmentDetail dept={selectedDept} />
+          <DepartmentDetail dept={selectedDept} readOnly={isReadOnly} />
         ) : (
           <div className="text-muted-foreground text-sm">
             Select a department from the sidebar

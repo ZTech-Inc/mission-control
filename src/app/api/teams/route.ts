@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { MOCK_TEAMS } from '@/lib/mock-org-data'
+import { getOrgSnapshot } from '@/lib/org-scanner'
+import { orgWatcher } from '@/lib/org-watcher'
 
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  return NextResponse.json({ teams: MOCK_TEAMS })
+  orgWatcher.ensureStarted(auth.user.workspace_id ?? 1)
+  const snapshot = getOrgSnapshot({ workspaceId: auth.user.workspace_id ?? 1 })
+  return NextResponse.json({
+    teams: snapshot.teams,
+    source: snapshot.source,
+    scannedAt: snapshot.scannedAt,
+  })
 }
 
 export async function POST(request: NextRequest) {

@@ -7,8 +7,8 @@ import type { Team, Agent } from '@/store'
 import { EntityListSidebar } from '@/components/ui/entity-list-sidebar'
 import { AgentMultiSelect } from '@/components/ui/agent-multi-select'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
-import { MOCK_DEPARTMENTS, MOCK_TEAMS, MOCK_AGENT_ASSIGNMENTS } from '@/lib/mock-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
+import { useOrgData } from '@/lib/use-org-data'
 
 // --- Team Detail ---
 
@@ -16,9 +16,10 @@ type TeamTab = 'overview' | 'members' | 'docs'
 
 interface TeamDetailProps {
   team: Team
+  readOnly: boolean
 }
 
-function TeamDetail({ team }: TeamDetailProps) {
+function TeamDetail({ team, readOnly }: TeamDetailProps) {
   const [tab, setTab] = useState<TeamTab>('overview')
   const [showAddMember, setShowAddMember] = useState(false)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
@@ -41,10 +42,12 @@ function TeamDetail({ team }: TeamDetailProps) {
   const lead = members.find((m) => m.role === 'lead')
 
   function handleAddMembers(agentIds: number[]) {
+    if (readOnly) return
     agentIds.forEach((id) => assignAgentToTeam(id, team.id, 'member'))
   }
 
   function handleSetLead(agentId: number) {
+    if (readOnly) return
     // Demote existing lead to member
     const existingLead = teamAssignments.find((a) => a.role === 'lead')
     if (existingLead && existingLead.agent_id !== agentId) {
@@ -54,6 +57,7 @@ function TeamDetail({ team }: TeamDetailProps) {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    if (readOnly) return
     const { active, over } = event
     if (!over) return
     const agentId = parseInt(String(active.id).replace('member-', ''), 10)
@@ -129,8 +133,9 @@ function TeamDetail({ team }: TeamDetailProps) {
         <div>
           <div className="flex justify-end mb-3 relative">
             <button
+              disabled={readOnly}
               onClick={() => setShowAddMember((v) => !v)}
-              className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors"
+              className="px-3 py-1.5 text-sm border border-border rounded hover:bg-surface-1 text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               + Add Member
             </button>
@@ -180,18 +185,20 @@ function TeamDetail({ team }: TeamDetailProps) {
                         </span>
                         {role !== 'lead' && (
                           <button
+                            disabled={readOnly}
                             onClick={() => handleSetLead(agent.id)}
                             onPointerDown={(e) => e.stopPropagation()}
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1 disabled:opacity-50"
                             title="Set as lead"
                           >
                             ★
                           </button>
                         )}
                         <button
+                          disabled={readOnly}
                           onClick={() => removeAgentFromTeam(agent.id, team.id)}
                           onPointerDown={(e) => e.stopPropagation()}
-                          className="text-xs text-muted-foreground hover:text-red-500 transition-colors px-1"
+                          className="text-xs text-muted-foreground hover:text-red-500 transition-colors px-1 disabled:opacity-50"
                           title="Remove from team"
                         >
                           ✕
@@ -232,21 +239,12 @@ export function TeamsPanel() {
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
-  const setDepartments = useMissionControl((s) => s.setDepartments)
-  const setTeams = useMissionControl((s) => s.setTeams)
-  const setAgentTeamAssignments = useMissionControl((s) => s.setAgentTeamAssignments)
+  const { isReadOnly, isLoading, syncError } = useOrgData()
 
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [deptFilter, setDeptFilter] = useState<number | null>(null)
   const [showNewTeamHint, setShowNewTeamHint] = useState(false)
-
-  useEffect(() => {
-    if (departments.length === 0) setDepartments(MOCK_DEPARTMENTS)
-    if (teams.length === 0) setTeams(MOCK_TEAMS)
-    if (agentTeamAssignments.length === 0) setAgentTeamAssignments(MOCK_AGENT_ASSIGNMENTS)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const filteredTeams =
     deptFilter !== null ? teams.filter((t) => t.department_id === deptFilter) : teams
@@ -293,6 +291,7 @@ export function TeamsPanel() {
         )}
         createLabel="New Team"
         onCreate={() => {
+          if (isReadOnly) return
           setShowNewTeamHint(true)
           setSelectedTeam(null)
         }}
@@ -320,6 +319,19 @@ export function TeamsPanel() {
 
       {/* Detail Pane */}
       <div className="flex-1 min-w-0 overflow-y-auto">
+        {isLoading ? (
+          <div className="mx-6 mt-6 text-sm text-muted-foreground">Loading org structure…</div>
+        ) : null}
+        {syncError ? (
+          <div className="mx-6 mt-6 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            {syncError}
+          </div>
+        ) : null}
+        {isReadOnly ? (
+          <div className="mx-6 mt-6 rounded border border-border bg-[hsl(var(--surface-1))] px-3 py-2 text-xs text-muted-foreground">
+            Team memberships are currently derived from the synced `AGENTS_DIR` structure.
+          </div>
+        ) : null}
         {showNewTeamHint && (
           <div className="text-xs text-muted-foreground p-3 border-b border-border bg-[hsl(var(--surface-1))]">
             Create teams from the Departments panel
@@ -327,7 +339,7 @@ export function TeamsPanel() {
         )}
         <div className="p-6">
           {selectedTeam ? (
-            <TeamDetail team={selectedTeam} />
+            <TeamDetail team={selectedTeam} readOnly={isReadOnly} />
           ) : (
             <div className="text-muted-foreground text-sm">
               Select a team from the sidebar
