@@ -1470,6 +1470,15 @@ const migrations: Migration[] = [
       db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_agent_id ON agent_team_assignments(agent_id)`)
       db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_team_assignments_team_external_id ON agent_team_assignments(workspace_id, team_external_id)`)
     }
+  },
+  {
+    id: '050_departments_manager_agent_id',
+    up(db: Database.Database) {
+      const cols = db.prepare(`PRAGMA table_info(departments)`).all() as Array<{ name: string }>
+      if (!cols.some((col) => col.name === 'manager_agent_id')) {
+        db.exec(`ALTER TABLE departments ADD COLUMN manager_agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL`)
+      }
+    }
   }
 ]
 

@@ -342,9 +342,15 @@ function applyFilesystemOrgPersistence(
       workspace_id, agent_id, team_external_id, role, assigned_at, source
     ) VALUES (?, ?, ?, ?, ?, 'filesystem')
     ON CONFLICT(workspace_id, agent_id, team_external_id) DO UPDATE SET
-      role = excluded.role,
+      role = CASE
+        WHEN agent_team_assignments.source = 'manual' THEN agent_team_assignments.role
+        ELSE excluded.role
+      END,
       assigned_at = excluded.assigned_at,
-      source = excluded.source
+      source = CASE
+        WHEN agent_team_assignments.source = 'manual' THEN 'manual'
+        ELSE excluded.source
+      END
   `)
 
   const deleteDepartmentsNotIn = (externalIds: number[]) => {
@@ -513,6 +519,17 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
 
   syncTxn()
   applyFilesystemOrgPersistence(workspaceId, resolvedRoot, departments, teams, agentAssignments)
+
+  const leadRows = db.prepare(
+    `SELECT external_id, manager_agent_id FROM departments WHERE workspace_id = ?`
+  ).all(workspaceId) as Array<{ external_id: number; manager_agent_id: number | null }>
+  const leadMap = new Map(leadRows.map((row) => [row.external_id, row.manager_agent_id]))
+  for (const department of departments) {
+    const leadId = leadMap.get(department.id)
+    if (leadId != null) {
+      department.manager_agent_id = leadId
+    }
+  }
 
   return {
     departments,
