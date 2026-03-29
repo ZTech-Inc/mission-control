@@ -109,6 +109,8 @@ const INSECURE_PASSWORDS = new Set([
   'testpass123',
 ])
 
+export const DEFAULT_SEED_AUTH_PASS = 'change-me-on-first-login'
+
 export function resolveSeedAuthPassword(env: NodeJS.ProcessEnv = process.env): string | null {
   const b64 = env.AUTH_PASS_B64
   if (b64 && b64.trim().length > 0) {
@@ -133,7 +135,7 @@ export function resolveSeedAuthPassword(env: NodeJS.ProcessEnv = process.env): s
     }
   }
 
-  return env.AUTH_PASS || null
+  return env.AUTH_PASS || DEFAULT_SEED_AUTH_PASS
 }
 
 function seedAdminUserFromEnv(dbConn: Database.Database): void {
