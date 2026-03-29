@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-29T21:57:05.663Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-29T22:15:00.000Z"
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Session State
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md
 **Milestone:** v1.0 milestone
 **Current phase:** 02
 **Status:** Executing Phase 02
-**Last completed plan:** 02-01-PLAN.md
-**Verification:** Passed (`pnpm typecheck`)
+**Last completed plan:** 02-02-PLAN.md
+**Verification:** Passed (`pnpm typecheck`, `pnpm build`, prior-phase regression tests)
 
 ## Decisions
 
@@ -35,19 +35,21 @@ See: .planning/PROJECT.md
 - [Phase 02]: Used it.todo-only Vitest stubs in Wave 0 so later implementation plans can add assertions without changing verify targets.
 - [Phase 02]: Manual team lead promotions now survive filesystem rescans because org-scanner preserves source='manual' on assignment conflicts.
 - [Phase 02]: Team and department lead mutation routes update SQLite by workspace_id plus external_id and invalidate the cached org snapshot after writes.
+- [Phase 02]: Lead changes now call dedicated async store actions, refresh `/api/org/scan?force=true`, and keep UI state in sync only after API success.
 
 ## Performance Metrics
 
 | Phase | Plans | Status | Notes |
 |------|-------|--------|-------|
 | 01 | 3/3 | Complete | Embedded department/team chat tabs verified |
-| 02 | 2/3 | In Progress | Wave 0 stubs plus data-foundation APIs and scanner persistence verified |
+| 02 | 3/3 | In Progress | All plans executed; awaiting phase verification and completion |
 | Phase 02 P01 | 11min | 3 tasks | 4 files |
+| Phase 02 P02 | 2min | 2 tasks | 3 files |
 
 ## Session Continuity
 
-- **Last session:** 2026-03-29T21:56:59.437Z
-- **Stopped at:** Completed 02-01-PLAN.md
+- **Last session:** 2026-03-29T22:15:00.000Z
+- **Stopped at:** Completed 02-02-PLAN.md
 
 ## Session Log
 
@@ -56,3 +58,4 @@ See: .planning/PROJECT.md
 - 2026-03-30: Completed plans 01-01 and 01-03, passed verification, and cleared auto-chain state
 - 2026-03-30: Completed plan 02-00 with Wave 0 route and org-scanner test stubs
 - 2026-03-30: Completed plan 02-01 with lead persistence APIs, migration 050, and org-scanner source-priority protections
+- 2026-03-30: Completed plan 02-02 with persisted lead-promotion store actions, inline team confirmation, and department lead selection
