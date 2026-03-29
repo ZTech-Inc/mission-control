@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Department, Agent } from '@/store'
+import { EmbeddedChat } from '@/components/chat/embedded-chat'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
 import { useOrgData } from '@/lib/use-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
 
-type DeptTab = 'overview' | 'teams' | 'agents' | 'docs'
+type DeptTab = 'overview' | 'teams' | 'agents' | 'docs' | 'chat'
 type DepartmentFilter = 'all' | 'staffed' | 'empty'
 
 interface DepartmentDetailProps {
@@ -130,8 +131,11 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
     }
   }
 
-  const viewTabs: DeptTab[] = ['overview', 'teams', 'agents', 'docs']
+  const viewTabs: DeptTab[] = ['overview', 'teams', 'agents', 'docs', 'chat']
   const unassignedAgents = agents.filter((agent) => !agentTeamAssignments.some((assignment) => assignment.agent_id === agent.id))
+  const leadAgent = dept.manager_agent_id
+    ? agents.find((agent) => agent.id === dept.manager_agent_id) ?? null
+    : null
 
   return (
     <>
@@ -160,7 +164,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className={tab === 'chat' ? 'flex-1 min-h-0' : 'flex-1 overflow-auto'}>
         {tab === 'overview' && (
           <div className="p-6 max-w-5xl space-y-6">
             <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-5">
@@ -486,6 +490,25 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
         {tab === 'docs' && (
           <div className="p-6">
             <OrgDocsPanel entityType="department" entityId={dept.id} />
+          </div>
+        )}
+
+        {tab === 'chat' && (
+          <div className="flex h-full min-h-0 flex-1 flex-col">
+            {leadAgent ? (
+              <EmbeddedChat
+                conversationId={`dept:${dept.id}`}
+                targetAgentName={leadAgent.name}
+                targetAgentStatus={leadAgent.status}
+                entityLabel={dept.name}
+                entityColor={dept.color}
+              />
+            ) : (
+              <EmptyState
+                title="No lead assigned"
+                subtitle="Assign a department lead to enable chat"
+              />
+            )}
           </div>
         )}
       </div>
