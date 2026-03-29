@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 status: executing
-stopped_at: Completed 02-00-PLAN.md
-last_updated: "2026-03-29T21:44:26.053Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-29T21:57:05.663Z"
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Session State
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md
 **Milestone:** v1.0 milestone
 **Current phase:** 02
 **Status:** Executing Phase 02
-**Last completed plan:** 02-00-PLAN.md
-**Verification:** Passed (`pnpm test --run src/lib/__tests__/team-assignment-route.test.ts src/lib/__tests__/department-lead-route.test.ts src/lib/__tests__/org-scanner-source-priority.test.ts`)
+**Last completed plan:** 02-01-PLAN.md
+**Verification:** Passed (`pnpm typecheck`)
 
 ## Decisions
 
@@ -33,18 +33,21 @@ See: .planning/PROJECT.md
 - 2026-03-30 (Phase 01): Department and team chat tabs give height ownership to `EmbeddedChat` so message scrolling stays inside the widget.
 - 2026-03-30 (Phase 01): Restored `DEFAULT_SEED_AUTH_PASS` in `src/lib/db` so repository-wide typecheck/build verification could complete cleanly.
 - [Phase 02]: Used it.todo-only Vitest stubs in Wave 0 so later implementation plans can add assertions without changing verify targets.
+- [Phase 02]: Manual team lead promotions now survive filesystem rescans because org-scanner preserves source='manual' on assignment conflicts.
+- [Phase 02]: Team and department lead mutation routes update SQLite by workspace_id plus external_id and invalidate the cached org snapshot after writes.
 
 ## Performance Metrics
 
 | Phase | Plans | Status | Notes |
 |------|-------|--------|-------|
 | 01 | 3/3 | Complete | Embedded department/team chat tabs verified |
-| 02 | 1/3 | In Progress | Wave 0 test stubs verified with 18 todo tests and 0 failures |
+| 02 | 2/3 | In Progress | Wave 0 stubs plus data-foundation APIs and scanner persistence verified |
+| Phase 02 P01 | 11min | 3 tasks | 4 files |
 
 ## Session Continuity
 
-- **Last session:** 2026-03-29T21:44:26.050Z
-- **Stopped at:** Completed 02-00-PLAN.md
+- **Last session:** 2026-03-29T21:56:59.437Z
+- **Stopped at:** Completed 02-01-PLAN.md
 
 ## Session Log
 
@@ -52,3 +55,4 @@ See: .planning/PROJECT.md
 - 2026-03-29: Executed and committed plan 01-02
 - 2026-03-30: Completed plans 01-01 and 01-03, passed verification, and cleared auto-chain state
 - 2026-03-30: Completed plan 02-00 with Wave 0 route and org-scanner test stubs
+- 2026-03-30: Completed plan 02-01 with lead persistence APIs, migration 050, and org-scanner source-priority protections
