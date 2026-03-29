@@ -640,6 +640,7 @@ interface MissionControlStore {
   addDepartment: (department: Department) => void
   updateDepartment: (departmentId: number, updates: Partial<Department>) => void
   deleteDepartment: (departmentId: number) => void
+  setDepartmentLead: (deptId: number, agentId: number | null) => Promise<boolean>
   setSelectedDepartment: (department: Department | null) => void
 
   // Teams
@@ -655,6 +656,7 @@ interface MissionControlStore {
   agentTeamAssignments: AgentTeamAssignment[]
   setAgentTeamAssignments: (assignments: AgentTeamAssignment[]) => void
   assignAgentToTeam: (agentId: number, teamId: number, role: 'member' | 'lead') => void
+  promoteToLead: (agentId: number, teamId: number) => Promise<boolean>
   removeAgentFromTeam: (agentId: number, teamId: number) => void
 
   // Org Docs
@@ -1253,6 +1255,42 @@ export const useMissionControl = create<MissionControlStore>()(
           selectedDepartment: state.selectedDepartment?.id === departmentId ? null : state.selectedDepartment,
         }
       }),
+    setDepartmentLead: async (deptId, agentId) => {
+      try {
+        const response = await fetch(`/api/departments/${deptId}/lead`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agent_id: agentId }),
+        })
+        if (!response.ok) {
+          console.error('Failed to set department lead:', await response.text())
+          return false
+        }
+      } catch (error) {
+        console.error('Failed to set department lead:', error)
+        return false
+      }
+
+      try {
+        await fetch('/api/org/scan?force=true')
+      } catch {
+        // Non-fatal: local state is still updated below.
+      }
+
+      set((state) => ({
+        departments: state.departments.map((department) =>
+          department.id === deptId
+            ? { ...department, manager_agent_id: agentId ?? undefined }
+            : department
+        ),
+        selectedDepartment:
+          state.selectedDepartment?.id === deptId
+            ? { ...state.selectedDepartment, manager_agent_id: agentId ?? undefined }
+            : state.selectedDepartment,
+      }))
+
+      return true
+    },
     setSelectedDepartment: (department) => set({ selectedDepartment: department }),
 
     // Teams
@@ -1297,6 +1335,42 @@ export const useMissionControl = create<MissionControlStore>()(
         const next = [...filtered, { agent_id: agentId, team_id: teamId, role, assigned_at: Math.floor(Date.now() / 1000) }]
         return { agentTeamAssignments: next }
       }),
+    promoteToLead: async (agentId, teamId) => {
+      try {
+        const response = await fetch(`/api/teams/${teamId}/assignments`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agent_id: agentId, role: 'lead' }),
+        })
+        if (!response.ok) {
+          console.error('Failed to promote to lead:', await response.text())
+          return false
+        }
+      } catch (error) {
+        console.error('Failed to promote to lead:', error)
+        return false
+      }
+
+      try {
+        await fetch('/api/org/scan?force=true')
+      } catch {
+        // Non-fatal: local state is still updated below.
+      }
+
+      set((state) => ({
+        agentTeamAssignments: state.agentTeamAssignments.map((assignment) => {
+          if (assignment.team_id === teamId && assignment.role === 'lead' && assignment.agent_id !== agentId) {
+            return { ...assignment, role: 'member' as const }
+          }
+          if (assignment.agent_id === agentId && assignment.team_id === teamId) {
+            return { ...assignment, role: 'lead' as const }
+          }
+          return assignment
+        }),
+      }))
+
+      return true
+    },
     removeAgentFromTeam: (agentId, teamId) =>
       set((state) => {
         const next = state.agentTeamAssignments.filter(
