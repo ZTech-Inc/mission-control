@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-30T11:35:58.415Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-30T11:37:38.308Z"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 13
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Session State
@@ -40,6 +40,8 @@ See: .planning/PROJECT.md
 - [Phase 03]: Stored stable agent path hash in config.external_id because agents table has no external_id
 - [Phase 03]: Kept /api/departments/[id]/lead stable while renaming store/UI terminology to Department Manager.
 - [Phase 03]: Filesystem org scanner now treats MANAGER/docs as reserved department folders and syncs department manager from MANAGER/.
+- [Phase 03]: Team/department docs routes resolve entities by workspace_id + external_id before filesystem reads and writes.
+- [Phase 03]: OrgDocsPanel now hydrates from docs API payloads and refreshes immediately after POST doc creation.
 
 ## Accumulated Context
 
@@ -57,11 +59,12 @@ See: .planning/PROJECT.md
 | Phase 02 P02 | 2min | 2 tasks | 3 files |
 | Phase 03 P02 | 3min | 2 tasks | 3 files |
 | Phase 03 P01 | 4m | 2 tasks | 6 files |
+| Phase 03 P03 | 6min | 2 tasks | 3 files |
 
 ## Session Continuity
 
-- **Last session:** 2026-03-30T11:35:58.412Z
-- **Stopped at:** Completed 03-01-PLAN.md
+- **Last session:** 2026-03-30T11:37:38.305Z
+- **Stopped at:** Completed 03-03-PLAN.md
 
 ## Session Log
 
