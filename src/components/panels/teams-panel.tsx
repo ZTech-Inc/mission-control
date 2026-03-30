@@ -297,7 +297,7 @@ function CreateTeamAgentForm({
   }
 
   return (
-    <div className="p-4 border-b border-border/50 bg-[hsl(var(--surface-1))] space-y-3">
+    <div className="p-6 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-mono font-semibold text-foreground">Create New Agent</span>
         <Button variant="ghost" size="sm" onClick={onClose}>
@@ -432,6 +432,21 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   useEffect(() => {
     setActiveChatConversationId(null)
   }, [selectedChatAgentId])
+
+  useEffect(() => {
+    if (!showCreateAgentForm) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowCreateAgentForm(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showCreateAgentForm])
 
   async function handleSetLead(agentId: number) {
     await promoteToLead(agentId, team.id)
@@ -639,19 +654,6 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
                   </div>
                 </div>
 
-                {showCreateAgentForm && (
-                  <CreateTeamAgentForm
-                    departmentName={dept?.name ?? ''}
-                    teamName={team.name}
-                    onClose={() => setShowCreateAgentForm(false)}
-                    onCreated={async () => {
-                      setShowCreateAgentForm(false)
-                      await fetch('/api/org/scan?force=true')
-                      window.location.reload()
-                    }}
-                  />
-                )}
-
                 <div className="flex-1 p-4">
                   <DndContext
                     onDragStart={(event) => {
@@ -764,6 +766,32 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
                 </div>
               </section>
             )}
+          </div>
+        </div>
+      )}
+
+      {showCreateAgentForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setShowCreateAgentForm(false)}
+        >
+          <div
+            className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create new agent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CreateTeamAgentForm
+              departmentName={dept?.name ?? ''}
+              teamName={team.name}
+              onClose={() => setShowCreateAgentForm(false)}
+              onCreated={async () => {
+                setShowCreateAgentForm(false)
+                await fetch('/api/org/scan?force=true')
+                window.location.reload()
+              }}
+            />
           </div>
         </div>
       )}
