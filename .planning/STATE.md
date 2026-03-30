@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-03-30T11:45:23.175Z"
+stopped_at: Completed 03-05-PLAN.md
+last_updated: "2026-03-30T11:57:13.534Z"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Session State
@@ -44,6 +44,9 @@ See: .planning/PROJECT.md
 - [Phase 03]: OrgDocsPanel now hydrates from docs API payloads and refreshes immediately after POST doc creation.
 - [Phase 03]: Used adapter wrappers to render all 11 agent detail tabs inline in Teams overview.
 - [Phase 03]: Selected team lead is auto-focused per team change with selectedAgentId reset and detail tab reset.
+- [Phase 03]: Replaced Add Member AgentMultiSelect with inline CreateTeamAgentForm posting to /api/agents/create.
+- [Phase 03]: Replaced full-page department creation mode with inline header form to match New Team behavior.
+- [Phase 03]: Displayed DepartmentManagerCard in Overview and gated manager creation behind inline Hire a Manager form.
 
 ## Accumulated Context
 
@@ -63,11 +66,12 @@ See: .planning/PROJECT.md
 | Phase 03 P01 | 4m | 2 tasks | 6 files |
 | Phase 03 P03 | 6min | 2 tasks | 3 files |
 | Phase 03 P04 | 3m | 1 tasks | 1 files |
+| Phase 03 P05 | 8 min | 2 tasks | 2 files |
 
 ## Session Continuity
 
-- **Last session:** 2026-03-30T11:45:23.173Z
-- **Stopped at:** Completed 03-04-PLAN.md
+- **Last session:** 2026-03-30T11:57:13.532Z
+- **Stopped at:** Completed 03-05-PLAN.md
 
 ## Session Log
 
