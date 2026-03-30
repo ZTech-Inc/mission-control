@@ -27,6 +27,7 @@ interface GoogleApi {
 type LoginRequestBody =
   | { username: string; password: string }
   | { credential?: string }
+  | Record<string, never>
 
 type LoginErrorPayload = {
   code?: string
@@ -346,6 +347,33 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
+
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">dev</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true)
+                setError('')
+                try {
+                  await completeLogin('/api/auth/dev-login', {})
+                } catch {
+                  setError('Dev login failed')
+                  setLoading(false)
+                }
+              }}
+              disabled={loading}
+              className="w-full h-10 flex items-center justify-center gap-2 rounded-lg border border-dashed border-yellow-500/50 bg-yellow-500/5 text-yellow-400 text-sm font-medium hover:bg-yellow-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Dev Login (skip auth)
+            </button>
+          </div>
+        )}
 
         <p className="text-center text-xs text-muted-foreground mt-6">{t('orchestrationTagline')}</p>
       </div>

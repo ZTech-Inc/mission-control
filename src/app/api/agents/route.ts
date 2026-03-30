@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const role = searchParams.get('role');
     const showHidden = searchParams.get('show_hidden') === 'true';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 200);
+    const rawLimit = searchParams.get('limit');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Build dynamic query
@@ -52,8 +52,12 @@ export async function GET(request: NextRequest) {
       params.push(role);
     }
     
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    query += ' ORDER BY created_at DESC';
+    if (rawLimit !== null) {
+      const limit = Math.max(0, parseInt(rawLimit, 10) || 0);
+      query += ' LIMIT ? OFFSET ?';
+      params.push(limit, offset);
+    }
     
     const stmt = db.prepare(query);
     const agents = stmt.all(...params) as Agent[];
@@ -139,8 +143,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       agents: agentsWithStats,
       total: countRow.total,
-      page: Math.floor(offset / limit) + 1,
-      limit
+      page: rawLimit !== null ? Math.floor(offset / Math.max(1, parseInt(rawLimit, 10) || 1)) + 1 : 1,
+      limit: rawLimit !== null ? Math.max(0, parseInt(rawLimit, 10) || 0) : countRow.total
     });
   } catch (error) {
     logger.error({ err: error }, 'GET /api/agents error');
