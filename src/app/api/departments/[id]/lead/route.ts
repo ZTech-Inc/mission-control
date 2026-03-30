@@ -5,7 +5,7 @@ import { getDatabase } from '@/lib/db'
 import { invalidateOrgSnapshot } from '@/lib/org-scanner'
 import { validateBody } from '@/lib/validation'
 
-const putLeadSchema = z.object({
+const putManagerSchema = z.object({
   agent_id: z.number().int().positive().nullable(),
 })
 
@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Invalid department id' }, { status: 400 })
   }
 
-  const validated = await validateBody(request, putLeadSchema)
+  const validated = await validateBody(request, putManagerSchema)
   if ('error' in validated) return validated.error
 
   const db = getDatabase()

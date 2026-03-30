@@ -80,7 +80,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
   const addTeam = useMissionControl((s) => s.addTeam)
   const assignAgentToTeam = useMissionControl((s) => s.assignAgentToTeam)
-  const setDepartmentLead = useMissionControl((s) => s.setDepartmentLead)
+  const setDepartmentManager = useMissionControl((s) => s.setDepartmentManager)
 
   const deptTeams = useMemo(
     () => teams.filter((team) => team.department_id === dept.id),
@@ -199,7 +199,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
 
             <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
               <div className="mb-2">
-                <h3 className="text-sm font-semibold font-mono text-foreground">Department Lead</h3>
+                <h3 className="text-sm font-semibold font-mono text-foreground">Department Manager</h3>
                 <p className="text-[11px] font-mono text-muted-foreground/50">
                   Agent who receives messages in the department chat tab.
                 </p>
@@ -208,7 +208,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
                 value={dept.manager_agent_id?.toString() ?? ''}
                 onChange={async (event) => {
                   const value = event.target.value
-                  await setDepartmentLead(dept.id, value ? Number(value) : null)
+                  await setDepartmentManager(dept.id, value ? Number(value) : null)
                 }}
                 className="w-full max-w-xs px-3 py-1.5 rounded border border-border/50 bg-[hsl(var(--surface-0))] text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
               >
@@ -530,8 +530,8 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
               />
             ) : (
               <EmptyState
-                title="No lead assigned"
-                subtitle="Assign a department lead to enable chat"
+                title="No manager assigned"
+                subtitle="Assign a department manager to enable chat"
               />
             )}
           </div>

@@ -640,7 +640,7 @@ interface MissionControlStore {
   addDepartment: (department: Department) => void
   updateDepartment: (departmentId: number, updates: Partial<Department>) => void
   deleteDepartment: (departmentId: number) => void
-  setDepartmentLead: (deptId: number, agentId: number | null) => Promise<boolean>
+  setDepartmentManager: (deptId: number, agentId: number | null) => Promise<boolean>
   setSelectedDepartment: (department: Department | null) => void
 
   // Teams
@@ -1255,7 +1255,7 @@ export const useMissionControl = create<MissionControlStore>()(
           selectedDepartment: state.selectedDepartment?.id === departmentId ? null : state.selectedDepartment,
         }
       }),
-    setDepartmentLead: async (deptId, agentId) => {
+    setDepartmentManager: async (deptId, agentId) => {
       try {
         const response = await fetch(`/api/departments/${deptId}/lead`, {
           method: 'PUT',
@@ -1263,11 +1263,11 @@ export const useMissionControl = create<MissionControlStore>()(
           body: JSON.stringify({ agent_id: agentId }),
         })
         if (!response.ok) {
-          console.error('Failed to set department lead:', await response.text())
+          console.error('Failed to set department manager:', await response.text())
           return false
         }
       } catch (error) {
-        console.error('Failed to set department lead:', error)
+        console.error('Failed to set department manager:', error)
         return false
       }
 
