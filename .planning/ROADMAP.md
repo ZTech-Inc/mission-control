@@ -51,5 +51,5 @@ Plans:
 - [x] 03-04-PLAN.md — Inline agent details card in Teams Overview tab
 - [x] 03-05-PLAN.md — Creation button prominence + modals + department manager card
 - [x] 03-06-PLAN.md — Chat tab agent selector with conversation history
-- [ ] 03-07-PLAN.md — Gap closure: wrap Add Member form in modal dialog (D-08)
+- [x] 03-07-PLAN.md — Gap closure: wrap Add Member form in modal dialog (D-08)
 - [ ] 03-08-PLAN.md — Gap closure: visual verification checkpoint (D-05, D-06, D-12)
