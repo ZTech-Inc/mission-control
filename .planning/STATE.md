@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 02
+current_phase: 03
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-03-30T10:42:58.182Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-30T11:35:58.415Z"
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 13
+  completed_plans: 8
 ---
 
 # Session State
@@ -22,8 +22,8 @@ See: .planning/PROJECT.md
 ## Position
 
 **Milestone:** v1.0 milestone
-**Current phase:** 02
-**Status:** Executing Phase 02
+**Current phase:** 03
+**Status:** Executing Phase 03
 **Last completed plan:** 02-02-PLAN.md
 **Verification:** Passed (`pnpm typecheck`, `pnpm build`, prior-phase regression tests)
 
@@ -36,6 +36,10 @@ See: .planning/PROJECT.md
 - [Phase 02]: Manual team lead promotions now survive filesystem rescans because org-scanner preserves source='manual' on assignment conflicts.
 - [Phase 02]: Team and department lead mutation routes update SQLite by workspace_id plus external_id and invalidate the cached org snapshot after writes.
 - [Phase 02]: Lead changes now call dedicated async store actions, refresh `/api/org/scan?force=true`, and keep UI state in sync only after API success.
+- [Phase 03]: Mapped org writes to external-id keyed department/team columns for creation routes
+- [Phase 03]: Stored stable agent path hash in config.external_id because agents table has no external_id
+- [Phase 03]: Kept /api/departments/[id]/lead stable while renaming store/UI terminology to Department Manager.
+- [Phase 03]: Filesystem org scanner now treats MANAGER/docs as reserved department folders and syncs department manager from MANAGER/.
 
 ## Accumulated Context
 
@@ -51,11 +55,13 @@ See: .planning/PROJECT.md
 | 02 | 3/3 | In Progress | All plans executed; awaiting phase verification and completion |
 | Phase 02 P01 | 11min | 3 tasks | 4 files |
 | Phase 02 P02 | 2min | 2 tasks | 3 files |
+| Phase 03 P02 | 3min | 2 tasks | 3 files |
+| Phase 03 P01 | 4m | 2 tasks | 6 files |
 
 ## Session Continuity
 
-- **Last session:** 2026-03-30T10:42:58.179Z
-- **Stopped at:** Phase 3 UI-SPEC approved
+- **Last session:** 2026-03-30T11:35:58.412Z
+- **Stopped at:** Completed 03-01-PLAN.md
 
 ## Session Log
 

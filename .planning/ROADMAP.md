@@ -45,8 +45,8 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Manager terminology rename + org-scanner MANAGER/ handling + isReadOnly bypass
-- [ ] 03-02-PLAN.md — API routes for team/department/agent creation
+- [x] 03-01-PLAN.md — Manager terminology rename + org-scanner MANAGER/ handling + isReadOnly bypass
+- [x] 03-02-PLAN.md — API routes for team/department/agent creation
 - [ ] 03-03-PLAN.md — Docs panel fixes + real API integration
 - [ ] 03-04-PLAN.md — Inline agent details card in Teams Overview tab
 - [ ] 03-05-PLAN.md — Creation button prominence + modals + department manager card
