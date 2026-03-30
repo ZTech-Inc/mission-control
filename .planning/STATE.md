@@ -24,7 +24,7 @@ See: .planning/PROJECT.md
 **Milestone:** v1.0 milestone
 **Current phase:** 03
 **Status:** Executing Phase 03
-**Last completed plan:** 02-02-PLAN.md
+**Last completed plan:** 03-01-PLAN.md
 **Verification:** Passed (`pnpm typecheck`, `pnpm build`, prior-phase regression tests)
 
 ## Decisions
