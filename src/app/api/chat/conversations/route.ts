@@ -17,8 +17,67 @@ export async function GET(request: NextRequest) {
     const workspaceId = auth.user.workspace_id ?? 1
 
     const agent = searchParams.get('agent')
+    const agentIdParam = searchParams.get('agent_id')
+    const teamIdParam = searchParams.get('team_id')
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 200)
     const offset = parseInt(searchParams.get('offset') || '0')
+
+    const agentId = agentIdParam ? Number.parseInt(agentIdParam, 10) : null
+    const teamId = teamIdParam ? Number.parseInt(teamIdParam, 10) : null
+
+    if (agentId !== null && teamId !== null && !Number.isNaN(agentId) && !Number.isNaN(teamId)) {
+      const conversationPrefix = `team:${teamId}:agent:${agentId}`
+      const conversationLike = `${conversationPrefix}%`
+
+      const rows = db.prepare(`
+        SELECT
+          m.conversation_id as id,
+          MAX(m.created_at) as updated_at,
+          (
+            SELECT m2.content
+            FROM messages m2
+            WHERE m2.workspace_id = ? AND m2.conversation_id = m.conversation_id
+            ORDER BY m2.created_at DESC, m2.id DESC
+            LIMIT 1
+          ) as last_message
+        FROM messages m
+        WHERE m.workspace_id = ? AND m.conversation_id LIKE ?
+        GROUP BY m.conversation_id
+        ORDER BY updated_at DESC
+        LIMIT ? OFFSET ?
+      `).all(workspaceId, workspaceId, conversationLike, limit, offset) as Array<{
+        id: string
+        updated_at: number | null
+        last_message: string | null
+      }>
+
+      const conversations = rows.map((row) => {
+        const suffix = row.id.slice(conversationPrefix.length).replace(/^:+/, '')
+        const title = suffix ? `Conversation ${suffix}` : 'Current conversation'
+        const epochSeconds = row.updated_at ?? Math.floor(Date.now() / 1000)
+        const updatedAt = new Date(epochSeconds * 1000).toISOString()
+
+        return {
+          id: row.id,
+          title,
+          lastMessage: row.last_message ?? '',
+          updatedAt,
+        }
+      })
+
+      const totalRow = db.prepare(`
+        SELECT COUNT(DISTINCT conversation_id) as total
+        FROM messages
+        WHERE workspace_id = ? AND conversation_id LIKE ?
+      `).get(workspaceId, conversationLike) as { total: number }
+
+      return NextResponse.json({
+        conversations,
+        total: totalRow.total,
+        page: Math.floor(offset / limit) + 1,
+        limit,
+      })
+    }
 
     let query: string
     const params: any[] = []

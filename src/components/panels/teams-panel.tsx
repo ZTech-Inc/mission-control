@@ -129,6 +129,117 @@ function InlineAgentDetailsCard({
   )
 }
 
+function AgentChatSelector({
+  members,
+  selectedAgentId,
+  onSelect,
+}: {
+  members: { agent: Agent; role: 'member' | 'lead' }[]
+  selectedAgentId: number | null
+  onSelect: (agentId: number) => void
+}) {
+  return (
+    <div
+      className="flex items-center gap-2 px-4 py-2 border-b border-border/50 overflow-x-auto shrink-0"
+      role="radiogroup"
+      aria-label="Select agent to chat with"
+    >
+      {members.map(({ agent, role }) => (
+        <button
+          key={agent.id}
+          onClick={() => onSelect(agent.id)}
+          role="radio"
+          aria-checked={selectedAgentId === agent.id}
+          className={`h-8 px-3 rounded-full flex items-center gap-2 shrink-0 text-[11px] font-mono transition-colors ${
+            selectedAgentId === agent.id
+              ? 'border border-primary/60 bg-[hsl(var(--surface-2))] text-foreground'
+              : 'border border-border/50 bg-[hsl(var(--surface-1))] text-muted-foreground hover:bg-[hsl(var(--surface-2))]'
+          }`}
+        >
+          <StatusDot status={agent.status} />
+          <span className="truncate max-w-24">{agent.name}</span>
+          {role === 'lead' && (
+            <span className="text-[9px] uppercase tracking-wider text-primary/70">lead</span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+type SidebarConversation = {
+  id: string
+  title: string
+  lastMessage: string
+  updatedAt: string
+}
+
+function AgentConversationSidebar({
+  teamId,
+  agentId,
+  agentName,
+  activeConversationId,
+  onSelectConversation,
+}: {
+  teamId: number
+  agentId: number
+  agentName: string
+  activeConversationId: string
+  onSelectConversation: (convId: string) => void
+}) {
+  const [conversations, setConversations] = useState<SidebarConversation[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadConversations() {
+      try {
+        const response = await fetch(`/api/chat/conversations?agent_id=${agentId}&team_id=${teamId}`)
+        if (!response.ok) return
+        const data = await response.json()
+        if (!cancelled && Array.isArray(data.conversations)) {
+          setConversations(data.conversations)
+        }
+      } catch {
+        if (!cancelled) setConversations([])
+      }
+    }
+
+    loadConversations()
+    return () => {
+      cancelled = true
+    }
+  }, [agentId, teamId])
+
+  return (
+    <div className="w-48 border-r border-border/50 flex flex-col overflow-y-auto shrink-0">
+      <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 border-b border-border/30">
+        {agentName} Conversations
+      </div>
+      {conversations.length === 0 ? (
+        <div className="px-3 py-4 text-xs text-muted-foreground/30 font-mono">No prior conversations</div>
+      ) : (
+        conversations.map((conversation) => (
+          <button
+            key={conversation.id}
+            onClick={() => onSelectConversation(conversation.id)}
+            className={`px-3 py-2 text-left text-xs font-mono border-b border-border/20 transition-colors ${
+              activeConversationId === conversation.id
+                ? 'bg-[hsl(var(--surface-2))] text-foreground'
+                : 'text-muted-foreground hover:bg-[hsl(var(--surface-1))]'
+            }`}
+          >
+            <div className="truncate">{conversation.title || 'Untitled'}</div>
+            <div className="text-[10px] text-muted-foreground/40 mt-0.5 truncate">
+              {conversation.lastMessage || 'No messages yet'}
+            </div>
+          </button>
+        ))
+      )}
+    </div>
+  )
+}
+
 function CreateTeamAgentForm({
   departmentName,
   teamName,
@@ -283,6 +394,8 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   const [confirmingPromote, setConfirmingPromote] = useState<number | null>(null)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null)
+  const [selectedChatAgentId, setSelectedChatAgentId] = useState<number | null>(null)
+  const [activeChatConversationId, setActiveChatConversationId] = useState<string | null>(null)
   const [detailTab, setDetailTab] = useState<DetailTabName>('Overview')
 
   const departments = useMissionControl((s) => s.departments)
@@ -311,8 +424,14 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   useEffect(() => {
     const leadMember = members.find((member) => member.role === 'lead')
     setSelectedAgentId(leadMember ? leadMember.agent.id : null)
+    setSelectedChatAgentId(leadMember ? leadMember.agent.id : null)
+    setActiveChatConversationId(null)
     setDetailTab('Overview')
   }, [team.id])
+
+  useEffect(() => {
+    setActiveChatConversationId(null)
+  }, [selectedChatAgentId])
 
   async function handleSetLead(agentId: number) {
     await promoteToLead(agentId, team.id)
@@ -350,24 +469,53 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
           <OrgDocsPanel entityType="team" entityId={team.id} />
         </div>
       ) : view === 'chat' ? (
-        <div className="flex-1 min-h-0">
-          {lead?.agent ? (
-            <EmbeddedChat
-              conversationId={`team:${team.id}`}
-              targetAgentName={lead.agent.name}
-              targetAgentStatus={lead.agent.status}
-              entityLabel={team.name}
-              entityColor={team.color ?? dept?.color}
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center text-muted-foreground/30">
-              <span className="mb-3 text-4xl font-mono">/</span>
-              <span className="text-sm font-mono">No team lead assigned</span>
-              <span className="mt-1 text-xs font-mono text-muted-foreground/20">
-                Promote an agent to lead to enable chat
-              </span>
-            </div>
-          )}
+        <div className="flex-1 min-h-0 flex flex-col">
+          <AgentChatSelector
+            members={members}
+            selectedAgentId={selectedChatAgentId}
+            onSelect={setSelectedChatAgentId}
+          />
+          {(() => {
+            const chatAgent = selectedChatAgentId !== null
+              ? members.find((member) => member.agent.id === selectedChatAgentId)?.agent ?? null
+              : null
+
+            if (!chatAgent) {
+              return (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/30">
+                  <span className="mb-3 text-4xl font-mono">/</span>
+                  <span className="text-sm font-mono">No agent selected</span>
+                  <span className="mt-1 text-xs font-mono text-muted-foreground/20">
+                    Choose an agent above to start a conversation.
+                  </span>
+                </div>
+              )
+            }
+
+            const defaultConversationId = `team:${team.id}:agent:${chatAgent.id}`
+            const conversationId = activeChatConversationId ?? defaultConversationId
+
+            return (
+              <div className="flex-1 min-h-0 flex">
+                <AgentConversationSidebar
+                  teamId={team.id}
+                  agentId={chatAgent.id}
+                  agentName={chatAgent.name}
+                  activeConversationId={conversationId}
+                  onSelectConversation={setActiveChatConversationId}
+                />
+                <div className="flex-1 min-h-0">
+                  <EmbeddedChat
+                    conversationId={conversationId}
+                    targetAgentName={chatAgent.name}
+                    targetAgentStatus={chatAgent.status}
+                    entityLabel={team.name}
+                    entityColor={team.color ?? dept?.color}
+                  />
+                </div>
+              </div>
+            )
+          })()}
         </div>
       ) : (
         <div className="flex-1 overflow-auto p-4">
@@ -861,7 +1009,7 @@ export function TeamsPanel() {
           )}
 
           {selectedTeam ? (
-            <TeamDetail key={`${selectedTeam.id}-${activeView}`} team={selectedTeam} view={activeView} isReadOnly={isReadOnly} />
+            <TeamDetail key={selectedTeam.id} team={selectedTeam} view={activeView} isReadOnly={isReadOnly} />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
