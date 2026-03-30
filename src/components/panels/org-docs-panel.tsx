@@ -1,12 +1,22 @@
 'use client'
-import { useState, useEffect, useMemo, useRef } from 'react'
-import { GraphCanvas, type GraphCanvasRef, type Theme, type GraphNode as ReagraphNode, type GraphEdge as ReagraphEdge } from 'reagraph'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import {
+  GraphCanvas,
+  type GraphCanvasRef,
+  type Theme,
+  type GraphNode as ReagraphNode,
+  type GraphEdge as ReagraphEdge,
+} from 'reagraph'
 import type { DocFile } from '@/store'
-import { MOCK_DEPARTMENT_DOCS, MOCK_TEAM_DOCS, MOCK_DOC_CONTENT } from '@/lib/mock-org-data'
 
 interface OrgDocsPanelProps {
   entityType: 'department' | 'team'
   entityId: number
+}
+
+interface DocsResponse {
+  docs?: DocFile[]
+  content?: Record<string, string>
 }
 
 function getFileColor(filePath: string): string {
@@ -20,20 +30,20 @@ const obsidianTheme: Theme = {
   canvas: { background: '#11111b', fog: '#11111b' },
   node: {
     fill: '#6c7086', activeFill: '#cba6f7', opacity: 1, selectedOpacity: 1, inactiveOpacity: 0.1,
-    label: { color: '#cdd6f4', stroke: '#11111b', activeColor: '#f5f5f7' }
+    label: { color: '#cdd6f4', stroke: '#11111b', activeColor: '#f5f5f7' },
   },
   ring: { fill: '#6c7086', activeFill: '#cba6f7' },
   edge: {
     fill: '#45475a', activeFill: '#cba6f7', opacity: 0.15, selectedOpacity: 0.5, inactiveOpacity: 0.03,
-    label: { color: '#6c7086', activeColor: '#cdd6f4' }
+    label: { color: '#6c7086', activeColor: '#cdd6f4' },
   },
   arrow: { fill: '#45475a', activeFill: '#cba6f7' },
-  lasso: { background: 'rgba(203, 166, 247, 0.08)', border: 'rgba(203, 166, 247, 0.25)' }
+  lasso: { background: 'rgba(203, 166, 247, 0.08)', border: 'rgba(203, 166, 247, 0.25)' },
 }
 
 function parseWikiLinks(content: string): string[] {
   const matches = content.match(/\[\[([^\]]+)\]\]/g) ?? []
-  return matches.map(m => m.slice(2, -2))
+  return matches.map((match) => match.slice(2, -2))
 }
 
 function renderMarkdown(content: string, onWikiLinkClick: (target: string) => void): React.ReactNode {
@@ -62,6 +72,49 @@ function renderMarkdown(content: string, onWikiLinkClick: (target: string) => vo
   })
 }
 
+function flattenDocs(files: DocFile[]): DocFile[] {
+  const result: DocFile[] = []
+  for (const file of files) {
+    result.push(file)
+    if (file.type === 'directory' && file.children?.length) {
+      result.push(...flattenDocs(file.children))
+    }
+  }
+  return result
+}
+
+function findFirstFile(files: DocFile[]): DocFile | null {
+  for (const file of files) {
+    if (file.type === 'file') return file
+    if (file.type === 'directory' && file.children?.length) {
+      const nested = findFirstFile(file.children)
+      if (nested) return nested
+    }
+  }
+  return null
+}
+
+function filterDocsTree(files: DocFile[], query: string): DocFile[] {
+  if (!query) return files
+  const normalized = query.toLowerCase()
+
+  return files.reduce<DocFile[]>((acc, file) => {
+    if (file.type === 'file') {
+      if (file.name.toLowerCase().includes(normalized)) acc.push(file)
+      return acc
+    }
+
+    const filteredChildren = filterDocsTree(file.children ?? [], query)
+    if (file.name.toLowerCase().includes(normalized) || filteredChildren.length > 0) {
+      acc.push({
+        ...file,
+        children: filteredChildren,
+      })
+    }
+    return acc
+  }, [])
+}
+
 interface TreeNodeProps {
   file: DocFile
   depth: number
@@ -86,7 +139,7 @@ function TreeNode({ file, depth, expandedDirs, selectedPath, onToggleDir, onSele
           <span>{isExpanded ? '▼' : '▶'}</span>
           <span className="text-muted-foreground">{file.name}</span>
         </button>
-        {isExpanded && file.children?.map(child => (
+        {isExpanded && file.children?.map((child) => (
           <TreeNode
             key={child.path}
             file={child}
@@ -116,6 +169,7 @@ function TreeNode({ file, depth, expandedDirs, selectedPath, onToggleDir, onSele
 export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
   const [view, setView] = useState<'files' | 'graph'>('files')
   const [docs, setDocs] = useState<DocFile[]>([])
+  const [docContent, setDocContent] = useState<Record<string, string>>({})
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set())
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [content, setContent] = useState<string | null>(null)
@@ -123,112 +177,166 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isCreatingDoc, setIsCreatingDoc] = useState(false)
+  const [newDocName, setNewDocName] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const graphRef = useRef<GraphCanvasRef | null>(null)
 
-  function loadContent(path: string) {
-    setSelectedPath(path)
-    const filename = path.split('/').pop() ?? ''
-    const mockContent = MOCK_DOC_CONTENT[filename]
-    if (mockContent) {
-      setContent(mockContent)
-      setWikiLinks(parseWikiLinks(mockContent))
-    } else {
-      setContent('# Not found\n\nDocument not found.')
+  const allDocs = useMemo(() => flattenDocs(docs), [docs])
+  const fileDocs = useMemo(() => allDocs.filter((doc) => doc.type === 'file'), [allDocs])
+
+  const loadContent = useCallback((docPath: string, contentMap: Record<string, string>) => {
+    setSelectedPath(docPath)
+    const nextContent = contentMap[docPath] ?? contentMap[docPath.split('/').pop() ?? ''] ?? '# Empty document'
+    setContent(nextContent)
+    setWikiLinks(parseWikiLinks(nextContent))
+    setIsEditing(false)
+  }, [])
+
+  const loadDocs = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/${entityType}s/${entityId}/docs`)
+      if (!response.ok) {
+        setError('Failed to load docs')
+        setDocs([])
+        setDocContent({})
+        setContent(null)
+        setWikiLinks([])
+        return
+      }
+
+      const data = await response.json() as DocsResponse
+      const nextDocs = data.docs ?? []
+      const nextContent = data.content ?? {}
+      setDocs(nextDocs)
+      setDocContent(nextContent)
+
+      const available = flattenDocs(nextDocs).filter((doc) => doc.type === 'file')
+      const previouslySelected = available.find((doc) => doc.path === selectedPath)
+      const fileToSelect = previouslySelected ?? available[0]
+      if (fileToSelect) {
+        loadContent(fileToSelect.path, nextContent)
+      } else {
+        setSelectedPath(null)
+        setContent(null)
+        setWikiLinks([])
+      }
+    } catch (fetchError) {
+      console.error('Failed to load docs:', fetchError)
+      setError('Failed to load docs')
+      setDocs([])
+      setDocContent({})
+      setContent(null)
       setWikiLinks([])
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [entityId, entityType, loadContent, selectedPath])
 
   useEffect(() => {
-    const mockDocs =
-      entityType === 'department'
-        ? MOCK_DEPARTMENT_DOCS[entityId] ?? []
-        : MOCK_TEAM_DOCS[entityId] ?? []
-    setDocs(mockDocs)
-    setSelectedPath(null)
-    setContent(null)
-    setWikiLinks([])
-    const firstFile = mockDocs.find(d => d.type === 'file')
-    if (firstFile) {
-      loadContent(firstFile.path)
-    }
-  }, [entityType, entityId])
+    setExpandedDirs(new Set())
+    setSearchQuery('')
+    setIsCreatingDoc(false)
+    setNewDocName('')
+    setIsEditing(false)
+    void loadDocs()
+  }, [entityType, entityId, loadDocs])
 
-  function handleWikiLinkClick(target: string) {
-    const found = docs.find(d => d.name === target + '.md' || d.name === target)
+  const handleWikiLinkClick = useCallback((target: string) => {
+    const found = fileDocs.find((doc) => doc.name === `${target}.md` || doc.name === target)
     if (found) {
       setView('files')
-      loadContent(found.path)
+      loadContent(found.path, docContent)
     }
-  }
+  }, [docContent, fileDocs, loadContent])
 
-  function handleToggleDir(path: string) {
-    setExpandedDirs(prev => {
+  function handleToggleDir(docPath: string) {
+    setExpandedDirs((prev) => {
       const next = new Set(prev)
-      if (next.has(path)) next.delete(path)
-      else next.add(path)
+      if (next.has(docPath)) next.delete(docPath)
+      else next.add(docPath)
       return next
     })
   }
 
   function handleNodeClick(node: ReagraphNode) {
     if (!node?.id) return
-    const found = docs.find(d => d.path === node.id)
+    const found = fileDocs.find((doc) => doc.path === node.id)
     if (found) {
       setView('files')
-      loadContent(found.path)
+      loadContent(found.path, docContent)
+    }
+  }
+
+  async function handleCreateDoc() {
+    const trimmed = newDocName.trim()
+    if (!trimmed || isCreating) return
+
+    setIsCreating(true)
+    setError(null)
+    try {
+      const filename = trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`
+      const response = await fetch(`/api/${entityType}s/${entityId}/docs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename,
+          content: `# ${trimmed.replace(/\.md$/i, '')}\n`,
+        }),
+      })
+
+      if (!response.ok) {
+        setError('Failed to create doc')
+        return
+      }
+
+      setIsCreatingDoc(false)
+      setNewDocName('')
+      await loadDocs()
+    } catch (createError) {
+      console.error('Failed to create doc:', createError)
+      setError('Failed to create doc')
+    } finally {
+      setIsCreating(false)
     }
   }
 
   const { graphNodes, graphEdges } = useMemo(() => {
-    const flatFiles = docs.filter(d => d.type === 'file')
-    const nodes: ReagraphNode[] = flatFiles.map(d => ({
-      id: d.path,
-      label: d.name,
-      fill: getFileColor(d.path),
-      size: selectedPath === d.path ? 10 : 6,
+    const nodes: ReagraphNode[] = fileDocs.map((doc) => ({
+      id: doc.path,
+      label: doc.name,
+      fill: getFileColor(doc.path),
+      size: selectedPath === doc.path ? 10 : 6,
     }))
 
     const edges: ReagraphEdge[] = []
-    flatFiles.forEach(doc => {
-      const filename = doc.path.split('/').pop() ?? ''
-      const docContent = MOCK_DOC_CONTENT[filename] ?? ''
-      const links = parseWikiLinks(docContent)
-      links.forEach(link => {
-        const target = docs.find(d => d.name === link + '.md' || d.name === link)
+    for (const sourceDoc of fileDocs) {
+      const sourceContent = docContent[sourceDoc.path] ?? docContent[sourceDoc.name] ?? ''
+      const links = parseWikiLinks(sourceContent)
+      for (const link of links) {
+        const target = fileDocs.find((doc) => doc.name === `${link}.md` || doc.name === link)
         if (target) {
           edges.push({
-            id: `${doc.path}->${target.path}`,
-            source: doc.path,
+            id: `${sourceDoc.path}->${target.path}`,
+            source: sourceDoc.path,
             target: target.path,
           })
         }
-      })
-    })
+      }
+    }
 
     return { graphNodes: nodes, graphEdges: edges }
-  }, [docs, selectedPath])
+  }, [docContent, fileDocs, selectedPath])
 
-  const filteredDocs = useMemo(() => {
-    if (!searchQuery) return docs
-    // Collect matching file paths
-    const matchingFilePaths = new Set(
-      docs.filter(d => d.type === 'file' && d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => d.path)
-    )
-    // Include all docs whose path is matched or is a prefix of a matched path
-    return docs.filter(d => {
-      if (matchingFilePaths.has(d.path)) return true
-      // Include directory if any matching file starts with this dir's path
-      if (d.type === 'directory') {
-        return Array.from(matchingFilePaths).some(fp => fp.startsWith(d.path + '/'))
-      }
-      return false
-    })
-  }, [docs, searchQuery])
+  const filteredDocs = useMemo(() => filterDocsTree(docs, searchQuery), [docs, searchQuery])
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-shrink-0">
+      <div className="flex items-center gap-2 px-4 py-2 flex-shrink-0">
         <div className="flex gap-1">
           <button
             onClick={() => setView('files')}
@@ -248,28 +356,54 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
             type="text"
             placeholder="Search docs..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
             className="bg-surface-1 border border-border rounded px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none w-40"
           />
         )}
         <div className="flex-1" />
-        <button
-          onClick={() => {
-            setIsEditing(true)
-            setContent('')
-            setSelectedPath(null)
-          }}
-          className="text-xs px-2 py-1 rounded bg-surface-1 border border-border text-muted-foreground hover:text-foreground"
-        >
-          + New Doc
-        </button>
+        {isCreatingDoc ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newDocName}
+              onChange={(event) => setNewDocName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  void handleCreateDoc()
+                }
+                if (event.key === 'Escape') {
+                  setIsCreatingDoc(false)
+                  setNewDocName('')
+                }
+              }}
+              placeholder="filename.md"
+              className="bg-surface-1 border border-border rounded px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none w-36"
+              autoFocus
+            />
+            <button
+              onClick={() => void handleCreateDoc()}
+              disabled={isCreating || !newDocName.trim()}
+              className="text-xs px-2 py-1 rounded bg-primary/20 border border-primary/30 text-primary disabled:opacity-50"
+            >
+              Create
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsCreatingDoc(true)}
+            className="text-xs px-2 py-1 rounded bg-surface-1 border border-border text-muted-foreground hover:text-foreground"
+          >
+            + New Doc
+          </button>
+        )}
       </div>
+      <div className="w-full border-t border-border/50 shrink-0" />
 
       {view === 'files' ? (
         <div className="flex flex-1 min-h-0">
-          {/* File tree sidebar */}
           <div className="w-48 shrink-0 border-r border-border overflow-y-auto py-2">
-            {filteredDocs.map(doc => (
+            {filteredDocs.map((doc) => (
               <TreeNode
                 key={doc.path}
                 file={doc}
@@ -277,14 +411,16 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
                 expandedDirs={expandedDirs}
                 selectedPath={selectedPath}
                 onToggleDir={handleToggleDir}
-                onSelectFile={loadContent}
+                onSelectFile={(docPath) => loadContent(docPath, docContent)}
               />
             ))}
           </div>
 
-          {/* Content pane */}
           <div className="flex-1 overflow-y-auto p-4">
-            {selectedPath ? (
+            {error && <div className="text-xs text-red-400 mb-3">{error}</div>}
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground">Loading documents...</div>
+            ) : selectedPath ? (
               <>
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-xs text-muted-foreground">{selectedPath}</div>
@@ -302,7 +438,7 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
                   <div className="flex flex-col gap-2">
                     <textarea
                       value={editContent}
-                      onChange={e => setEditContent(e.target.value)}
+                      onChange={(event) => setEditContent(event.target.value)}
                       className="w-full h-64 bg-surface-1 border border-border rounded p-3 text-sm font-mono text-foreground focus:outline-none resize-none"
                     />
                     <div className="flex gap-2">
@@ -330,10 +466,11 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
                   </div>
                 )}
                 {wikiLinks.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <div className="text-xs text-muted-foreground mb-2">Links</div>
+                  <div className="mt-4 pt-4">
+                    <div className="w-full border-t border-border/50" />
+                    <div className="text-xs text-muted-foreground mb-2 mt-4">Links</div>
                     <div className="flex flex-wrap gap-2">
-                      {wikiLinks.map(link => (
+                      {wikiLinks.map((link) => (
                         <button
                           key={link}
                           onClick={() => handleWikiLinkClick(link)}
@@ -352,7 +489,6 @@ export function OrgDocsPanel({ entityType, entityId }: OrgDocsPanelProps) {
           </div>
         </div>
       ) : (
-        /* Graph view */
         <div className="flex-1">
           {graphNodes.length > 0 ? (
             <GraphCanvas
