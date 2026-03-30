@@ -94,6 +94,11 @@ const IGNORED_DIRECTORIES = new Set([
   '.DS_Store',
 ])
 
+const RESERVED_DEPARTMENT_SUBDIRS = new Set([
+  'MANAGER',
+  'docs',
+])
+
 function safeDirectories(dir: string): string[] {
   try {
     return readdirSync(dir, { withFileTypes: true })
@@ -348,12 +353,13 @@ function applyFilesystemOrgPersistence(
 
   const upsertDepartment = db.prepare(`
     INSERT INTO departments (
-      workspace_id, external_id, name, description, color, source, source_path, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, 'filesystem', ?, ?, ?)
+      workspace_id, external_id, name, description, color, manager_agent_id, source, source_path, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, 'filesystem', ?, ?, ?)
     ON CONFLICT(workspace_id, external_id) DO UPDATE SET
       name = excluded.name,
       description = excluded.description,
       color = excluded.color,
+      manager_agent_id = excluded.manager_agent_id,
       source = excluded.source,
       source_path = excluded.source_path,
       updated_at = excluded.updated_at
@@ -437,6 +443,7 @@ function applyFilesystemOrgPersistence(
         department.name,
         department.description ?? null,
         department.color ?? null,
+        department.manager_agent_id ?? null,
         path.join(rootPath, department.name),
         department.created_at,
         department.updated_at
@@ -483,6 +490,48 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
   const agentAssignments: AgentTeamAssignment[] = []
   const db = getDatabase()
 
+  const syncFilesystemAgentFromPath = (
+    agentPath: string,
+    defaults: { departmentName: string; teamName?: string }
+  ): { agentId: number; assignmentRole: 'member' | 'lead' } => {
+    const agentDirName = path.basename(agentPath)
+    const agentMd = safeRead(path.join(agentPath, 'AGENT.md'))
+    const identityMd = safeRead(path.join(agentPath, 'IDENTITY.md'))
+    const soulMd = safeRead(path.join(agentPath, 'SOUL.md'))
+    const userMd = safeRead(path.join(agentPath, 'USER.md'))
+    const metadata = parseAgentMetadata(agentDirName, agentMd, identityMd)
+    const agentName = metadata.name || agentDirName
+    const agentRole = metadata.role || 'agent'
+    const contentHash = buildAgentContentHash([agentMd, identityMd, soulMd, userMd, agentPath])
+    const folderOrg: Record<string, unknown> = {
+      department: metadata.department || defaults.departmentName,
+      path: agentPath,
+    }
+    if (defaults.teamName) {
+      folderOrg.team = metadata.team || defaults.teamName
+    }
+
+    const agentId = ensureFilesystemAgent({
+      workspaceId,
+      name: agentName,
+      role: agentRole,
+      soulContent: soulMd || agentMd || identityMd || null,
+      contentHash,
+      workspacePath: agentPath,
+      config: {
+        orgSource: 'filesystem',
+        folderOrg,
+        skills: metadata.skills,
+        kpis: metadata.kpis,
+      },
+    })
+
+    return {
+      agentId,
+      assignmentRole: metadata.assignmentRole || 'member',
+    }
+  }
+
   const syncTxn = db.transaction(() => {
     for (const departmentName of safeDirectories(resolvedRoot)) {
       const departmentPath = path.join(resolvedRoot, departmentName)
@@ -498,7 +547,12 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
         updated_at: startedAt,
       })
 
-      for (const teamName of safeDirectories(departmentPath)) {
+      const departmentSubdirectories = safeDirectories(departmentPath)
+      const teamNames = departmentSubdirectories.filter(
+        (name) => !RESERVED_DEPARTMENT_SUBDIRS.has(name)
+      )
+
+      for (const teamName of teamNames) {
         const teamPath = path.join(departmentPath, teamName)
         const teamId = stableNumber(`team:${teamPath}`)
         const teamColor = colorForKey(`team:${teamName}`)
@@ -515,39 +569,32 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
 
         for (const agentDirName of safeDirectories(teamPath)) {
           const agentPath = path.join(teamPath, agentDirName)
-          const agentMd = safeRead(path.join(agentPath, 'AGENT.md'))
-          const identityMd = safeRead(path.join(agentPath, 'IDENTITY.md'))
-          const soulMd = safeRead(path.join(agentPath, 'SOUL.md'))
-          const userMd = safeRead(path.join(agentPath, 'USER.md'))
-          const metadata = parseAgentMetadata(agentDirName, agentMd, identityMd)
-          const agentName = metadata.name || agentDirName
-          const agentRole = metadata.role || 'agent'
-          const contentHash = buildAgentContentHash([agentMd, identityMd, soulMd, userMd, agentPath])
-          const agentId = ensureFilesystemAgent({
-            workspaceId,
-            name: agentName,
-            role: agentRole,
-            soulContent: soulMd || agentMd || identityMd || null,
-            contentHash,
-            workspacePath: agentPath,
-            config: {
-              orgSource: 'filesystem',
-              folderOrg: {
-                department: metadata.department || departmentName,
-                team: metadata.team || teamName,
-                path: agentPath,
-              },
-              skills: metadata.skills,
-              kpis: metadata.kpis,
-            },
+          const { agentId, assignmentRole } = syncFilesystemAgentFromPath(agentPath, {
+            departmentName,
+            teamName,
           })
 
           agentAssignments.push({
             agent_id: agentId,
             team_id: teamId,
-            role: metadata.assignmentRole || 'member',
+            role: assignmentRole,
             assigned_at: startedAt,
           })
+        }
+      }
+
+      if (departmentSubdirectories.includes('MANAGER')) {
+        const managerDirectory = path.join(departmentPath, 'MANAGER')
+        const managerAgentDirectory = safeDirectories(managerDirectory)[0]
+        if (managerAgentDirectory) {
+          const managerAgentPath = path.join(managerDirectory, managerAgentDirectory)
+          const { agentId: managerAgentId } = syncFilesystemAgentFromPath(managerAgentPath, {
+            departmentName,
+          })
+          const department = departments.find((entry) => entry.id === departmentId)
+          if (department) {
+            department.manager_agent_id = managerAgentId
+          }
         }
       }
     }

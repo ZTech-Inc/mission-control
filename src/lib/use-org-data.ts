@@ -23,6 +23,7 @@ export function useOrgData() {
   const setTeams = useMissionControl((state) => state.setTeams)
   const setAgentTeamAssignments = useMissionControl((state) => state.setAgentTeamAssignments)
   const [orgSource, setOrgSource] = useState<'mock' | 'filesystem'>('mock')
+  const [orgRootPath, setOrgRootPath] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [syncError, setSyncError] = useState<string | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
@@ -36,6 +37,7 @@ export function useOrgData() {
       setTeams(snapshot.teams)
       setAgentTeamAssignments(snapshot.agentAssignments)
       setOrgSource(snapshot.source)
+      setOrgRootPath(snapshot.rootPath)
       setSyncError(null)
       setIsLoading(false)
     }
@@ -98,5 +100,6 @@ export function useOrgData() {
     isLoading,
     syncError,
     isReadOnly: orgSource === 'filesystem',
+    canCreate: Boolean(orgRootPath),
   }
 }
