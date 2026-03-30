@@ -123,6 +123,39 @@ function firstHeading(content: string): string | undefined {
   return undefined
 }
 
+function parseMarkdownTableField(content: string, labels: string[]): string | undefined {
+  const normalizedLabels = labels.map((label) => label.toLowerCase())
+
+  for (const rawLine of content.split('\n')) {
+    const line = rawLine.trim()
+    if (!line.startsWith('|')) continue
+
+    const cells = line
+      .split('|')
+      .map((cell) => cell.trim())
+      .filter(Boolean)
+
+    if (cells.length < 2) continue
+    if (cells.every((cell) => /^:?-{3,}:?$/.test(cell))) continue
+
+    const key = cells[0].replace(/\*\*/g, '').trim().toLowerCase()
+    if (!normalizedLabels.includes(key)) continue
+
+    const value = cells[1].replace(/\*\*/g, '').trim()
+    if (value) return value
+  }
+
+  return undefined
+}
+
+function normalizeAgentName(name: string | undefined): string | undefined {
+  if (!name) return undefined
+  const normalized = name
+    .replace(/^[A-Za-z0-9_-]+\.md\s*(?:[-—–:|]+\s*)?/i, '')
+    .trim()
+  return normalized || undefined
+}
+
 function parseField(content: string, keys: string[]): string | undefined {
   const pattern = new RegExp(
     `^(?:${keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:\\s*(.+)$`,
@@ -182,11 +215,14 @@ function parseListField(content: string, keys: string[]): string[] {
 }
 
 function parseAgentMetadata(agentName: string, agentMd: string, identityMd: string): ParsedAgentMetadata {
-  const name =
+  const name = normalizeAgentName(
     parseField(agentMd, ['name']) ||
     parseField(identityMd, ['name']) ||
+    parseMarkdownTableField(agentMd, ['Agent Name', 'Full Name', 'Name']) ||
+    parseMarkdownTableField(identityMd, ['Agent Name', 'Full Name', 'Name']) ||
     firstHeading(agentMd) ||
     firstHeading(identityMd)
+  )
 
   const role =
     parseField(agentMd, ['role', 'title']) ||
