@@ -50,4 +50,4 @@ Plans:
 - [x] 03-03-PLAN.md — Docs panel fixes + real API integration
 - [x] 03-04-PLAN.md — Inline agent details card in Teams Overview tab
 - [x] 03-05-PLAN.md — Creation button prominence + modals + department manager card
-- [ ] 03-06-PLAN.md — Chat tab agent selector with conversation history
+- [x] 03-06-PLAN.md — Chat tab agent selector with conversation history
