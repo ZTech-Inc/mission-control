@@ -4,11 +4,11 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-03-29T22:15:00.000Z"
+stopped_at: Phase 3 context gathered
+last_updated: "2026-03-30T10:36:46.017Z"
 progress:
-  total_phases: 2
-  completed_phases: 1
+  total_phases: 3
+  completed_phases: 2
   total_plans: 6
   completed_plans: 6
 ---
@@ -37,6 +37,12 @@ See: .planning/PROJECT.md
 - [Phase 02]: Team and department lead mutation routes update SQLite by workspace_id plus external_id and invalidate the cached org snapshot after writes.
 - [Phase 02]: Lead changes now call dedicated async store actions, refresh `/api/org/scan?force=true`, and keep UI state in sync only after API success.
 
+## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 3 added: improve the teams and department panels
+
 ## Performance Metrics
 
 | Phase | Plans | Status | Notes |
@@ -48,8 +54,8 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- **Last session:** 2026-03-29T22:15:00.000Z
-- **Stopped at:** Completed 02-02-PLAN.md
+- **Last session:** 2026-03-30T10:36:46.014Z
+- **Stopped at:** Phase 3 context gathered
 
 ## Session Log
 
