@@ -6,6 +6,7 @@ import { useMissionControl } from '@/store'
 import type { Department, Agent } from '@/store'
 import { EmbeddedChat } from '@/components/chat/embedded-chat'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
+import { Button } from '@/components/ui/button'
 import { useOrgData } from '@/lib/use-org-data'
 import { DroppableZone, DraggableCard, StatusDot } from '@/components/ui/dnd-org-helpers'
 
@@ -68,11 +69,36 @@ function EmptyState({
   )
 }
 
+function DepartmentManagerCard({ agent }: { agent: Agent }) {
+  const model = (agent as { model?: string }).model
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <StatusDot status={agent.status} />
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold font-mono text-foreground truncate">{agent.name}</div>
+        <div className="text-[11px] font-mono text-muted-foreground/70 truncate">
+          {agent.role || 'Department Manager'} {model ? `/ ${model}` : ''}
+        </div>
+      </div>
+      <div className="text-[10px] font-mono text-muted-foreground/50">
+        {agent.status === 'idle' ? 'active' : agent.status}
+      </div>
+    </div>
+  )
+}
+
 function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   const [tab, setTab] = useState<DeptTab>('overview')
   const [showAddTeam, setShowAddTeam] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamDesc, setNewTeamDesc] = useState('')
+  const [showHireManagerForm, setShowHireManagerForm] = useState(false)
+  const [managerFormData, setManagerFormData] = useState({
+    name: '',
+    role: 'Department Manager',
+    model: '',
+  })
+  const [isHiringManager, setIsHiringManager] = useState(false)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
 
   const teams = useMissionControl((s) => s.teams)
@@ -80,7 +106,6 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
   const addTeam = useMissionControl((s) => s.addTeam)
   const assignAgentToTeam = useMissionControl((s) => s.assignAgentToTeam)
-  const setDepartmentManager = useMissionControl((s) => s.setDepartmentManager)
 
   const deptTeams = useMemo(
     () => teams.filter((team) => team.department_id === dept.id),
@@ -134,7 +159,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
 
   const viewTabs: DeptTab[] = ['overview', 'teams', 'agents', 'docs', 'chat']
   const unassignedAgents = agents.filter((agent) => !agentTeamAssignments.some((assignment) => assignment.agent_id === agent.id))
-  const leadAgent = dept.manager_agent_id
+  const managerAgent = dept.manager_agent_id
     ? agents.find((agent) => agent.id === dept.manager_agent_id) ?? null
     : null
 
@@ -197,29 +222,91 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
               <OverviewMetric label="team leads" value={leadCount} />
             </div>
 
-            <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
-              <div className="mb-2">
-                <h3 className="text-sm font-semibold font-mono text-foreground">Department Manager</h3>
-                <p className="text-[11px] font-mono text-muted-foreground/50">
-                  Agent who receives messages in the department chat tab.
-                </p>
+            <section className="border border-border/50 rounded-md bg-[hsl(var(--surface-1))]">
+              <div className="px-4 py-3 border-b border-border/50">
+                <div className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/55">
+                  department manager
+                </div>
               </div>
-              <select
-                value={dept.manager_agent_id?.toString() ?? ''}
-                onChange={async (event) => {
-                  const value = event.target.value
-                  await setDepartmentManager(dept.id, value ? Number(value) : null)
-                }}
-                className="w-full max-w-xs px-3 py-1.5 rounded border border-border/50 bg-[hsl(var(--surface-0))] text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
-              >
-                <option value="">Unassigned</option>
-                {agents.map((agent) => (
-                  <option key={agent.id} value={agent.id}>
-                    {agent.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {managerAgent ? (
+                <DepartmentManagerCard agent={managerAgent} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/30">
+                  <span className="mb-3 text-4xl font-mono">/</span>
+                  <span className="text-sm font-mono">No manager assigned</span>
+                  <span className="mt-1 text-xs font-mono text-muted-foreground/20">
+                    Hire a manager to oversee this department.
+                  </span>
+                  <Button variant="default" size="sm" className="mt-3" onClick={() => setShowHireManagerForm(true)}>
+                    Hire a Manager
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            {showHireManagerForm && (
+              <div className="mt-3 border border-border/50 rounded-md bg-[hsl(var(--surface-0))] p-4 space-y-3">
+                <div className="text-sm font-mono font-semibold text-foreground">Hire Department Manager</div>
+                <input
+                  type="text"
+                  value={managerFormData.name}
+                  onChange={(e) => setManagerFormData((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Manager name"
+                  className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-1))] border border-border/50 rounded text-foreground"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={managerFormData.role}
+                  onChange={(e) => setManagerFormData((prev) => ({ ...prev, role: e.target.value }))}
+                  placeholder="Role"
+                  className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-1))] border border-border/50 rounded text-foreground"
+                />
+                <input
+                  type="text"
+                  value={managerFormData.model}
+                  onChange={(e) => setManagerFormData((prev) => ({ ...prev, model: e.target.value }))}
+                  placeholder="Model (e.g. claude-sonnet-4-20250514)"
+                  className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-1))] border border-border/50 rounded text-foreground"
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={!managerFormData.name.trim() || isHiringManager}
+                    onClick={async () => {
+                      setIsHiringManager(true)
+                      try {
+                        const res = await fetch('/api/agents/create', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            name: managerFormData.name.trim(),
+                            role: managerFormData.role,
+                            model: managerFormData.model,
+                            department_name: dept.name,
+                            is_manager: true,
+                          }),
+                        })
+                        if (res.ok) {
+                          setShowHireManagerForm(false)
+                          setManagerFormData({ name: '', role: 'Department Manager', model: '' })
+                          await fetch('/api/org/scan?force=true')
+                          window.location.reload()
+                        }
+                      } finally {
+                        setIsHiringManager(false)
+                      }
+                    }}
+                  >
+                    Hire
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowHireManagerForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-4">
               <div className="flex items-center justify-between gap-3 mb-3">
@@ -520,11 +607,11 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
 
         {tab === 'chat' && (
           <div className="flex h-full min-h-0 flex-1 flex-col">
-            {leadAgent ? (
+            {managerAgent ? (
               <EmbeddedChat
                 conversationId={`dept:${dept.id}`}
-                targetAgentName={leadAgent.name}
-                targetAgentStatus={leadAgent.status}
+                targetAgentName={managerAgent.name}
+                targetAgentStatus={managerAgent.status}
                 entityLabel={dept.name}
                 entityColor={dept.color}
               />
@@ -541,105 +628,26 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   )
 }
 
-interface CreateDeptFormProps {
-  onSubmit: (name: string, color: string) => void
-  onCancel: () => void
-}
-
-function CreateDeptForm({ onSubmit, onCancel }: CreateDeptFormProps) {
-  const [name, setName] = useState('')
-  const [color, setColor] = useState('#89b4fa')
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim()) return
-    onSubmit(name.trim(), color)
-  }
-
-  return (
-    <div className="flex-1 overflow-auto">
-      <div className="p-6 max-w-3xl">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-5 space-y-4"
-        >
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground/40">
-              Department
-            </div>
-            <h2 className="mt-2 text-lg font-semibold font-mono text-foreground">Create department</h2>
-            <p className="mt-1 text-xs font-mono text-muted-foreground/50">
-              Add a new department to the organization registry.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_7rem] gap-4">
-            <div>
-              <label className="block text-[11px] font-mono text-muted-foreground/60 mb-1">name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Department name"
-                className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-mono text-muted-foreground/60 mb-1">color</label>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="h-8 w-full rounded border border-border/50 bg-[hsl(var(--surface-0))] cursor-pointer"
-              />
-            </div>
-          </div>
-
-          <div className="text-[10px] font-mono text-muted-foreground/40 bg-[hsl(var(--surface-0))] px-2 py-1 rounded">
-            preview: {name || 'new-department'}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              className="px-2 py-1 rounded text-xs font-mono text-primary hover:bg-primary/10 transition-colors"
-            >
-              create
-            </button>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
-            >
-              cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
 export function DepartmentsPanel() {
-  const { isReadOnly } = useOrgData()
+  const { isReadOnly, canCreate } = useOrgData()
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agents = useMissionControl((s) => s.agents)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
-  const addDepartment = useMissionControl((s) => s.addDepartment)
 
   const [selectedDept, setSelectedDept] = useState<Department | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showNewDeptForm, setShowNewDeptForm] = useState(false)
+  const [newDeptName, setNewDeptName] = useState('')
+  const [isCreatingDept, setIsCreatingDept] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [deptFilter, setDeptFilter] = useState<DepartmentFilter>('all')
 
   useEffect(() => {
-    if (!selectedDept && departments.length > 0 && !showCreateForm) {
+    if (!selectedDept && departments.length > 0) {
       setSelectedDept(departments[0])
     }
-  }, [departments, selectedDept, showCreateForm])
+  }, [departments, selectedDept])
 
   const filteredDepartments = useMemo(() => {
     return departments.filter((department) => {
@@ -656,21 +664,6 @@ export function DepartmentsPanel() {
     teams.some((team) => team.department_id === department.id)
   ).length
   const totalAssignedAgents = new Set(agentTeamAssignments.map((assignment) => assignment.agent_id)).size
-
-  function handleCreate(name: string, color: string) {
-    if (isReadOnly) return
-    const now = Math.floor(Date.now() / 1000)
-    const newDepartment: Department = {
-      id: Math.max(0, ...departments.map((department) => department.id)) + 1,
-      name,
-      color,
-      created_at: now,
-      updated_at: now,
-    }
-    addDepartment(newDepartment)
-    setSelectedDept(newDepartment)
-    setShowCreateForm(false)
-  }
 
   return (
     <div className="h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden">
@@ -691,16 +684,17 @@ export function DepartmentsPanel() {
           {departments.length} depts / {totalTeamCount} teams / {totalAssignedAgents} assigned
         </span>
         <div className="w-px h-4 bg-border mx-1" />
-        <button
+        <Button
+          variant="default"
+          size="sm"
           onClick={() => {
-            if (isReadOnly) return
-            setShowCreateForm(true)
+            setShowNewDeptForm(true)
             setSelectedDept(null)
           }}
-          className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+          disabled={!canCreate}
         >
-          new department
-        </button>
+          New Department
+        </Button>
       </div>
 
       <div className="flex flex-1 min-h-0">
@@ -759,13 +753,12 @@ export function DepartmentsPanel() {
                       .filter((assignment) => departmentTeams.some((team) => team.id === assignment.team_id))
                       .map((assignment) => assignment.agent_id)
                   )
-                  const selected = selectedDept?.id === department.id && !showCreateForm
+                  const selected = selectedDept?.id === department.id
                   return (
                     <button
                       key={department.id}
                       onClick={() => {
                         setSelectedDept(department)
-                        setShowCreateForm(false)
                       }}
                       className={`w-full text-left px-2 py-1.5 transition-colors ${
                         selected ? 'bg-[hsl(var(--surface-2))]' : 'hover:bg-[hsl(var(--surface-2))]'
@@ -799,22 +792,51 @@ export function DepartmentsPanel() {
         )}
 
         <div className="flex-1 min-w-0 flex flex-col bg-[hsl(var(--surface-0))]">
-          {showCreateForm ? (
-            <>
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-[hsl(var(--surface-0))]">
-                <span className="text-xs font-mono text-muted-foreground/60 truncate flex-1">
-                  /departments/new
-                </span>
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-2 py-0.5 text-[11px] font-mono text-muted-foreground hover:text-foreground rounded hover:bg-[hsl(var(--surface-2))] transition-colors"
+          {showNewDeptForm && (
+            <div className="px-4 py-3 border-b border-border/50 bg-[hsl(var(--surface-1))] space-y-2">
+              <div className="text-sm font-mono font-semibold text-foreground">Create New Department</div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newDeptName}
+                  onChange={(e) => setNewDeptName(e.target.value)}
+                  placeholder="Department name"
+                  className="flex-1 px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
+                  autoFocus
+                />
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={!newDeptName.trim() || isCreatingDept}
+                  onClick={async () => {
+                    setIsCreatingDept(true)
+                    try {
+                      const res = await fetch('/api/departments', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newDeptName.trim() }),
+                      })
+                      if (res.ok) {
+                        setShowNewDeptForm(false)
+                        setNewDeptName('')
+                        await fetch('/api/org/scan?force=true')
+                        window.location.reload()
+                      }
+                    } finally {
+                      setIsCreatingDept(false)
+                    }
+                  }}
                 >
-                  cancel
-                </button>
+                  Create
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setShowNewDeptForm(false)}>
+                  Cancel
+                </Button>
               </div>
-              <CreateDeptForm onSubmit={handleCreate} onCancel={() => setShowCreateForm(false)} />
-            </>
-          ) : selectedDept ? (
+            </div>
+          )}
+
+          {selectedDept ? (
             <DepartmentDetail dept={selectedDept} isReadOnly={isReadOnly} />
           ) : (
             <EmptyState
