@@ -18,7 +18,7 @@ import {
   TasksTab,
   ToolsTab,
 } from '@/components/panels/agent-detail-tabs'
-import { AgentMultiSelect } from '@/components/ui/agent-multi-select'
+import { Button } from '@/components/ui/button'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
 import { useOrgData } from '@/lib/use-org-data'
 import { DraggableCard, DroppableZone, StatusDot } from '@/components/ui/dnd-org-helpers'
@@ -129,8 +129,157 @@ function InlineAgentDetailsCard({
   )
 }
 
+function CreateTeamAgentForm({
+  departmentName,
+  teamName,
+  onClose,
+  onCreated,
+}: {
+  departmentName: string
+  teamName: string
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [model, setModel] = useState('')
+  const [identityMd, setIdentityMd] = useState('')
+  const [agentMd, setAgentMd] = useState('')
+  const [soulMd, setSoulMd] = useState('')
+  const [toolAllow, setToolAllow] = useState('')
+  const [toolDeny, setToolDeny] = useState('')
+  const [toolProfile, setToolProfile] = useState('')
+  const [modelPrimary, setModelPrimary] = useState('')
+  const [modelFallback, setModelFallback] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!name.trim() || !departmentName || !teamName) return
+    setIsSubmitting(true)
+    try {
+      const res = await fetch('/api/agents/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          role: role.trim() || undefined,
+          model: model.trim() || undefined,
+          identity_md: identityMd || undefined,
+          agent_md: agentMd || undefined,
+          soul_md: soulMd || undefined,
+          department_name: departmentName, team_name: teamName,
+          tool_allow: toolAllow ? toolAllow.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+          tool_deny: toolDeny ? toolDeny.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+          tool_profile: toolProfile.trim() || undefined,
+          model_primary: modelPrimary.trim() || undefined,
+          model_fallback: modelFallback
+            ? modelFallback.split(',').map((s) => s.trim()).filter(Boolean)
+            : undefined,
+        }),
+      })
+      if (res.ok) {
+        onCreated()
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="p-4 border-b border-border/50 bg-[hsl(var(--surface-1))] space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-mono font-semibold text-foreground">Create New Agent</span>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Agent name *"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+          autoFocus
+        />
+        <input
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          placeholder="Role"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+        <input
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          placeholder="Model"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+      </div>
+      <div className="space-y-2">
+        <textarea
+          value={identityMd}
+          onChange={(e) => setIdentityMd(e.target.value)}
+          placeholder="IDENTITY.md content"
+          rows={3}
+          className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 resize-y"
+        />
+        <textarea
+          value={agentMd}
+          onChange={(e) => setAgentMd(e.target.value)}
+          placeholder="AGENT.md content"
+          rows={3}
+          className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 resize-y"
+        />
+        <textarea
+          value={soulMd}
+          onChange={(e) => setSoulMd(e.target.value)}
+          placeholder="SOUL.md content"
+          rows={3}
+          className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 resize-y"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={toolAllow}
+          onChange={(e) => setToolAllow(e.target.value)}
+          placeholder="Tool allow list (comma-separated)"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+        <input
+          value={toolDeny}
+          onChange={(e) => setToolDeny(e.target.value)}
+          placeholder="Tool deny list (comma-separated)"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <input
+          value={toolProfile}
+          onChange={(e) => setToolProfile(e.target.value)}
+          placeholder="Tool profile"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+        <input
+          value={modelPrimary}
+          onChange={(e) => setModelPrimary(e.target.value)}
+          placeholder="Primary model"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+        <input
+          value={modelFallback}
+          onChange={(e) => setModelFallback(e.target.value)}
+          placeholder="Fallback models (comma-separated)"
+          className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40"
+        />
+      </div>
+      <Button variant="default" size="sm" disabled={!name.trim() || isSubmitting} onClick={handleSubmit}>
+        Create Agent
+      </Button>
+    </div>
+  )
+}
+
 function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
-  const [showAddMember, setShowAddMember] = useState(false)
+  const [showCreateAgentForm, setShowCreateAgentForm] = useState(false)
   const [confirmingPromote, setConfirmingPromote] = useState<number | null>(null)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null)
@@ -164,12 +313,6 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
     setSelectedAgentId(leadMember ? leadMember.agent.id : null)
     setDetailTab('Overview')
   }, [team.id])
-
-  function handleAddMembers(agentIds: number[]) {
-    if (isReadOnly) return
-    agentIds.forEach((agentId) => assignAgentToTeam(agentId, team.id, 'member'))
-    setShowAddMember(false)
-  }
 
   async function handleSetLead(agentId: number) {
     await promoteToLead(agentId, team.id)
@@ -342,21 +485,24 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
                   </div>
                   <div className="flex-1" />
                   <div className="relative">
-                    <button
-                      onClick={() => setShowAddMember((value) => !value)}
-                      className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
-                    >
-                      add member
-                    </button>
-                    {showAddMember && (
-                      <AgentMultiSelect
-                        teamId={team.id}
-                        onAdd={handleAddMembers}
-                        onClose={() => setShowAddMember(false)}
-                      />
-                    )}
+                    <Button variant="default" size="sm" onClick={() => setShowCreateAgentForm(true)}>
+                      Add Member
+                    </Button>
                   </div>
                 </div>
+
+                {showCreateAgentForm && (
+                  <CreateTeamAgentForm
+                    departmentName={dept?.name ?? ''}
+                    teamName={team.name}
+                    onClose={() => setShowCreateAgentForm(false)}
+                    onCreated={async () => {
+                      setShowCreateAgentForm(false)
+                      await fetch('/api/org/scan?force=true')
+                      window.location.reload()
+                    }}
+                  />
+                )}
 
                 <div className="flex-1 p-4">
                   <DndContext
@@ -478,7 +624,7 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
 }
 
 export function TeamsPanel() {
-  const { isReadOnly } = useOrgData()
+  const { isReadOnly, canCreate } = useOrgData()
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
@@ -488,7 +634,10 @@ export function TeamsPanel() {
   const [deptFilter, setDeptFilter] = useState<number | null>(null)
   const [teamSearch, setTeamSearch] = useState('')
   const [activeView, setActiveView] = useState<TeamView>('overview')
-  const [showNewTeamHint, setShowNewTeamHint] = useState(false)
+  const [showNewTeamForm, setShowNewTeamForm] = useState(false)
+  const [newTeamName, setNewTeamName] = useState('')
+  const [newTeamDept, setNewTeamDept] = useState<string>('')
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false)
 
   const filteredTeams = useMemo(() => {
     const query = teamSearch.trim().toLowerCase()
@@ -552,16 +701,17 @@ export function TeamsPanel() {
           {filteredTeams.length} teams / {totalAssignments} assignments
         </span>
         <div className="w-px h-4 bg-border mx-1" />
-        <button
+        <Button
+          variant="default"
+          size="sm"
           onClick={() => {
-            if (isReadOnly) return
-            setShowNewTeamHint(true)
+            setShowNewTeamForm(true)
             setSelectedTeamId(null)
           }}
-          className="px-2 py-1 rounded text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-colors"
+          disabled={!canCreate}
         >
-          new team
-        </button>
+          New Team
+        </Button>
       </div>
 
       <div className="flex flex-1 min-h-0">
@@ -582,7 +732,6 @@ export function TeamsPanel() {
                 onChange={(event) => {
                   const value = event.target.value
                   setDeptFilter(value === '' ? null : Number.parseInt(value, 10))
-                  setShowNewTeamHint(false)
                 }}
                 className="w-full px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-1))] border border-border/50 rounded text-foreground focus:outline-none focus:border-primary/30"
               >
@@ -612,7 +761,6 @@ export function TeamsPanel() {
                       key={team.id}
                       onClick={() => {
                         setSelectedTeamId(team.id)
-                        setShowNewTeamHint(false)
                       }}
                       className={`w-full text-left px-2 py-1.5 transition-colors ${
                         isSelected
@@ -655,11 +803,62 @@ export function TeamsPanel() {
         )}
 
         <div className="flex-1 min-w-0 flex flex-col bg-[hsl(var(--surface-0))]">
-          {showNewTeamHint && !selectedTeam ? (
-            <div className="px-4 py-3 border-b border-border/50 bg-[hsl(var(--surface-1))] text-xs font-mono text-muted-foreground/70">
-              create teams from the departments panel
+          {showNewTeamForm && (
+            <div className="px-4 py-3 border-b border-border/50 bg-[hsl(var(--surface-1))] space-y-2">
+              <div className="text-sm font-mono font-semibold text-foreground">Create New Team</div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  placeholder="Team name"
+                  className="flex-1 px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30"
+                  autoFocus
+                />
+                <select
+                  value={newTeamDept}
+                  onChange={(e) => setNewTeamDept(e.target.value)}
+                  className="px-2 py-1.5 text-xs font-mono bg-[hsl(var(--surface-0))] border border-border/50 rounded text-foreground"
+                >
+                  <option value="">Select department</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.name}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={!newTeamName.trim() || !newTeamDept || isCreatingTeam}
+                  onClick={async () => {
+                    setIsCreatingTeam(true)
+                    try {
+                      const res = await fetch('/api/teams', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newTeamName.trim(), department_name: newTeamDept }),
+                      })
+                      if (res.ok) {
+                        setShowNewTeamForm(false)
+                        setNewTeamName('')
+                        setNewTeamDept('')
+                        await fetch('/api/org/scan?force=true')
+                        window.location.reload()
+                      }
+                    } finally {
+                      setIsCreatingTeam(false)
+                    }
+                  }}
+                >
+                  Create
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setShowNewTeamForm(false)}>
+                  Cancel
+                </Button>
+              </div>
             </div>
-          ) : null}
+          )}
 
           {selectedTeam ? (
             <TeamDetail key={`${selectedTeam.id}-${activeView}`} team={selectedTeam} view={activeView} isReadOnly={isReadOnly} />
