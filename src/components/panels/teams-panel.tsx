@@ -5,6 +5,19 @@ import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core'
 import { useMissionControl } from '@/store'
 import type { Agent, Team } from '@/store'
 import { EmbeddedChat } from '@/components/chat/embedded-chat'
+import {
+  ActivityTab,
+  ChannelsTab,
+  ConfigTab,
+  CronTab,
+  FilesTab,
+  MemoryTab,
+  ModelsTab,
+  OverviewTab,
+  SoulTab,
+  TasksTab,
+  ToolsTab,
+} from '@/components/panels/agent-detail-tabs'
 import { AgentMultiSelect } from '@/components/ui/agent-multi-select'
 import { OrgDocsPanel } from '@/components/panels/org-docs-panel'
 import { useOrgData } from '@/lib/use-org-data'
@@ -18,10 +31,110 @@ interface TeamDetailProps {
   isReadOnly: boolean
 }
 
+const DETAIL_TABS = [
+  'Overview',
+  'Files',
+  'Tools',
+  'Models',
+  'Channels',
+  'Cron',
+  'SOUL',
+  'Memory',
+  'Tasks',
+  'Activity',
+  'Config',
+] as const
+
+type DetailTabName = typeof DETAIL_TABS[number]
+
+function DetailTabContent({ agent, tab }: { agent: Agent; tab: DetailTabName }) {
+  const noopAsync = async () => {}
+
+  switch (tab) {
+    case 'Overview':
+      return (
+        <OverviewTab
+          agent={agent}
+          editing={false}
+          formData={{}}
+          setFormData={() => {}}
+          onSave={noopAsync}
+          onStatusUpdate={noopAsync}
+          onWakeAgent={noopAsync}
+          onEdit={() => {}}
+          onCancel={() => {}}
+          heartbeatData={null}
+          loadingHeartbeat={false}
+          onPerformHeartbeat={noopAsync}
+        />
+      )
+    case 'Files':
+      return <FilesTab agent={agent} />
+    case 'Tools':
+      return <ToolsTab agent={agent} />
+    case 'Models':
+      return <ModelsTab agent={agent} />
+    case 'Channels':
+      return <ChannelsTab agent={agent} />
+    case 'Cron':
+      return <CronTab agent={agent} />
+    case 'SOUL':
+      return <SoulTab agent={agent} soulContent={agent.soul_content ?? ''} templates={[]} onSave={noopAsync} />
+    case 'Memory':
+      return <MemoryTab agent={agent} workingMemory={agent.working_memory ?? ''} onSave={noopAsync} />
+    case 'Tasks':
+      return <TasksTab agent={agent} />
+    case 'Activity':
+      return <ActivityTab agent={agent} />
+    case 'Config':
+      return <ConfigTab agent={agent} onSave={() => {}} />
+    default:
+      return null
+  }
+}
+
+function InlineAgentDetailsCard({
+  agent,
+  activeTab,
+  onTabChange,
+}: {
+  agent: Agent
+  activeTab: DetailTabName
+  onTabChange: (tab: DetailTabName) => void
+}) {
+  return (
+    <section className="border border-border/50 rounded-md bg-[hsl(var(--surface-1))] flex min-h-[28rem]">
+      <div className="w-32 shrink-0 border-r border-border/50 flex flex-col py-2" role="tablist" aria-orientation="vertical">
+        {DETAIL_TABS.map((tab) => (
+          <button
+            key={tab}
+            id={`tab-${tab}`}
+            onClick={() => onTabChange(tab)}
+            role="tab"
+            aria-selected={activeTab === tab}
+            className={`w-full text-left px-3 py-2 text-[11px] font-mono transition-colors ${
+              activeTab === tab
+                ? 'bg-[hsl(var(--surface-2))] text-foreground'
+                : 'text-muted-foreground hover:bg-[hsl(var(--surface-2))] hover:text-foreground'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-y-auto p-4" role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
+        <DetailTabContent agent={agent} tab={activeTab} />
+      </div>
+    </section>
+  )
+}
+
 function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   const [showAddMember, setShowAddMember] = useState(false)
   const [confirmingPromote, setConfirmingPromote] = useState<number | null>(null)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
+  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null)
+  const [detailTab, setDetailTab] = useState<DetailTabName>('Overview')
 
   const departments = useMissionControl((s) => s.departments)
   const agents = useMissionControl((s) => s.agents)
@@ -42,6 +155,15 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
   const lead = members.find((member) => member.role === 'lead')
   const activeCount = members.filter(({ agent }) => agent.status !== 'offline').length
   const busyCount = members.filter(({ agent }) => agent.status === 'busy').length
+  const selectedAgent = selectedAgentId !== null
+    ? members.find((member) => member.agent.id === selectedAgentId)?.agent ?? null
+    : null
+
+  useEffect(() => {
+    const leadMember = members.find((member) => member.role === 'lead')
+    setSelectedAgentId(leadMember ? leadMember.agent.id : null)
+    setDetailTab('Overview')
+  }, [team.id])
 
   function handleAddMembers(agentIds: number[]) {
     if (isReadOnly) return
@@ -149,87 +271,65 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
             </section>
 
             {view === 'overview' ? (
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)]">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(200px,1fr)_minmax(0,2fr)]">
                 <section className="border border-border/50 rounded-md bg-[hsl(var(--surface-1))]">
                   <div className="px-4 py-3 border-b border-border/50">
                     <div className="text-sm font-semibold font-mono text-foreground">team roster</div>
                     <div className="text-[11px] font-mono text-muted-foreground/55">
-                      Current assignments and workload visibility.
+                      Click an agent to view details.
                     </div>
                   </div>
                   <div className="p-3 space-y-2">
                     {members.length === 0 ? (
                       <div className="text-center text-muted-foreground/40 text-xs font-mono py-10">
-                        no members assigned
+                        No members
+                        <div className="mt-1 text-[10px]">Add agents to this team to get started.</div>
                       </div>
                     ) : (
                       members.map(({ agent, role }) => (
-                        <div
+                        <button
                           key={agent.id}
-                          className="flex items-center gap-3 rounded-md border border-border/50 bg-[hsl(var(--surface-0))] px-3 py-2"
+                          onClick={() => setSelectedAgentId(agent.id)}
+                          className={`w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors ${
+                            selectedAgentId === agent.id
+                              ? 'border-primary/60 bg-[hsl(var(--surface-2))]'
+                              : 'border-border/50 bg-[hsl(var(--surface-0))] hover:bg-[hsl(var(--surface-1))]'
+                          }`}
+                          aria-pressed={selectedAgentId === agent.id}
                         >
                           <StatusDot status={agent.status} />
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-mono text-foreground truncate">{agent.name}</div>
-                            <div className="text-[11px] font-mono text-muted-foreground/55 truncate">
-                              {agent.role}
-                            </div>
+                            <div className="text-[11px] font-mono text-muted-foreground/55 truncate">{agent.role}</div>
                           </div>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wide ${
-                              role === 'lead'
-                                ? 'bg-primary/10 text-primary'
-                                : 'bg-[hsl(var(--surface-2))] text-muted-foreground'
-                            }`}
-                          >
-                            {role}
-                          </span>
-                        </div>
+                          {role === 'lead' && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wide bg-primary/10 text-primary">
+                              lead
+                            </span>
+                          )}
+                        </button>
                       ))
                     )}
                   </div>
                 </section>
 
-                <section className="border border-border/50 rounded-md bg-[hsl(var(--surface-1))]">
-                  <div className="px-4 py-3 border-b border-border/50">
-                    <div className="text-sm font-semibold font-mono text-foreground">team notes</div>
-                    <div className="text-[11px] font-mono text-muted-foreground/55">
-                      Quick operational context for this workspace.
+                {selectedAgent ? (
+                  <InlineAgentDetailsCard agent={selectedAgent} activeTab={detailTab} onTabChange={setDetailTab} />
+                ) : (
+                  <section className="border border-border/50 rounded-md bg-[hsl(var(--surface-1))] flex items-center justify-center min-h-[28rem]">
+                    <div className="text-center text-muted-foreground/30">
+                      <span className="mb-3 text-4xl font-mono block">/</span>
+                      <span className="text-sm font-mono block">
+                        {members.length === 0 ? 'No lead assigned' : 'Select an agent'}
+                      </span>
+                      <span className="mt-1 text-xs font-mono text-muted-foreground/20 block">
+                        {members.length === 0
+                          ? 'Select an agent from the roster to view their details.'
+                          : 'Click any team member to view details.'}
+                      </span>
                     </div>
-                  </div>
-                  <div className="p-4 space-y-4">
-                    <div>
-                      <div className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground/45 mb-2">
-                        department
-                      </div>
-                      <div className="flex items-center gap-2 text-sm font-mono text-foreground">
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: dept?.color ?? '#888' }}
-                        />
-                        <span>{dept?.name ?? 'Unknown Department'}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground/45 mb-2">
-                        staffing
-                      </div>
-                      <div className="space-y-1 text-[11px] font-mono text-muted-foreground/70">
-                        <div>{members.length} assigned agents</div>
-                        <div>{activeCount} agents currently reachable</div>
-                        <div>{busyCount} agents marked busy</div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-mono uppercase tracking-wide text-muted-foreground/45 mb-2">
-                        lead
-                      </div>
-                      <div className="text-sm font-mono text-foreground">
-                        {lead?.agent.name ?? 'No lead assigned'}
-                      </div>
-                    </div>
-                  </div>
-                </section>
+                  </section>
+                )}
               </div>
             ) : (
               <section className="border border-border/50 rounded-md bg-[hsl(var(--surface-1))] min-h-[24rem] flex flex-col">
