@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
+import { writeDepartmentMetadata } from '@/lib/org-metadata'
 import { invalidateOrgSnapshot } from '@/lib/org-scanner'
 
 const createAgentBodySchema = z.object({
@@ -134,6 +135,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.is_manager) {
+    writeDepartmentMetadata(path.join(config.agentsDir, body.department_name), {
+      manager_agent_dir: path.join('MANAGER', body.name),
+    })
+
     const result = db.prepare(
       'UPDATE departments SET manager_agent_id = ?, updated_at = unixepoch() WHERE workspace_id = ? AND name = ?'
     ).run(agentId, workspaceId, body.department_name)

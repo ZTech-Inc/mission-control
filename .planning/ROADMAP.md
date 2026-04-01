@@ -42,9 +42,10 @@ Plans:
 **Goal:** Enhance Teams and Department panels with inline agent details, working creation buttons, chat agent selection, doc management, and department manager terminology rename.
 **Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20, D-21, D-22, D-23, D-24, D-25
 **Depends on:** Phase 2
-**Plans:** 8 plans
+**Plans:** 9 plans
 
 Plans:
+- [x] 03-00-PLAN.md — Wave 0: test stubs for creation routes, manager rename store wiring, and MANAGER/ scanner handling
 - [x] 03-01-PLAN.md — Manager terminology rename + org-scanner MANAGER/ handling + isReadOnly bypass
 - [x] 03-02-PLAN.md — API routes for team/department/agent creation
 - [x] 03-03-PLAN.md — Docs panel fixes + real API integration
@@ -52,4 +53,4 @@ Plans:
 - [x] 03-05-PLAN.md — Creation button prominence + modals + department manager card
 - [x] 03-06-PLAN.md — Chat tab agent selector with conversation history
 - [x] 03-07-PLAN.md — Gap closure: wrap Add Member form in modal dialog (D-08)
-- [ ] 03-08-PLAN.md — Gap closure: visual verification checkpoint (D-05, D-06, D-12)
+- [x] 03-08-PLAN.md — Gap closure: visual verification checkpoint (D-05, D-06, D-12)
