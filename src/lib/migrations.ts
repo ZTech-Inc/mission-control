@@ -1479,6 +1479,25 @@ const migrations: Migration[] = [
         db.exec(`ALTER TABLE departments ADD COLUMN manager_agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL`)
       }
     }
+  },
+  {
+    id: '051_agent_profile_columns',
+    up(db: Database.Database) {
+      const cols = db.prepare(`PRAGMA table_info(agents)`).all() as Array<{ name: string }>
+      const addIfMissing = (col: string, type: string) => {
+        if (!cols.some((c) => c.name === col)) {
+          db.exec(`ALTER TABLE agents ADD COLUMN ${col} ${type}`)
+        }
+      }
+      addIfMissing('openclaw_id', 'TEXT')
+      addIfMissing('protocol_stack', 'TEXT')
+      addIfMissing('kpis', 'TEXT')
+      addIfMissing('deliverables', 'TEXT')
+      addIfMissing('dependencies', 'TEXT')
+      addIfMissing('preferred_runtime', 'TEXT')
+      // NOTE: workspace_path already exists from migration 034_agents_source — do NOT add it
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agents_openclaw_id ON agents(openclaw_id)`)
+    }
   }
 ]
 
