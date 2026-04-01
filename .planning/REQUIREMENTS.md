@@ -66,23 +66,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROF-01 | — | Pending |
-| PROF-02 | — | Pending |
-| PROF-03 | — | Pending |
-| SKIL-01 | — | Pending |
-| SKIL-02 | — | Pending |
-| RUNT-01 | — | Pending |
-| RUNT-02 | — | Pending |
-| RUNT-03 | — | Pending |
-| DELG-01 | — | Pending |
-| DELG-02 | — | Pending |
-| DELG-03 | — | Pending |
+| PROF-01 | Phase 4 | Pending |
+| PROF-02 | Phase 4 | Pending |
+| PROF-03 | Phase 4 | Pending |
+| SKIL-01 | Phase 5 | Pending |
+| SKIL-02 | Phase 5 | Pending |
+| RUNT-01 | Phase 6 | Pending |
+| RUNT-02 | Phase 6 | Pending |
+| RUNT-03 | Phase 6 | Pending |
+| DELG-01 | Phase 7 | Pending |
+| DELG-02 | Phase 7 | Pending |
+| DELG-03 | Phase 7 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11
+- Mapped to phases: 11
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-01 after initial definition*
+*Last updated: 2026-04-01 after roadmap creation*
