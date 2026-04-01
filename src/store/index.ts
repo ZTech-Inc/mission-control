@@ -184,6 +184,7 @@ export interface Agent {
   config?: JsonValue
   agentType?: 'openclaw' | 'claude-code' | 'codex' | 'generic'
   openclaw_id?: string
+  skills?: string[]
   protocol_stack?: string[]
   kpis?: string[]
   deliverables?: string[]

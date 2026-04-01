@@ -1498,6 +1498,15 @@ const migrations: Migration[] = [
       // NOTE: workspace_path already exists from migration 034_agents_source — do NOT add it
       db.exec(`CREATE INDEX IF NOT EXISTS idx_agents_openclaw_id ON agents(openclaw_id)`)
     }
+  },
+  {
+    id: '052_agent_skills_column',
+    up(db: Database.Database) {
+      const cols = db.prepare(`PRAGMA table_info(agents)`).all() as Array<{ name: string }>
+      if (!cols.some((col) => col.name === 'skills')) {
+        db.exec(`ALTER TABLE agents ADD COLUMN skills TEXT`)
+      }
+    }
   }
 ]
 
