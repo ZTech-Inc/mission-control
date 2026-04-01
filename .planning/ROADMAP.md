@@ -16,7 +16,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 4. Agent Profile Enrichment | 0/2 | Planned | - |
+| 4. Agent Profile Enrichment | 1/2 | In Progress|  |
 | 5. Skills Import and Linking | 0/? | Not started | - |
 | 6. Multi-Runtime Gateway | 0/? | Not started | - |
 | 7. Hierarchical Task Delegation | 0/? | Not started | - |
@@ -32,9 +32,9 @@
   2. The agents table has discrete columns for `protocol_stack`, `kpis`, `deliverables`, `dependencies`, `preferred_runtime`, and `workspace_path` that can be queried directly via SQL
   3. Running an org rescan for a directory of agents populates all new profile fields without overwriting manually assigned lead roles
   4. An agent's `openclawId` is derived and stored at import time so that downstream dispatch does not rely on display-name matching
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 04-01-PLAN.md — Migration 051, profile parser module with tests, Agent type update
+- [x] 04-01-PLAN.md — Migration 051, profile parser module with tests, Agent type update
 - [ ] 04-02-PLAN.md — Wire parser into org-scanner, update API, build ProfileTab UI
 
 ### Phase 5: Skills Import and Linking
