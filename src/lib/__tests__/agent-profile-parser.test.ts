@@ -57,6 +57,56 @@ Dependencies:
 Preferred Runtime: claude-code
 `
 
+const agentMdSectionFormat = `# AGENT.md — Agent Builder
+
+## Agent Configuration
+
+| Property | Value |
+|----------|-------|
+| **Agent Name** | Agent Builder |
+| **Role / Title** | Team Lead - Agent Dev |
+| **Department** | AI Automation |
+| **Team** | AGENT DEVELOPMENT |
+
+## Core Skills
+
+- Multi-agent systems
+- tool use
+
+## Key Deliverables
+
+- Custom agent architectures
+- agent deployments
+
+## KPI
+
+Agent deployment success rate
+
+## Protocol Stack
+
+| Protocol | Purpose |
+|----------|---------|
+| **A2A** | Agent-to-Agent communication |
+| **MCP** | Tool integration |
+|
+## Operating Parameters
+
+- **Runtime:** codex
+
+## Dependencies
+
+- Reports to: AGENT DEVELOPMENT Team Lead
+- Collaborates with: All agents within AI Automation department
+`
+
+const identityMdSectionFormat = `# IDENTITY.md — Agent Builder
+
+## Expertise Domain
+
+- Prompt engineering
+- tool use
+`
+
 const identityMdFull = `# Identity
 Skills:
 - Node.js
@@ -231,6 +281,21 @@ describe('parseAgentProfile', () => {
       expect(Array.isArray(result.protocol_stack)).toBe(true)
       expect(Array.isArray(result.deliverables)).toBe(true)
       expect(Array.isArray(result.dependencies)).toBe(true)
+    })
+
+    it('parses section-based agent docs used by the filesystem corpus', () => {
+      const result = parseAgentProfile('Agent_Builder', agentMdSectionFormat, identityMdSectionFormat)
+
+      expect(result.name).toBe('Agent Builder')
+      expect(result.role).toBe('Team Lead - Agent Dev')
+      expect(result.skills).toContain('Multi-agent systems')
+      expect(result.skills).toContain('Prompt engineering')
+      expect(result.kpis).toEqual(['Agent deployment success rate'])
+      expect(result.protocol_stack).toEqual(['A2A', 'MCP'])
+      expect(result.deliverables).toEqual(['Custom agent architectures', 'agent deployments'])
+      expect(result.dependencies).toContain('Reports to: AGENT DEVELOPMENT Team Lead')
+      expect(result.preferred_runtime).toBe('codex')
+      expect(result.openclaw_id).toBe('agent-builder')
     })
   })
 })
