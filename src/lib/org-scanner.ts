@@ -4,6 +4,7 @@ import path from 'node:path'
 import { config } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
+import { readDepartmentMetadata, readTeamMetadata } from '@/lib/org-metadata'
 import { MOCK_AGENT_ASSIGNMENTS, MOCK_DEPARTMENTS, MOCK_TEAMS } from '@/lib/mock-org-data'
 import type { AgentTeamAssignment, Department, Team } from '@/store'
 
@@ -548,6 +549,7 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
       })
 
       const departmentSubdirectories = safeDirectories(departmentPath)
+      const departmentMetadata = readDepartmentMetadata(departmentPath)
       const teamNames = departmentSubdirectories.filter(
         (name) => !RESERVED_DEPARTMENT_SUBDIRS.has(name)
       )
@@ -556,6 +558,7 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
         const teamPath = path.join(departmentPath, teamName)
         const teamId = stableNumber(`team:${teamPath}`)
         const teamColor = colorForKey(`team:${teamName}`)
+        const teamMetadata = readTeamMetadata(teamPath)
 
         teams.push({
           id: teamId,
@@ -567,11 +570,17 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
           updated_at: startedAt,
         })
 
+        const teamMembers: Array<{ dirName: string; agentId: number; assignmentRole: 'member' | 'lead' }> = []
         for (const agentDirName of safeDirectories(teamPath)) {
           const agentPath = path.join(teamPath, agentDirName)
           const { agentId, assignmentRole } = syncFilesystemAgentFromPath(agentPath, {
             departmentName,
             teamName,
+          })
+          teamMembers.push({
+            dirName: agentDirName,
+            agentId,
+            assignmentRole,
           })
 
           agentAssignments.push({
@@ -581,13 +590,33 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
             assigned_at: startedAt,
           })
         }
+
+        if (teamMetadata.lead_agent_dir) {
+          const leadDirName = path.basename(teamMetadata.lead_agent_dir)
+          const leadAgentId = teamMembers.find((member) => member.dirName === leadDirName)?.agentId
+
+          if (leadAgentId != null) {
+            for (const assignment of agentAssignments) {
+              if (assignment.team_id !== teamId) continue
+              assignment.role = assignment.agent_id === leadAgentId ? 'lead' : 'member'
+            }
+          }
+        }
       }
 
-      if (departmentSubdirectories.includes('MANAGER')) {
-        const managerDirectory = path.join(departmentPath, 'MANAGER')
-        const managerAgentDirectory = safeDirectories(managerDirectory)[0]
-        if (managerAgentDirectory) {
-          const managerAgentPath = path.join(managerDirectory, managerAgentDirectory)
+      const fallbackManagerDir = departmentSubdirectories.includes('MANAGER')
+        ? safeDirectories(path.join(departmentPath, 'MANAGER'))[0]
+        : undefined
+      const managerAgentDir = departmentMetadata.manager_agent_dir ??
+        (fallbackManagerDir ? path.join('MANAGER', fallbackManagerDir) : undefined)
+
+      if (managerAgentDir) {
+        const managerAgentPath = path.resolve(departmentPath, managerAgentDir)
+        if (
+          managerAgentPath !== departmentPath &&
+          existsSync(managerAgentPath) &&
+          statSync(managerAgentPath).isDirectory()
+        ) {
           const { agentId: managerAgentId } = syncFilesystemAgentFromPath(managerAgentPath, {
             departmentName,
           })
