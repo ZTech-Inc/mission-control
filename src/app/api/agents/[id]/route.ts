@@ -6,6 +6,29 @@ import { eventBus } from '@/lib/event-bus'
 import { logger } from '@/lib/logger'
 import { runOpenClaw } from '@/lib/command'
 
+function parseJsonArray(value: unknown): string[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string')
+
+  try {
+    const parsed = JSON.parse(String(value))
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function deserializeAgentProfile(agent: any) {
+  return {
+    ...agent,
+    skills: parseJsonArray(agent.skills),
+    protocol_stack: parseJsonArray(agent.protocol_stack),
+    kpis: parseJsonArray(agent.kpis),
+    deliverables: parseJsonArray(agent.deliverables),
+    dependencies: parseJsonArray(agent.dependencies),
+  }
+}
+
 /**
  * GET /api/agents/[id] - Get a single agent by ID or name
  */
@@ -32,10 +55,10 @@ export async function GET(
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
     }
 
-    const parsed = {
+    const parsed = deserializeAgentProfile({
       ...(agent as any),
       config: enrichAgentConfigFromWorkspace((agent as any).config ? JSON.parse((agent as any).config) : {}),
-    }
+    })
 
     return NextResponse.json({ agent: parsed })
   } catch (error) {
