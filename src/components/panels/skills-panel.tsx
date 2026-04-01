@@ -5,16 +5,12 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { useMissionControl } from '@/store'
 import { Button } from '@/components/ui/button'
-
-interface SkillSummary {
-  id: string
-  name: string
-  source: string
-  path: string
-  description?: string
-  registry_slug?: string | null
-  security_status?: string | null
-}
+import {
+  getSkillSourceLabel,
+  SkillContentViewer,
+  type SkillContentResponse,
+  type SkillSummary,
+} from '@/components/panels/skill-content-viewer'
 
 interface SkillGroup {
   source: string
@@ -26,15 +22,6 @@ interface SkillsResponse {
   skills: SkillSummary[]
   groups: SkillGroup[]
   total: number
-}
-
-interface SkillContentResponse {
-  source: string
-  name: string
-  skillPath: string
-  skillDocPath: string
-  content: string
-  security?: { status: string; issues: Array<{ severity: string; rule: string; description: string; line?: number }> }
 }
 
 interface RegistrySkill {
@@ -50,33 +37,8 @@ interface RegistrySkill {
 
 type PanelTab = 'installed' | 'registry'
 
-const SOURCE_LABELS: Record<string, string> = {
-  'user-agents': '~/.agents/skills (global)',
-  'user-codex': '~/.codex/skills (global)',
-  'project-agents': '.agents/skills (project)',
-  'project-codex': '.codex/skills (project)',
-  'openclaw': '~/.openclaw/skills (gateway)',
-  'workspace': '~/.openclaw/workspace/skills',
-}
-
-function formatSourceTitle(source: string): string {
-  return source
-    .split(/[-_]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
 export function getSourceLabel(source: string): string {
-  if (SOURCE_LABELS[source]) return SOURCE_LABELS[source]
-  if (source.startsWith('org-agent:')) {
-    return `${formatSourceTitle(source.replace('org-agent:', ''))} skills`
-  }
-  if (source.startsWith('workspace-')) {
-    const agentName = source.replace('workspace-', '')
-    return `${agentName} workspace`
-  }
-  return source
+  return getSkillSourceLabel(source)
 }
 
 export function SkillsPanel() {
@@ -531,14 +493,14 @@ export function SkillsPanel() {
                 disabled={selectedSkillIsReadOnly}
                 className="h-9 rounded-md border border-border bg-secondary/50 px-2 text-xs text-foreground"
               >
-                <option value="user-agents">{SOURCE_LABELS['user-agents']}</option>
-                <option value="user-codex">{SOURCE_LABELS['user-codex']}</option>
-                <option value="project-agents">{SOURCE_LABELS['project-agents']}</option>
-                <option value="project-codex">{SOURCE_LABELS['project-codex']}</option>
+                <option value="user-agents">{getSourceLabel('user-agents')}</option>
+                <option value="user-codex">{getSourceLabel('user-codex')}</option>
+                <option value="project-agents">{getSourceLabel('project-agents')}</option>
+                <option value="project-codex">{getSourceLabel('project-codex')}</option>
                 {dashboardMode === 'full' && (
-                  <option value="openclaw">{SOURCE_LABELS['openclaw']}</option>
+                  <option value="openclaw">{getSourceLabel('openclaw')}</option>
                 )}
-                <option value="workspace">{SOURCE_LABELS['workspace']}</option>
+                <option value="workspace">{getSourceLabel('workspace')}</option>
               </select>
               <input
                 value={createName}
@@ -683,14 +645,14 @@ export function SkillsPanel() {
                 onChange={(e) => setInstallTarget(e.target.value)}
                 className="h-7 rounded-md border border-border bg-secondary/50 px-2 text-xs text-foreground"
               >
-                <option value="user-agents">{SOURCE_LABELS['user-agents']}</option>
-                <option value="user-codex">{SOURCE_LABELS['user-codex']}</option>
-                <option value="project-agents">{SOURCE_LABELS['project-agents']}</option>
-                <option value="project-codex">{SOURCE_LABELS['project-codex']}</option>
+                <option value="user-agents">{getSourceLabel('user-agents')}</option>
+                <option value="user-codex">{getSourceLabel('user-codex')}</option>
+                <option value="project-agents">{getSourceLabel('project-agents')}</option>
+                <option value="project-codex">{getSourceLabel('project-codex')}</option>
                 {dashboardMode === 'full' && (
-                  <option value="openclaw">{SOURCE_LABELS['openclaw']}</option>
+                  <option value="openclaw">{getSourceLabel('openclaw')}</option>
                 )}
-                <option value="workspace">{SOURCE_LABELS['workspace']}</option>
+                <option value="workspace">{getSourceLabel('workspace')}</option>
               </select>
             </div>
           </div>
@@ -851,69 +813,34 @@ export function SkillsPanel() {
         <div className="fixed inset-0 z-[120]">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedSkill(null)} />
           <aside className="absolute right-0 top-0 h-full w-[min(52rem,100vw)] bg-card border-l border-border shadow-2xl flex flex-col">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground truncate">{selectedSkill.name}</h3>
-                <p className="text-2xs text-muted-foreground truncate">
-                  {selectedSkill.source} • {selectedSkill.path}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {!selectedSkillIsReadOnly && (
-                  <Button variant="destructive" size="sm" onClick={deleteSkill} disabled={saving || drawerLoading}>
-                    {t('delete')}
-                  </Button>
-                )}
-                {!selectedSkillIsReadOnly && (
-                  <Button variant="outline" size="sm" onClick={saveSkill} disabled={saving || drawerLoading}>
-                    {t('save')}
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => setSelectedSkill(null)}>{t('close')}</Button>
-              </div>
-              {selectedSkillIsReadOnly && (
-                <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
-                  Imported org-agent skills are read-only in the catalog.
-                </div>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {drawerLoading ? (
-                <div className="p-4 text-sm text-muted-foreground">{t('loadingSkillContent')}</div>
-              ) : drawerError ? (
-                <div className="p-4 text-sm text-destructive">{drawerError}</div>
-              ) : selectedContent ? (
+            <SkillContentViewer
+              skill={selectedSkill}
+              content={selectedContent}
+              loading={drawerLoading}
+              error={drawerError}
+              readOnly={selectedSkillIsReadOnly}
+              value={draftContent}
+              onValueChange={setDraftContent}
+              emptyMessage={t('noContent')}
+              actions={
                 <>
-                  {selectedContent.security && selectedContent.security.issues.length > 0 && (
-                    <div className={`mx-4 mt-3 rounded-lg border p-3 text-xs ${
-                      selectedContent.security.status === 'rejected'
-                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-                        : selectedContent.security.status === 'warning'
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                          : 'bg-slate-500/10 border-slate-500/30 text-slate-300'
-                    }`}>
-                      <div className="font-medium mb-1">{t('security')}: {selectedContent.security.status}</div>
-                      {selectedContent.security.issues.map((issue, i) => (
-                        <div key={i} className="flex items-start gap-1.5 mt-1">
-                          <span className={`mt-0.5 text-2xs font-mono ${
-                            issue.severity === 'critical' ? 'text-rose-400' : issue.severity === 'warning' ? 'text-amber-400' : 'text-slate-400'
-                          }`}>[{issue.severity}]</span>
-                          <span>{issue.description}{issue.line ? ` (line ${issue.line})` : ''}</span>
-                        </div>
-                      ))}
-                    </div>
+                  {!selectedSkillIsReadOnly && (
+                    <Button variant="destructive" size="sm" onClick={deleteSkill} disabled={saving || drawerLoading}>
+                      {t('delete')}
+                    </Button>
                   )}
-                  <textarea
-                    value={draftContent}
-                    onChange={(e) => setDraftContent(e.target.value)}
-                    readOnly={selectedSkillIsReadOnly}
-                    className="w-full h-full min-h-[70vh] bg-card p-4 text-xs text-muted-foreground leading-5 font-mono whitespace-pre rounded-none border-0 focus:outline-none"
-                  />
+                  {!selectedSkillIsReadOnly && (
+                    <Button variant="outline" size="sm" onClick={saveSkill} disabled={saving || drawerLoading}>
+                      {t('save')}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedSkill(null)}>
+                    {t('close')}
+                  </Button>
                 </>
-              ) : (
-                <div className="p-4 text-sm text-muted-foreground">{t('noContent')}</div>
-              )}
-            </div>
+              }
+              footer={selectedSkillIsReadOnly ? 'Imported org-agent skills are read-only in the catalog.' : null}
+            />
           </aside>
         </div>,
         document.body

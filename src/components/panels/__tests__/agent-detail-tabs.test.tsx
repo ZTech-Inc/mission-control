@@ -113,6 +113,6 @@ describe('ProfileTab skill linking', () => {
     })
 
     expect(await screen.findByText('Atlas Coordinator skills')).toBeInTheDocument()
-    expect(screen.getByText('Atlas retrospective loop')).toBeInTheDocument()
+    expect(await screen.findByText(/Atlas retrospective loop/)).toBeInTheDocument()
   })
 })

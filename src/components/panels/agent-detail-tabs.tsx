@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
@@ -8,6 +9,12 @@ import { createClientLogger } from '@/lib/client-logger'
 import Link from 'next/link'
 import { useMissionControl } from '@/store'
 import type { Agent, Team, Department } from '@/store'
+import { buildOrgAgentSkillSource } from '@/lib/agent-skills-importer'
+import {
+  SkillContentViewer,
+  type SkillContentResponse,
+  type SkillSummary,
+} from '@/components/panels/skill-content-viewer'
 
 const log = createClientLogger('AgentDetailTabs')
 
@@ -46,12 +53,25 @@ const statusIcons: Record<string, string> = {
   error: '!',
 }
 
-function ProfileChip({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-      {label}
-    </span>
-  )
+function normalizeSkillLabel(raw: string): string {
+  return raw.trim().toLowerCase().replace(/[^a-z0-9]+/g, '')
+}
+
+function ProfileChip({ label, onClick }: { label: string; onClick?: () => void }) {
+  const className = 'inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary'
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${className} cursor-pointer transition-colors hover:border-primary/40 hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/30`}
+      >
+        {label}
+      </button>
+    )
+  }
+
+  return <span className={className}>{label}</span>
 }
 
 function ParseBadge() {
@@ -66,10 +86,12 @@ function ProfileField({
   label,
   values,
   canParse,
+  renderItem,
 }: {
   label: string
   values?: string[]
   canParse: boolean
+  renderItem?: (value: string) => ReactNode
 }) {
   const items = values?.filter(Boolean) ?? []
 
@@ -90,7 +112,9 @@ function ProfileField({
       </div>
       <div className="flex flex-wrap gap-1.5">
         {items.length > 0
-          ? items.map((item) => <ProfileChip key={`${label}-${item}`} label={item} />)
+          ? items.map((item) => (
+              <div key={`${label}-${item}`}>{renderItem ? renderItem(item) : <ProfileChip label={item} />}</div>
+            ))
           : !canParse
             ? <span className="text-xs text-muted-foreground">None</span>
             : null}
@@ -131,12 +155,96 @@ function ProfileTextField({
 
 export function ProfileTab({ agent }: { agent: Agent }) {
   const hasScannedSource = Boolean(agent.content_hash)
+  const [catalog, setCatalog] = useState<SkillSummary[] | null>(null)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [selectedSkill, setSelectedSkill] = useState<SkillSummary | null>(null)
+  const [selectedContent, setSelectedContent] = useState<SkillContentResponse | null>(null)
+  const [viewerLoading, setViewerLoading] = useState(false)
+  const [viewerError, setViewerError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!hasScannedSource || !agent.skills?.length) return
+
+    let cancelled = false
+    async function loadCatalog() {
+      try {
+        setCatalogError(null)
+        const response = await fetch('/api/skills', { cache: 'no-store' })
+        const body = await response.json()
+        if (!response.ok) throw new Error(body?.error || 'Failed to load skills catalog')
+        if (!cancelled) setCatalog(body.skills || [])
+      } catch (error: any) {
+        if (!cancelled) setCatalogError(error?.message || 'Failed to load skills catalog')
+      }
+    }
+
+    loadCatalog()
+    return () => {
+      cancelled = true
+    }
+  }, [agent.skills, hasScannedSource])
+
+  useEffect(() => {
+    if (!selectedSkill) return
+
+    let cancelled = false
+    async function loadContent() {
+      try {
+        setViewerLoading(true)
+        setViewerError(null)
+        setSelectedContent(null)
+        const params = new URLSearchParams({
+          mode: 'content',
+          source: selectedSkill.source,
+          name: selectedSkill.name,
+        })
+        const response = await fetch(`/api/skills?${params.toString()}`, { cache: 'no-store' })
+        const body = await response.json()
+        if (!response.ok) throw new Error(body?.error || 'Failed to load SKILL.md')
+        if (!cancelled) setSelectedContent(body as SkillContentResponse)
+      } catch (error: any) {
+        if (!cancelled) setViewerError(error?.message || 'Failed to load SKILL.md')
+      } finally {
+        if (!cancelled) setViewerLoading(false)
+      }
+    }
+
+    loadContent()
+    return () => {
+      cancelled = true
+    }
+  }, [selectedSkill])
+
+  const resolveLinkedSkill = (label: string): SkillSummary | null => {
+    if (!catalog) return null
+    const normalizedLabel = normalizeSkillLabel(label)
+    if (!normalizedLabel) return null
+
+    const exactMatches = catalog.filter((skill) => normalizeSkillLabel(skill.name) === normalizedLabel)
+    if (exactMatches.length === 0) return null
+
+    const sameAgentSource = buildOrgAgentSkillSource(agent.name)
+    const sameAgentMatches = exactMatches.filter((skill) => skill.source === sameAgentSource)
+    if (sameAgentMatches.length === 1) return sameAgentMatches[0]
+    if (sameAgentMatches.length > 1) return null
+
+    return exactMatches.length === 1 ? exactMatches[0] : null
+  }
 
   return (
     <div className="space-y-6 p-2">
       <section className="space-y-3">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Capabilities</h3>
-        <ProfileField label="Skills" values={agent.skills} canParse={hasScannedSource} />
+        <ProfileField
+          label="Skills"
+          values={agent.skills}
+          canParse={hasScannedSource}
+          renderItem={(item) => {
+            const linkedSkill = resolveLinkedSkill(item)
+            return <ProfileChip label={item} onClick={linkedSkill ? () => setSelectedSkill(linkedSkill) : undefined} />
+          }}
+        />
+        {catalogError ? <p className="text-xs text-destructive">{catalogError}</p> : null}
         <ProfileField label="Protocol Stack" values={agent.protocol_stack} canParse={hasScannedSource} />
       </section>
 
@@ -161,6 +269,27 @@ export function ProfileTab({ agent }: { agent: Agent }) {
           mono
         />
       </section>
+      {selectedSkill && createPortal(
+        <div className="fixed inset-0 z-[120]">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedSkill(null)} />
+          <aside className="absolute right-0 top-0 flex h-full w-[min(52rem,100vw)] flex-col border-l border-border bg-card shadow-2xl">
+            <SkillContentViewer
+              skill={selectedSkill}
+              content={selectedContent}
+              loading={viewerLoading}
+              error={viewerError}
+              readOnly
+              emptyMessage="No content"
+              actions={
+                <Button variant="ghost" size="sm" onClick={() => setSelectedSkill(null)}>
+                  close
+                </Button>
+              }
+            />
+          </aside>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
