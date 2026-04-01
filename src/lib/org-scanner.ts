@@ -31,7 +31,7 @@ export interface OrgSnapshot {
   scannedAt: number
 }
 
-interface ParsedAgentMetadata {
+export interface ParsedAgentMetadata {
   name?: string
   role?: string
   skills: string[]
@@ -129,7 +129,7 @@ function firstHeading(content: string): string | undefined {
   return undefined
 }
 
-function parseMarkdownTableField(content: string, labels: string[]): string | undefined {
+export function parseMarkdownTableField(content: string, labels: string[]): string | undefined {
   const normalizedLabels = labels.map((label) => label.toLowerCase())
 
   for (const rawLine of content.split('\n')) {
@@ -162,7 +162,7 @@ function normalizeAgentName(name: string | undefined): string | undefined {
   return normalized || undefined
 }
 
-function parseField(content: string, keys: string[]): string | undefined {
+export function parseField(content: string, keys: string[]): string | undefined {
   const pattern = new RegExp(
     `^(?:${keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:\\s*(.+)$`,
     'i'
@@ -184,7 +184,7 @@ function parseInlineList(value: string): string[] {
     .filter(Boolean)
 }
 
-function parseListField(content: string, keys: string[]): string[] {
+export function parseListField(content: string, keys: string[]): string[] {
   const lines = content.split('\n')
   const keyPattern = new RegExp(
     `^(?:${keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:\\s*(.*)$`,
