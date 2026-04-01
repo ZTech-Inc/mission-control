@@ -6,7 +6,9 @@ import { getDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { readDepartmentMetadata, readTeamMetadata } from '@/lib/org-metadata'
 import { MOCK_AGENT_ASSIGNMENTS, MOCK_DEPARTMENTS, MOCK_TEAMS } from '@/lib/mock-org-data'
+import { syncOrgAgentSkills } from './agent-skills-importer'
 import type { AgentTeamAssignment, Department, Team } from '@/store'
+import { parseAgentProfile } from './agent-profile-parser'
 
 const COLOR_PALETTE = [
   '#89b4fa',
@@ -31,7 +33,7 @@ export interface OrgSnapshot {
   scannedAt: number
 }
 
-interface ParsedAgentMetadata {
+export interface ParsedAgentMetadata {
   name?: string
   role?: string
   skills: string[]
@@ -129,7 +131,7 @@ function firstHeading(content: string): string | undefined {
   return undefined
 }
 
-function parseMarkdownTableField(content: string, labels: string[]): string | undefined {
+export function parseMarkdownTableField(content: string, labels: string[]): string | undefined {
   const normalizedLabels = labels.map((label) => label.toLowerCase())
 
   for (const rawLine of content.split('\n')) {
@@ -162,7 +164,7 @@ function normalizeAgentName(name: string | undefined): string | undefined {
   return normalized || undefined
 }
 
-function parseField(content: string, keys: string[]): string | undefined {
+export function parseField(content: string, keys: string[]): string | undefined {
   const pattern = new RegExp(
     `^(?:${keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:\\s*(.+)$`,
     'i'
@@ -184,7 +186,7 @@ function parseInlineList(value: string): string[] {
     .filter(Boolean)
 }
 
-function parseListField(content: string, keys: string[]): string[] {
+export function parseListField(content: string, keys: string[]): string[] {
   const lines = content.split('\n')
   const keyPattern = new RegExp(
     `^(?:${keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:\\s*(.*)$`,
@@ -278,6 +280,13 @@ function ensureFilesystemAgent(params: {
   contentHash: string
   workspacePath: string
   config: Record<string, unknown>
+  openclaw_id: string
+  protocol_stack: string
+  kpis: string
+  deliverables: string
+  dependencies: string
+  preferred_runtime: string | null
+  skills: string
 }): number {
   const db = getDatabase()
   const now = nowInSeconds()
@@ -308,6 +317,13 @@ function ensureFilesystemAgent(params: {
            content_hash = ?,
            workspace_path = ?,
            config = ?,
+           openclaw_id = ?,
+           protocol_stack = ?,
+           kpis = ?,
+           deliverables = ?,
+           dependencies = ?,
+           preferred_runtime = ?,
+           skills = ?,
            updated_at = ?
        WHERE id = ?`
     ).run(
@@ -317,6 +333,13 @@ function ensureFilesystemAgent(params: {
       params.contentHash,
       params.workspacePath,
       mergeConfig(existing.config, params.config),
+      params.openclaw_id,
+      params.protocol_stack,
+      params.kpis,
+      params.deliverables,
+      params.dependencies,
+      params.preferred_runtime,
+      params.skills,
       now,
       existing.id
     )
@@ -326,8 +349,9 @@ function ensureFilesystemAgent(params: {
 
   const result = db.prepare(
     `INSERT INTO agents (
-      name, role, soul_content, status, created_at, updated_at, config, workspace_id, source, content_hash, workspace_path
-    ) VALUES (?, ?, ?, 'offline', ?, ?, ?, ?, 'filesystem', ?, ?)`
+      name, role, soul_content, status, created_at, updated_at, config, workspace_id, source, content_hash, workspace_path,
+      openclaw_id, protocol_stack, kpis, deliverables, dependencies, preferred_runtime, skills
+    ) VALUES (?, ?, ?, 'offline', ?, ?, ?, ?, 'filesystem', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     params.name,
     params.role || 'agent',
@@ -337,7 +361,14 @@ function ensureFilesystemAgent(params: {
     JSON.stringify(params.config),
     params.workspaceId,
     params.contentHash,
-    params.workspacePath
+    params.workspacePath,
+    params.openclaw_id,
+    params.protocol_stack,
+    params.kpis,
+    params.deliverables,
+    params.dependencies,
+    params.preferred_runtime,
+    params.skills
   )
 
   return Number(result.lastInsertRowid)
@@ -490,6 +521,7 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
   const teams: Team[] = []
   const agentAssignments: AgentTeamAssignment[] = []
   const db = getDatabase()
+  const syncedAgents: Array<{ agentId: number; agentName: string; workspacePath: string | null }> = []
 
   const syncFilesystemAgentFromPath = (
     agentPath: string,
@@ -500,7 +532,7 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
     const identityMd = safeRead(path.join(agentPath, 'IDENTITY.md'))
     const soulMd = safeRead(path.join(agentPath, 'SOUL.md'))
     const userMd = safeRead(path.join(agentPath, 'USER.md'))
-    const metadata = parseAgentMetadata(agentDirName, agentMd, identityMd)
+    const metadata = parseAgentProfile(agentDirName, agentMd, identityMd)
     const agentName = metadata.name || agentDirName
     const agentRole = metadata.role || 'agent'
     const contentHash = buildAgentContentHash([agentMd, identityMd, soulMd, userMd, agentPath])
@@ -519,12 +551,20 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
       soulContent: soulMd || agentMd || identityMd || null,
       contentHash,
       workspacePath: agentPath,
-      config: {
-        orgSource: 'filesystem',
-        folderOrg,
-        skills: metadata.skills,
-        kpis: metadata.kpis,
-      },
+      config: { orgSource: 'filesystem', folderOrg },
+      openclaw_id: metadata.openclaw_id,
+      protocol_stack: JSON.stringify(metadata.protocol_stack),
+      kpis: JSON.stringify(metadata.kpis),
+      deliverables: JSON.stringify(metadata.deliverables),
+      dependencies: JSON.stringify(metadata.dependencies),
+      preferred_runtime: metadata.preferred_runtime ?? null,
+      skills: JSON.stringify(metadata.skills),
+    })
+
+    syncedAgents.push({
+      agentId,
+      agentName,
+      workspacePath: agentPath,
     })
 
     return {
@@ -631,6 +671,11 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
 
   syncTxn()
   applyFilesystemOrgPersistence(workspaceId, resolvedRoot, departments, teams, agentAssignments)
+  for (const agent of syncedAgents) {
+    void syncOrgAgentSkills(agent).catch((error) => {
+      logger.warn({ err: error, agentId: agent.agentId, workspacePath: agent.workspacePath }, 'Failed to sync org-agent skills')
+    })
+  }
 
   const leadRows = db.prepare(
     `SELECT external_id, manager_agent_id FROM departments WHERE workspace_id = ?`

@@ -5,16 +5,12 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { useMissionControl } from '@/store'
 import { Button } from '@/components/ui/button'
-
-interface SkillSummary {
-  id: string
-  name: string
-  source: string
-  path: string
-  description?: string
-  registry_slug?: string | null
-  security_status?: string | null
-}
+import {
+  getSkillSourceLabel,
+  SkillContentViewer,
+  type SkillContentResponse,
+  type SkillSummary,
+} from '@/components/panels/skill-content-viewer'
 
 interface SkillGroup {
   source: string
@@ -26,15 +22,6 @@ interface SkillsResponse {
   skills: SkillSummary[]
   groups: SkillGroup[]
   total: number
-}
-
-interface SkillContentResponse {
-  source: string
-  name: string
-  skillPath: string
-  skillDocPath: string
-  content: string
-  security?: { status: string; issues: Array<{ severity: string; rule: string; description: string; line?: number }> }
 }
 
 interface RegistrySkill {
@@ -50,22 +37,8 @@ interface RegistrySkill {
 
 type PanelTab = 'installed' | 'registry'
 
-const SOURCE_LABELS: Record<string, string> = {
-  'user-agents': '~/.agents/skills (global)',
-  'user-codex': '~/.codex/skills (global)',
-  'project-agents': '.agents/skills (project)',
-  'project-codex': '.codex/skills (project)',
-  'openclaw': '~/.openclaw/skills (gateway)',
-  'workspace': '~/.openclaw/workspace/skills',
-}
-
-function getSourceLabel(source: string): string {
-  if (SOURCE_LABELS[source]) return SOURCE_LABELS[source]
-  if (source.startsWith('workspace-')) {
-    const agentName = source.replace('workspace-', '')
-    return `${agentName} workspace`
-  }
-  return source
+export function getSourceLabel(source: string): string {
+  return getSkillSourceLabel(source)
 }
 
 export function SkillsPanel() {
@@ -110,6 +83,7 @@ export function SkillsPanel() {
     message?: string
     securityStatus?: string
   } | null>(null)
+  const selectedSkillIsReadOnly = selectedSkill?.source.startsWith('org-agent:') ?? false
 
   useEffect(() => {
     setIsMounted(true)
@@ -162,6 +136,28 @@ export function SkillsPanel() {
       return haystack.includes(q)
     })
   }, [skillsList, query, activeRoot])
+
+  const visibleGroups = useMemo(
+    () =>
+      (skillGroups || []).filter(
+        (group) =>
+          group.skills.length > 0 ||
+          ['user-agents', 'user-codex', 'openclaw', 'workspace'].includes(group.source) ||
+          group.source.startsWith('workspace-') ||
+          group.source.startsWith('org-agent:'),
+      ),
+    [skillGroups],
+  )
+
+  const orgAgentGroups = useMemo(
+    () => visibleGroups.filter((group) => group.source.startsWith('org-agent:')),
+    [visibleGroups],
+  )
+
+  const defaultGroups = useMemo(
+    () => visibleGroups.filter((group) => !group.source.startsWith('org-agent:')),
+    [visibleGroups],
+  )
 
   useEffect(() => {
     if (!selectedSkill) return
@@ -401,6 +397,39 @@ export function SkillsPanel() {
     return null
   }
 
+  const renderSourceCards = (groups: SkillGroup[], options?: { imported?: boolean }) => (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {groups.map((group) => (
+        <button
+          key={group.source}
+          onClick={() => setActiveRoot(activeRoot === group.source ? null : group.source)}
+          className={`rounded-lg border bg-card p-3 text-left transition-colors ${
+            activeRoot === group.source
+              ? 'border-primary ring-1 ring-primary/30'
+              : group.source === 'openclaw'
+                ? 'border-cyan-500/30 hover:border-cyan-500/50'
+                : group.source.startsWith('org-agent:')
+                  ? 'border-emerald-500/30 hover:border-emerald-500/50'
+                  : group.source.startsWith('workspace-')
+                    ? 'border-violet-500/30 hover:border-violet-500/50'
+                    : 'border-border hover:border-border/80'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className="text-xs font-medium text-muted-foreground">{getSourceLabel(group.source)}</div>
+            {options?.imported ? (
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                Imported from agent workspace
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-1 text-lg font-semibold text-foreground">{group.skills.length}</div>
+          <div className="mt-1 truncate text-2xs text-muted-foreground">{group.path}</div>
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -516,30 +545,33 @@ export function SkillsPanel() {
               <select
                 value={createSource}
                 onChange={(e) => setCreateSource(e.target.value)}
+                disabled={selectedSkillIsReadOnly}
                 className="h-9 rounded-md border border-border bg-secondary/50 px-2 text-xs text-foreground"
               >
-                <option value="user-agents">{SOURCE_LABELS['user-agents']}</option>
-                <option value="user-codex">{SOURCE_LABELS['user-codex']}</option>
-                <option value="project-agents">{SOURCE_LABELS['project-agents']}</option>
-                <option value="project-codex">{SOURCE_LABELS['project-codex']}</option>
+                <option value="user-agents">{getSourceLabel('user-agents')}</option>
+                <option value="user-codex">{getSourceLabel('user-codex')}</option>
+                <option value="project-agents">{getSourceLabel('project-agents')}</option>
+                <option value="project-codex">{getSourceLabel('project-codex')}</option>
                 {dashboardMode === 'full' && (
-                  <option value="openclaw">{SOURCE_LABELS['openclaw']}</option>
+                  <option value="openclaw">{getSourceLabel('openclaw')}</option>
                 )}
-                <option value="workspace">{SOURCE_LABELS['workspace']}</option>
+                <option value="workspace">{getSourceLabel('workspace')}</option>
               </select>
               <input
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
+                disabled={selectedSkillIsReadOnly}
                 placeholder="new-skill-name"
                 className="h-9 rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
-              <Button variant="default" size="sm" onClick={createSkill} disabled={saving || !createName.trim()}>
+              <Button variant="default" size="sm" onClick={createSkill} disabled={saving || !createName.trim() || selectedSkillIsReadOnly}>
                 {t('addSkill')}
               </Button>
             </div>
             <textarea
               value={createContent}
               onChange={(e) => setCreateContent(e.target.value)}
+              disabled={selectedSkillIsReadOnly}
               className="w-full h-24 rounded-md border border-border bg-secondary/30 p-2 text-xs text-foreground font-mono focus:outline-none"
               placeholder={t('initialContent')}
             />
@@ -552,32 +584,36 @@ export function SkillsPanel() {
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-6 text-sm text-destructive">{error}</div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="space-y-4">
                 {activeRoot && (
                   <button
                     onClick={() => setActiveRoot(null)}
-                    className="col-span-full text-left text-2xs text-primary hover:underline"
+                    className="text-left text-2xs text-primary hover:underline"
                   >
                     {t('showAllRoots')}
                   </button>
                 )}
-                {(skillGroups || []).filter(g => g.skills.length > 0 || ['user-agents', 'user-codex', 'openclaw', 'workspace'].includes(g.source) || g.source.startsWith('workspace-')).map((group) => (
-                  <button
-                    key={group.source}
-                    onClick={() => setActiveRoot(activeRoot === group.source ? null : group.source)}
-                    className={`rounded-lg border bg-card p-3 text-left transition-colors ${
-                      activeRoot === group.source
-                        ? 'border-primary ring-1 ring-primary/30'
-                        : group.source === 'openclaw' ? 'border-cyan-500/30 hover:border-cyan-500/50'
-                        : group.source.startsWith('workspace-') ? 'border-violet-500/30 hover:border-violet-500/50'
-                        : 'border-border hover:border-border/80'
-                    }`}
-                  >
-                    <div className="text-xs font-medium text-muted-foreground">{getSourceLabel(group.source)}</div>
-                    <div className="mt-1 text-lg font-semibold text-foreground">{group.skills.length}</div>
-                    <div className="mt-1 text-2xs text-muted-foreground truncate">{group.path}</div>
-                  </button>
-                ))}
+
+                {orgAgentGroups.length > 0 ? (
+                  <section className="space-y-3">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-foreground">Imported Agent Skills</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Read-only skills imported from agent workspaces during org scans.
+                      </p>
+                    </div>
+                    {renderSourceCards(orgAgentGroups, { imported: true })}
+                  </section>
+                ) : null}
+
+                {defaultGroups.length > 0 ? (
+                  <section className="space-y-3">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-foreground">Global and Project Skill Sources</h3>
+                    </div>
+                    {renderSourceCards(defaultGroups)}
+                  </section>
+                ) : null}
               </div>
 
               <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -604,6 +640,8 @@ export function SkillsPanel() {
                             <span className={`text-2xs rounded-full border px-2 py-0.5 ${
                               skill.source === 'openclaw'
                                 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                : skill.source.startsWith('org-agent:')
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                                 : skill.source.startsWith('workspace-')
                                   ? 'bg-violet-500/10 text-violet-400 border-violet-500/30'
                                   : skill.source.startsWith('project-')
@@ -665,14 +703,14 @@ export function SkillsPanel() {
                 onChange={(e) => setInstallTarget(e.target.value)}
                 className="h-7 rounded-md border border-border bg-secondary/50 px-2 text-xs text-foreground"
               >
-                <option value="user-agents">{SOURCE_LABELS['user-agents']}</option>
-                <option value="user-codex">{SOURCE_LABELS['user-codex']}</option>
-                <option value="project-agents">{SOURCE_LABELS['project-agents']}</option>
-                <option value="project-codex">{SOURCE_LABELS['project-codex']}</option>
+                <option value="user-agents">{getSourceLabel('user-agents')}</option>
+                <option value="user-codex">{getSourceLabel('user-codex')}</option>
+                <option value="project-agents">{getSourceLabel('project-agents')}</option>
+                <option value="project-codex">{getSourceLabel('project-codex')}</option>
                 {dashboardMode === 'full' && (
-                  <option value="openclaw">{SOURCE_LABELS['openclaw']}</option>
+                  <option value="openclaw">{getSourceLabel('openclaw')}</option>
                 )}
-                <option value="workspace">{SOURCE_LABELS['workspace']}</option>
+                <option value="workspace">{getSourceLabel('workspace')}</option>
               </select>
             </div>
           </div>
@@ -833,59 +871,34 @@ export function SkillsPanel() {
         <div className="fixed inset-0 z-[120]">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedSkill(null)} />
           <aside className="absolute right-0 top-0 h-full w-[min(52rem,100vw)] bg-card border-l border-border shadow-2xl flex flex-col">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-foreground truncate">{selectedSkill.name}</h3>
-                <p className="text-2xs text-muted-foreground truncate">
-                  {selectedSkill.source} • {selectedSkill.path}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="destructive" size="sm" onClick={deleteSkill} disabled={saving || drawerLoading}>
-                  {t('delete')}
-                </Button>
-                <Button variant="outline" size="sm" onClick={saveSkill} disabled={saving || drawerLoading}>
-                  {t('save')}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedSkill(null)}>{t('close')}</Button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {drawerLoading ? (
-                <div className="p-4 text-sm text-muted-foreground">{t('loadingSkillContent')}</div>
-              ) : drawerError ? (
-                <div className="p-4 text-sm text-destructive">{drawerError}</div>
-              ) : selectedContent ? (
+            <SkillContentViewer
+              skill={selectedSkill}
+              content={selectedContent}
+              loading={drawerLoading}
+              error={drawerError}
+              readOnly={selectedSkillIsReadOnly}
+              value={draftContent}
+              onValueChange={setDraftContent}
+              emptyMessage={t('noContent')}
+              actions={
                 <>
-                  {selectedContent.security && selectedContent.security.issues.length > 0 && (
-                    <div className={`mx-4 mt-3 rounded-lg border p-3 text-xs ${
-                      selectedContent.security.status === 'rejected'
-                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-                        : selectedContent.security.status === 'warning'
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                          : 'bg-slate-500/10 border-slate-500/30 text-slate-300'
-                    }`}>
-                      <div className="font-medium mb-1">{t('security')}: {selectedContent.security.status}</div>
-                      {selectedContent.security.issues.map((issue, i) => (
-                        <div key={i} className="flex items-start gap-1.5 mt-1">
-                          <span className={`mt-0.5 text-2xs font-mono ${
-                            issue.severity === 'critical' ? 'text-rose-400' : issue.severity === 'warning' ? 'text-amber-400' : 'text-slate-400'
-                          }`}>[{issue.severity}]</span>
-                          <span>{issue.description}{issue.line ? ` (line ${issue.line})` : ''}</span>
-                        </div>
-                      ))}
-                    </div>
+                  {!selectedSkillIsReadOnly && (
+                    <Button variant="destructive" size="sm" onClick={deleteSkill} disabled={saving || drawerLoading}>
+                      {t('delete')}
+                    </Button>
                   )}
-                  <textarea
-                    value={draftContent}
-                    onChange={(e) => setDraftContent(e.target.value)}
-                    className="w-full h-full min-h-[70vh] bg-card p-4 text-xs text-muted-foreground leading-5 font-mono whitespace-pre rounded-none border-0 focus:outline-none"
-                  />
+                  {!selectedSkillIsReadOnly && (
+                    <Button variant="outline" size="sm" onClick={saveSkill} disabled={saving || drawerLoading}>
+                      {t('save')}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedSkill(null)}>
+                    {t('close')}
+                  </Button>
                 </>
-              ) : (
-                <div className="p-4 text-sm text-muted-foreground">{t('noContent')}</div>
-              )}
-            </div>
+              }
+              footer={selectedSkillIsReadOnly ? 'Imported org-agent skills are read-only in the catalog.' : null}
+            />
           </aside>
         </div>,
         document.body
