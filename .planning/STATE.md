@@ -28,9 +28,9 @@ See: .planning/PROJECT.md
 
 **Milestone:** v1.1 Agent Gateway Integration
 **Current phase:** 04
-**Status:** Phase 04 complete; Phase 05 not started
+**Status:** Phase 04 implementation complete; verification gap recorded; Phase 05 not started
 **Last completed plan:** 04-02-PLAN.md
-**Verification:** Passed (`pnpm typecheck`, `pnpm build`, parser test run, manual browser verification after forced org scan)
+**Verification:** `gaps_found` in `04-VERIFICATION.md` based on existing evidence; the forced org scan/profile population path remains the open blocker
 **Progress:** 1/4 phases complete
 
 ```
@@ -79,7 +79,7 @@ See: .planning/PROJECT.md
 
 | Phase | Plans | Status | Notes |
 |------|-------|--------|-------|
-| 04 | 2/2 | Complete | Agent profile enrichment shipped and verified; closeout stopped before Phase 05 |
+| 04 | 2/2 | Complete with gap | Implementation complete; verification recorded a forced-rescan profile population gap |
 | Phase 04 P01 | 4 min | 2 tasks | 5 files |
 | Phase 04 P02 | 12 min | 2 tasks | 8 files |
 
