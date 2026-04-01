@@ -46,6 +46,78 @@ function buildStore(source: string) {
   }
 }
 
+function buildMixedStore() {
+  return {
+    dashboardMode: 'full',
+    skillsList: [
+      {
+        id: 'org-agent:atlas-coordinator:Retrospective',
+        name: 'Retrospective',
+        source: 'org-agent:atlas-coordinator',
+        path: '/tmp/org-agent-atlas/Retrospective',
+        description: 'Imported agent skill',
+      },
+      {
+        id: 'user-agents:PromptPlanning',
+        name: 'PromptPlanning',
+        source: 'user-agents',
+        path: '/tmp/user-agents/PromptPlanning',
+        description: 'Global skill',
+      },
+      {
+        id: 'project-main:Roadmap',
+        name: 'Roadmap',
+        source: 'project-main',
+        path: '/tmp/project-main/Roadmap',
+        description: 'Project skill',
+      },
+    ],
+    skillGroups: [
+      {
+        source: 'org-agent:atlas-coordinator',
+        path: '/tmp/org-agent-atlas',
+        skills: [
+          {
+            id: 'org-agent:atlas-coordinator:Retrospective',
+            name: 'Retrospective',
+            source: 'org-agent:atlas-coordinator',
+            path: '/tmp/org-agent-atlas/Retrospective',
+            description: 'Imported agent skill',
+          },
+        ],
+      },
+      {
+        source: 'user-agents',
+        path: '/tmp/user-agents',
+        skills: [
+          {
+            id: 'user-agents:PromptPlanning',
+            name: 'PromptPlanning',
+            source: 'user-agents',
+            path: '/tmp/user-agents/PromptPlanning',
+            description: 'Global skill',
+          },
+        ],
+      },
+      {
+        source: 'project-main',
+        path: '/tmp/project-main',
+        skills: [
+          {
+            id: 'project-main:Roadmap',
+            name: 'Roadmap',
+            source: 'project-main',
+            path: '/tmp/project-main/Roadmap',
+            description: 'Project skill',
+          },
+        ],
+      },
+    ],
+    skillsTotal: 3,
+    setSkillsData: vi.fn(),
+  }
+}
+
 describe('SkillsPanel org-agent behavior', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn(async () => ({
@@ -64,6 +136,20 @@ describe('SkillsPanel org-agent behavior', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.clearAllMocks()
+  })
+
+  it('renders imported sources in a dedicated section with explicit source copy', () => {
+    useMissionControlMock.mockReturnValue(buildMixedStore())
+
+    render(<SkillsPanel />)
+
+    expect(screen.getByText('Imported Agent Skills')).toBeInTheDocument()
+    expect(screen.getByText('Read-only skills imported from agent workspaces during org scans.')).toBeInTheDocument()
+    expect(screen.getByText('Global and Project Skill Sources')).toBeInTheDocument()
+    expect(screen.getByText('Imported from agent workspace')).toBeInTheDocument()
+    expect(screen.getAllByText('Atlas Coordinator skills').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('~/.agents/skills (global)').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('project skills').length).toBeGreaterThan(0)
   })
 
   it('shows org-agent sources with readable labels and keeps the drawer read-only', async () => {
@@ -97,6 +183,22 @@ describe('SkillsPanel org-agent behavior', () => {
     expect(screen.getByRole('button', { name: 'delete' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText('new-skill-name')).not.toBeDisabled()
     expect(screen.getByPlaceholderText('initialContent')).not.toBeDisabled()
+    expect(screen.queryByText('Imported org-agent skills are read-only in the catalog.')).not.toBeInTheDocument()
+  })
+
+  it('keeps project-family sources writable', async () => {
+    useMissionControlMock.mockReturnValue(buildStore('project-main'))
+
+    render(<SkillsPanel />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('project skills').length).toBeGreaterThan(0)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'view' }))
+
+    expect(await screen.findByRole('button', { name: 'save' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'delete' })).toBeInTheDocument()
     expect(screen.queryByText('Imported org-agent skills are read-only in the catalog.')).not.toBeInTheDocument()
   })
 })

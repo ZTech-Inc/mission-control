@@ -50,6 +50,9 @@ export function getSkillSourceLabel(source: string): string {
   if (source.startsWith('org-agent:')) {
     return `${formatSourceTitle(source.replace('org-agent:', ''))} skills`
   }
+  if (source.startsWith('project-')) {
+    return 'project skills'
+  }
   if (source.startsWith('workspace-')) {
     const agentName = source.replace('workspace-', '')
     return `${agentName} workspace`

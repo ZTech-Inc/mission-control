@@ -137,6 +137,28 @@ export function SkillsPanel() {
     })
   }, [skillsList, query, activeRoot])
 
+  const visibleGroups = useMemo(
+    () =>
+      (skillGroups || []).filter(
+        (group) =>
+          group.skills.length > 0 ||
+          ['user-agents', 'user-codex', 'openclaw', 'workspace'].includes(group.source) ||
+          group.source.startsWith('workspace-') ||
+          group.source.startsWith('org-agent:'),
+      ),
+    [skillGroups],
+  )
+
+  const orgAgentGroups = useMemo(
+    () => visibleGroups.filter((group) => group.source.startsWith('org-agent:')),
+    [visibleGroups],
+  )
+
+  const defaultGroups = useMemo(
+    () => visibleGroups.filter((group) => !group.source.startsWith('org-agent:')),
+    [visibleGroups],
+  )
+
   useEffect(() => {
     if (!selectedSkill) return
     const skill = selectedSkill
@@ -375,6 +397,39 @@ export function SkillsPanel() {
     return null
   }
 
+  const renderSourceCards = (groups: SkillGroup[], options?: { imported?: boolean }) => (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {groups.map((group) => (
+        <button
+          key={group.source}
+          onClick={() => setActiveRoot(activeRoot === group.source ? null : group.source)}
+          className={`rounded-lg border bg-card p-3 text-left transition-colors ${
+            activeRoot === group.source
+              ? 'border-primary ring-1 ring-primary/30'
+              : group.source === 'openclaw'
+                ? 'border-cyan-500/30 hover:border-cyan-500/50'
+                : group.source.startsWith('org-agent:')
+                  ? 'border-emerald-500/30 hover:border-emerald-500/50'
+                  : group.source.startsWith('workspace-')
+                    ? 'border-violet-500/30 hover:border-violet-500/50'
+                    : 'border-border hover:border-border/80'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className="text-xs font-medium text-muted-foreground">{getSourceLabel(group.source)}</div>
+            {options?.imported ? (
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                Imported from agent workspace
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-1 text-lg font-semibold text-foreground">{group.skills.length}</div>
+          <div className="mt-1 truncate text-2xs text-muted-foreground">{group.path}</div>
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -529,33 +584,36 @@ export function SkillsPanel() {
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-6 text-sm text-destructive">{error}</div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="space-y-4">
                 {activeRoot && (
                   <button
                     onClick={() => setActiveRoot(null)}
-                    className="col-span-full text-left text-2xs text-primary hover:underline"
+                    className="text-left text-2xs text-primary hover:underline"
                   >
                     {t('showAllRoots')}
                   </button>
                 )}
-                {(skillGroups || []).filter(g => g.skills.length > 0 || ['user-agents', 'user-codex', 'openclaw', 'workspace'].includes(g.source) || g.source.startsWith('workspace-') || g.source.startsWith('org-agent:')).map((group) => (
-                  <button
-                    key={group.source}
-                    onClick={() => setActiveRoot(activeRoot === group.source ? null : group.source)}
-                    className={`rounded-lg border bg-card p-3 text-left transition-colors ${
-                      activeRoot === group.source
-                        ? 'border-primary ring-1 ring-primary/30'
-                        : group.source === 'openclaw' ? 'border-cyan-500/30 hover:border-cyan-500/50'
-                        : group.source.startsWith('org-agent:') ? 'border-emerald-500/30 hover:border-emerald-500/50'
-                        : group.source.startsWith('workspace-') ? 'border-violet-500/30 hover:border-violet-500/50'
-                        : 'border-border hover:border-border/80'
-                    }`}
-                  >
-                    <div className="text-xs font-medium text-muted-foreground">{getSourceLabel(group.source)}</div>
-                    <div className="mt-1 text-lg font-semibold text-foreground">{group.skills.length}</div>
-                    <div className="mt-1 text-2xs text-muted-foreground truncate">{group.path}</div>
-                  </button>
-                ))}
+
+                {orgAgentGroups.length > 0 ? (
+                  <section className="space-y-3">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-foreground">Imported Agent Skills</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Read-only skills imported from agent workspaces during org scans.
+                      </p>
+                    </div>
+                    {renderSourceCards(orgAgentGroups, { imported: true })}
+                  </section>
+                ) : null}
+
+                {defaultGroups.length > 0 ? (
+                  <section className="space-y-3">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-foreground">Global and Project Skill Sources</h3>
+                    </div>
+                    {renderSourceCards(defaultGroups)}
+                  </section>
+                ) : null}
               </div>
 
               <div className="rounded-lg border border-border bg-card overflow-hidden">
