@@ -17,7 +17,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 4. Agent Profile Enrichment | 2/2 | Complete   | 2026-04-01 |
-| 5. Skills Import and Linking | 0/? | Not started | - |
+| 5. Skills Import and Linking | 1/2 | In progress | - |
 | 6. Multi-Runtime Gateway | 0/? | Not started | - |
 | 7. Hierarchical Task Delegation | 0/? | Not started | - |
 
@@ -45,9 +45,9 @@ Plans:
   1. After an org scan, the skills catalog contains entries for every SKILL.md file found under agent `skills/` subdirectories, each attributed to its source agent via a namespaced key (`org-agent:<name>`)
   2. Skill entries imported from agent directories do not disappear when the global `syncSkillsFromDisk()` routine runs
   3. In an agent's profile panel, inline skill names that match a catalog entry are rendered as clickable links that open the corresponding SKILL.md detail
-**Plans:** 2 plans
+**Plans:** 1/2 plans complete
 Plans:
-- [ ] 05-01-PLAN.md — Build the dedicated org-agent skills importer, scanner hook, and source-aware catalog visibility
+- [x] 05-01-PLAN.md — Build the dedicated org-agent skills importer, scanner hook, and source-aware catalog visibility
 - [ ] 05-02-PLAN.md — Add deterministic Profile-tab skill linking and reuse the read-only skill detail viewer
 
 ### Phase 6: Multi-Runtime Gateway

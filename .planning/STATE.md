@@ -1,18 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Agent Gateway Integration
-current_phase: 04
-status: completed
-stopped_at: Completed 04-02-PLAN.md; shipped for review in PR #6 with verification gap recorded
-last_updated: "2026-04-01T10:17:09.630Z"
+milestone: v1.0
+milestone_name: milestone
+current_phase: 05
+status: executing
+last_updated: "2026-04-01T12:05:00.000Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
+  total_plans: 4
   completed_plans: 2
-  percent: 100
 ---
 
 # Session State
@@ -22,17 +20,17 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** See which agent is working on what, delegate tasks to the right agent, and manage the entire agent task force from one screen.
-**Current focus:** Phase 04 complete — waiting for explicit Phase 05 start
+**Current focus:** Phase 05 wave 2 — profile skill linking and browser checkpoint
 
 ## Position
 
 **Milestone:** v1.1 Agent Gateway Integration
-**Current phase:** 04
-**Status:** Phase 04 implementation complete; verification gap recorded; Phase 05 not started
-**Last completed plan:** 04-02-PLAN.md
+**Current phase:** 05
+**Status:** Executing Phase 05; 05-01 complete and 05-02 pending checkpointed implementation
+**Last completed plan:** 05-01-PLAN.md
 **Shipping:** PR #6 open against `main`
 **Verification:** `gaps_found` in `04-VERIFICATION.md` based on existing evidence; the forced org scan/profile population path remains the open blocker
-**Progress:** 1/4 phases complete
+**Progress:** 1/4 phases complete; Phase 05 is 1/2 plans complete
 
 ```
 [done] Phase 4: Agent Profile Enrichment
@@ -55,6 +53,7 @@ See: .planning/PROJECT.md
 - [Phase 04]: Export parseField/parseListField/ParsedAgentMetadata from org-scanner to enable reuse without duplication
 - [Phase 04]: openclaw_id derived at parse time from resolved name using formula from agent-workspace.ts
 - [Phase 04]: Phase 04-02 closes on the implementation-complete commit f0d9837 after manual checkpoint approval and browser verification. — This keeps post-approval bookkeeping separate from product changes while preserving the approved implementation boundary for the plan.
+- [Phase 05]: Agent-local skills are imported under `org-agent:<normalized-agent-name>` and must remain read-only in the catalog UI.
 
 ## Accumulated Context
 
@@ -81,8 +80,10 @@ See: .planning/PROJECT.md
 | Phase | Plans | Status | Notes |
 |------|-------|--------|-------|
 | 04 | 2/2 | Complete with gap | Implementation complete; verification recorded a forced-rescan profile population gap |
+| 05 | 1/2 | In progress | 05-01 shipped org-agent skill import, API exposure, and read-only catalog visibility |
 | Phase 04 P01 | 4 min | 2 tasks | 5 files |
 | Phase 04 P02 | 12 min | 2 tasks | 8 files |
+| Phase 05 P01 | 10 min | 3 tasks | 7 files |
 
 ## Session Log
 
@@ -92,3 +93,4 @@ See: .planning/PROJECT.md
 - 2026-04-01: Completed 04-01 with migration 051, parser extraction, and enriched Agent typing
 - 2026-04-01: Completed 04-02 with scanner/API wiring, Profile tab UI, browser verification, and docs closeout without starting Phase 05
 - 2026-04-01: Shipped Phase 04 branch for review as PR #6 while preserving the evidence-backed verification gap in `04-VERIFICATION.md`
+- 2026-04-01: Completed 05-01 with org-agent skill import, catalog API support, and read-only Skills panel exposure
