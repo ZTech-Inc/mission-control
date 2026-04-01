@@ -59,8 +59,19 @@ const SOURCE_LABELS: Record<string, string> = {
   'workspace': '~/.openclaw/workspace/skills',
 }
 
-function getSourceLabel(source: string): string {
+function formatSourceTitle(source: string): string {
+  return source
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+export function getSourceLabel(source: string): string {
   if (SOURCE_LABELS[source]) return SOURCE_LABELS[source]
+  if (source.startsWith('org-agent:')) {
+    return `${formatSourceTitle(source.replace('org-agent:', ''))} skills`
+  }
   if (source.startsWith('workspace-')) {
     const agentName = source.replace('workspace-', '')
     return `${agentName} workspace`
@@ -110,6 +121,7 @@ export function SkillsPanel() {
     message?: string
     securityStatus?: string
   } | null>(null)
+  const selectedSkillIsReadOnly = selectedSkill?.source.startsWith('org-agent:') ?? false
 
   useEffect(() => {
     setIsMounted(true)
@@ -516,6 +528,7 @@ export function SkillsPanel() {
               <select
                 value={createSource}
                 onChange={(e) => setCreateSource(e.target.value)}
+                disabled={selectedSkillIsReadOnly}
                 className="h-9 rounded-md border border-border bg-secondary/50 px-2 text-xs text-foreground"
               >
                 <option value="user-agents">{SOURCE_LABELS['user-agents']}</option>
@@ -530,16 +543,18 @@ export function SkillsPanel() {
               <input
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
+                disabled={selectedSkillIsReadOnly}
                 placeholder="new-skill-name"
                 className="h-9 rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
-              <Button variant="default" size="sm" onClick={createSkill} disabled={saving || !createName.trim()}>
+              <Button variant="default" size="sm" onClick={createSkill} disabled={saving || !createName.trim() || selectedSkillIsReadOnly}>
                 {t('addSkill')}
               </Button>
             </div>
             <textarea
               value={createContent}
               onChange={(e) => setCreateContent(e.target.value)}
+              disabled={selectedSkillIsReadOnly}
               className="w-full h-24 rounded-md border border-border bg-secondary/30 p-2 text-xs text-foreground font-mono focus:outline-none"
               placeholder={t('initialContent')}
             />
@@ -561,7 +576,7 @@ export function SkillsPanel() {
                     {t('showAllRoots')}
                   </button>
                 )}
-                {(skillGroups || []).filter(g => g.skills.length > 0 || ['user-agents', 'user-codex', 'openclaw', 'workspace'].includes(g.source) || g.source.startsWith('workspace-')).map((group) => (
+                {(skillGroups || []).filter(g => g.skills.length > 0 || ['user-agents', 'user-codex', 'openclaw', 'workspace'].includes(g.source) || g.source.startsWith('workspace-') || g.source.startsWith('org-agent:')).map((group) => (
                   <button
                     key={group.source}
                     onClick={() => setActiveRoot(activeRoot === group.source ? null : group.source)}
@@ -569,6 +584,7 @@ export function SkillsPanel() {
                       activeRoot === group.source
                         ? 'border-primary ring-1 ring-primary/30'
                         : group.source === 'openclaw' ? 'border-cyan-500/30 hover:border-cyan-500/50'
+                        : group.source.startsWith('org-agent:') ? 'border-emerald-500/30 hover:border-emerald-500/50'
                         : group.source.startsWith('workspace-') ? 'border-violet-500/30 hover:border-violet-500/50'
                         : 'border-border hover:border-border/80'
                     }`}
@@ -604,6 +620,8 @@ export function SkillsPanel() {
                             <span className={`text-2xs rounded-full border px-2 py-0.5 ${
                               skill.source === 'openclaw'
                                 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                : skill.source.startsWith('org-agent:')
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                                 : skill.source.startsWith('workspace-')
                                   ? 'bg-violet-500/10 text-violet-400 border-violet-500/30'
                                   : skill.source.startsWith('project-')
@@ -841,14 +859,23 @@ export function SkillsPanel() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="destructive" size="sm" onClick={deleteSkill} disabled={saving || drawerLoading}>
-                  {t('delete')}
-                </Button>
-                <Button variant="outline" size="sm" onClick={saveSkill} disabled={saving || drawerLoading}>
-                  {t('save')}
-                </Button>
+                {!selectedSkillIsReadOnly && (
+                  <Button variant="destructive" size="sm" onClick={deleteSkill} disabled={saving || drawerLoading}>
+                    {t('delete')}
+                  </Button>
+                )}
+                {!selectedSkillIsReadOnly && (
+                  <Button variant="outline" size="sm" onClick={saveSkill} disabled={saving || drawerLoading}>
+                    {t('save')}
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setSelectedSkill(null)}>{t('close')}</Button>
               </div>
+              {selectedSkillIsReadOnly && (
+                <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
+                  Imported org-agent skills are read-only in the catalog.
+                </div>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto">
               {drawerLoading ? (
@@ -879,6 +906,7 @@ export function SkillsPanel() {
                   <textarea
                     value={draftContent}
                     onChange={(e) => setDraftContent(e.target.value)}
+                    readOnly={selectedSkillIsReadOnly}
                     className="w-full h-full min-h-[70vh] bg-card p-4 text-xs text-muted-foreground leading-5 font-mono whitespace-pre rounded-none border-0 focus:outline-none"
                   />
                 </>
