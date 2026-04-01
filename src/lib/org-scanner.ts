@@ -6,6 +6,7 @@ import { getDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { readDepartmentMetadata, readTeamMetadata } from '@/lib/org-metadata'
 import { MOCK_AGENT_ASSIGNMENTS, MOCK_DEPARTMENTS, MOCK_TEAMS } from '@/lib/mock-org-data'
+import { syncOrgAgentSkills } from './agent-skills-importer'
 import type { AgentTeamAssignment, Department, Team } from '@/store'
 import { parseAgentProfile } from './agent-profile-parser'
 
@@ -520,6 +521,7 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
   const teams: Team[] = []
   const agentAssignments: AgentTeamAssignment[] = []
   const db = getDatabase()
+  const syncedAgents: Array<{ agentId: number; agentName: string; workspacePath: string | null }> = []
 
   const syncFilesystemAgentFromPath = (
     agentPath: string,
@@ -557,6 +559,12 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
       dependencies: JSON.stringify(metadata.dependencies),
       preferred_runtime: metadata.preferred_runtime ?? null,
       skills: JSON.stringify(metadata.skills),
+    })
+
+    syncedAgents.push({
+      agentId,
+      agentName,
+      workspacePath: agentPath,
     })
 
     return {
@@ -663,6 +671,11 @@ function scanFilesystemOrg(rootPath: string, workspaceId: number): OrgSnapshot {
 
   syncTxn()
   applyFilesystemOrgPersistence(workspaceId, resolvedRoot, departments, teams, agentAssignments)
+  for (const agent of syncedAgents) {
+    void syncOrgAgentSkills(agent).catch((error) => {
+      logger.warn({ err: error, agentId: agent.agentId, workspacePath: agent.workspacePath }, 'Failed to sync org-agent skills')
+    })
+  }
 
   const leadRows = db.prepare(
     `SELECT external_id, manager_agent_id FROM departments WHERE workspace_id = ?`

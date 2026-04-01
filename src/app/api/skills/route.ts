@@ -5,6 +5,7 @@ import { constants } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { requireRole } from '@/lib/auth'
+import { getDatabase } from '@/lib/db'
 import { resolveWithin } from '@/lib/paths'
 import { checkSkillSecurity } from '@/lib/skill-registry'
 
@@ -126,6 +127,17 @@ function getRootBySource(roots: SkillRoot[], sourceRaw: string | null): SkillRoo
   return roots.find((r) => r.source === source) || null
 }
 
+function getSkillRowFromDB(source: string, name: string): { source: string; name: string; path: string } | null {
+  try {
+    const db = getDatabase()
+    return db.prepare(
+      'SELECT source, name, path FROM skills WHERE source = ? AND name = ?'
+    ).get(source, name) as { source: string; name: string; path: string } | null
+  } catch {
+    return null
+  }
+}
+
 async function upsertSkill(root: SkillRoot, name: string, content: string) {
   const skillPath = resolveWithin(root.path, name)
   const skillDocPath = resolveWithin(skillPath, 'SKILL.md')
@@ -182,7 +194,6 @@ async function deleteSkill(root: SkillRoot, name: string) {
  */
 function getSkillsFromDB(): SkillSummary[] | null {
   try {
-    const { getDatabase } = require('@/lib/db')
     const db = getDatabase()
     const rows = db.prepare('SELECT name, source, path, description, registry_slug, security_status FROM skills ORDER BY name').all() as Array<{
       name: string; source: string; path: string; description: string | null; registry_slug: string | null; security_status: string | null
@@ -216,9 +227,12 @@ export async function GET(request: NextRequest) {
     if (!source || !name) {
       return NextResponse.json({ error: 'source and valid name are required' }, { status: 400 })
     }
+    const row = getSkillRowFromDB(source, name)
     const root = roots.find((r) => r.source === source)
-    if (!root) return NextResponse.json({ error: 'Invalid source' }, { status: 400 })
-    const skillPath = join(root.path, name)
+    const skillPath = source.startsWith('org-agent:')
+      ? row?.path
+      : row?.path || (root ? join(root.path, name) : null)
+    if (!skillPath) return NextResponse.json({ error: 'Invalid source' }, { status: 400 })
     const skillDocPath = join(skillPath, 'SKILL.md')
     if (!(await pathReadable(skillDocPath))) {
       return NextResponse.json({ error: 'SKILL.md not found' }, { status: 404 })
@@ -275,23 +289,17 @@ export async function GET(request: NextRequest) {
       groupMap.set(root.source, { source: root.source, path: root.path, skills: [] })
     }
     for (const skill of dbSkills) {
-      // Dynamically add workspace-* groups not already in roots
-      if (!groupMap.has(skill.source) && skill.source.startsWith('workspace-')) {
+      if (!groupMap.has(skill.source)) {
         groupMap.set(skill.source, { source: skill.source, path: '', skills: [] })
       }
       const group = groupMap.get(skill.source)
       if (group) group.skills.push(skill)
     }
 
-    const deduped = new Map<string, SkillSummary>()
-    for (const skill of dbSkills) {
-      if (!deduped.has(skill.name)) deduped.set(skill.name, skill)
-    }
-
     return NextResponse.json({
-      skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
+      skills: dbSkills,
       groups: Array.from(groupMap.values()),
-      total: deduped.size,
+      total: dbSkills.length,
     })
   }
 
