@@ -45,7 +45,10 @@ Plans:
   1. After an org scan, the skills catalog contains entries for every SKILL.md file found under agent `skills/` subdirectories, each attributed to its source agent via a namespaced key (`org-agent:<name>`)
   2. Skill entries imported from agent directories do not disappear when the global `syncSkillsFromDisk()` routine runs
   3. In an agent's profile panel, inline skill names that match a catalog entry are rendered as clickable links that open the corresponding SKILL.md detail
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Build the dedicated org-agent skills importer, scanner hook, and source-aware catalog visibility
+- [ ] 05-02-PLAN.md — Add deterministic Profile-tab skill linking and reuse the read-only skill detail viewer
 
 ### Phase 6: Multi-Runtime Gateway
 **Goal**: Operators can spawn agent sessions and dispatch tasks on Claude Code and Codex runtimes — not just OpenClaw — and agent cards show which runtime each agent uses along with that runtime's live availability.
