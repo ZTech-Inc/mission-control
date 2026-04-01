@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-current_phase: 03
-status: completed
-stopped_at: Completed 03-08-PLAN.md
-last_updated: "2026-04-01T06:22:48.019Z"
+milestone: v1.1
+milestone_name: Agent Gateway Integration
+current_phase: 0
+status: defining_requirements
+stopped_at: null
+last_updated: "2026-04-01"
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Session State
@@ -20,74 +20,34 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** See which agent is working on what, delegate tasks to the right agent, and manage the entire agent task force from one screen.
-**Current focus:** Planning next milestone
+**Current focus:** Defining requirements for v1.1
 
 ## Position
 
-**Milestone:** v1.0 milestone
-**Current phase:** 03
-**Status:** v1.0 milestone complete
-**Last completed plan:** 03-08-PLAN.md
-**Verification:** Passed (`pnpm typecheck`, `pnpm build`, human UI approval for D-05/D-06/D-12)
+**Milestone:** v1.1 Agent Gateway Integration
+**Current phase:** Not started (defining requirements)
+**Status:** Defining requirements
+**Last activity:** 2026-04-01 — Milestone v1.1 started
 
 ## Decisions
 
-- 2026-03-30 (Phase 01): Embedded chat renders `MessageBubble` directly and keeps message state local instead of reusing store-bound `MessageList`.
-- 2026-03-30 (Phase 01): Department and team chat tabs give height ownership to `EmbeddedChat` so message scrolling stays inside the widget.
-- 2026-03-30 (Phase 01): Restored `DEFAULT_SEED_AUTH_PASS` in `src/lib/db` so repository-wide typecheck/build verification could complete cleanly.
-- [Phase 02]: Used it.todo-only Vitest stubs in Wave 0 so later implementation plans can add assertions without changing verify targets.
-- [Phase 02]: Manual team lead promotions now survive filesystem rescans because org-scanner preserves source='manual' on assignment conflicts.
-- [Phase 02]: Team and department lead mutation routes update SQLite by workspace_id plus external_id and invalidate the cached org snapshot after writes.
-- [Phase 02]: Lead changes now call dedicated async store actions, refresh `/api/org/scan?force=true`, and keep UI state in sync only after API success.
-- [Phase 03]: Mapped org writes to external-id keyed department/team columns for creation routes
-- [Phase 03]: Stored stable agent path hash in config.external_id because agents table has no external_id
-- [Phase 03]: Kept /api/departments/[id]/lead stable while renaming store/UI terminology to Department Manager.
-- [Phase 03]: Filesystem org scanner now treats MANAGER/docs as reserved department folders and syncs department manager from MANAGER/.
-- [Phase 03]: Team/department docs routes resolve entities by workspace_id + external_id before filesystem reads and writes.
-- [Phase 03]: OrgDocsPanel now hydrates from docs API payloads and refreshes immediately after POST doc creation.
-- [Phase 03]: Used adapter wrappers to render all 11 agent detail tabs inline in Teams overview.
-- [Phase 03]: Selected team lead is auto-focused per team change with selectedAgentId reset and detail tab reset.
-- [Phase 03]: Replaced Add Member AgentMultiSelect with inline CreateTeamAgentForm posting to /api/agents/create.
-- [Phase 03]: Replaced full-page department creation mode with inline header form to match New Team behavior.
-- [Phase 03]: Displayed DepartmentManagerCard in Overview and gated manager creation behind inline Hire a Manager form.
-- [Phase 03]: Teams chat selection now persists across Overview/Members/Docs/Chat by keeping TeamDetail keyed by selectedTeam.id.
-- [Phase 03]: Chat conversation history sidebar uses /api/chat/conversations with team_id+agent_id filter and team:teamId:agent:agentId conversation prefixes.
-- [Phase 03]: Add Member now opens CreateTeamAgentForm in a modal overlay with backdrop and Escape dismissal.
-- [Phase 03]: Department docs tab now gives OrgDocsPanel full-height flex ownership, resolving the final D-12 visual verification issue.
+(None yet for v1.1)
 
 ## Accumulated Context
 
-### Roadmap Evolution
+### From v1.0
 
-- Phase 3 added: improve the teams and department panels
+- Embedded chat renders MessageBubble directly with local state (not store-bound MessageList)
+- Manual team lead promotions survive filesystem rescans (source='manual' protection)
+- Filesystem org scanner reads MANAGER/ folders and exposes creation capability via canCreate
+- Team/department creation writes to both filesystem and SQLite with path-derived IDs
+- Stable agent path hash stored in config.external_id (agents table has no external_id column)
+- OrgDocsPanel hydrates from docs API payloads and refreshes after POST creation
 
 ## Performance Metrics
 
-| Phase | Plans | Status | Notes |
-|------|-------|--------|-------|
-| 01 | 3/3 | Complete | Embedded department/team chat tabs verified |
-| 02 | 3/3 | In Progress | All plans executed; awaiting phase verification and completion |
-| Phase 02 P01 | 11min | 3 tasks | 4 files |
-| Phase 02 P02 | 2min | 2 tasks | 3 files |
-| Phase 03 P02 | 3min | 2 tasks | 3 files |
-| Phase 03 P01 | 4m | 2 tasks | 6 files |
-| Phase 03 P03 | 6min | 2 tasks | 3 files |
-| Phase 03 P04 | 3m | 1 tasks | 1 files |
-| Phase 03 P05 | 8 min | 2 tasks | 2 files |
-| Phase 03 P06 | 4 min | 1 tasks | 2 files |
-| Phase 03 P07 | 2min | 1 tasks | 1 files |
-| Phase 03 P08 | 2026-04-01 session | 1 task | 1 file |
-
-## Session Continuity
-
-- **Last session:** 2026-03-30T12:34:22.691Z
-- **Stopped at:** Completed 03-08-PLAN.md
+(None yet for v1.1)
 
 ## Session Log
 
-- 2026-03-29: STATE.md regenerated by /gsd:health --repair
-- 2026-03-29: Executed and committed plan 01-02
-- 2026-03-30: Completed plans 01-01 and 01-03, passed verification, and cleared auto-chain state
-- 2026-03-30: Completed plan 02-00 with Wave 0 route and org-scanner test stubs
-- 2026-03-30: Completed plan 02-01 with lead persistence APIs, migration 050, and org-scanner source-priority protections
-- 2026-03-30: Completed plan 02-02 with persisted lead-promotion store actions, inline team confirmation, and department lead selection
+- 2026-04-01: Milestone v1.1 Agent Gateway Integration started
