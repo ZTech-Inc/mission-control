@@ -9,7 +9,7 @@ import { createClientLogger } from '@/lib/client-logger'
 import Link from 'next/link'
 import { useMissionControl } from '@/store'
 import type { Agent, Team, Department } from '@/store'
-import { buildOrgAgentSkillSource } from '@/lib/agent-skills-importer'
+import { buildOrgAgentSkillSource } from '@/lib/agent-skill-source'
 import {
   SkillContentViewer,
   type SkillContentResponse,
@@ -187,6 +187,7 @@ export function ProfileTab({ agent }: { agent: Agent }) {
   useEffect(() => {
     if (!selectedSkill) return
 
+    const skill = selectedSkill
     let cancelled = false
     async function loadContent() {
       try {
@@ -195,8 +196,8 @@ export function ProfileTab({ agent }: { agent: Agent }) {
         setSelectedContent(null)
         const params = new URLSearchParams({
           mode: 'content',
-          source: selectedSkill.source,
-          name: selectedSkill.name,
+          source: skill.source,
+          name: skill.name,
         })
         const response = await fetch(`/api/skills?${params.toString()}`, { cache: 'no-store' })
         const body = await response.json()

@@ -65,7 +65,7 @@ describe('agent skills importer', () => {
   })
 
   it('builds org-agent source keys from normalized agent names', async () => {
-    const { buildOrgAgentSkillSource } = await import('@/lib/agent-skills-importer')
+    const { buildOrgAgentSkillSource } = await import('@/lib/agent-skill-source')
     expect(buildOrgAgentSkillSource('Atlas Coordinator')).toBe('org-agent:atlas-coordinator')
   })
 

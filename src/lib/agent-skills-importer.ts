@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { getDatabase } from '@/lib/db'
+import { buildOrgAgentSkillSource } from '@/lib/agent-skill-source'
 
 type SkillRow = {
   name: string
@@ -27,14 +28,6 @@ function extractDescription(content: string): string | undefined {
   const first = lines.find((line) => !line.startsWith('#'))
   if (!first) return undefined
   return first.length > 220 ? `${first.slice(0, 217)}...` : first
-}
-
-function slugifyAgentName(agentName: string): string {
-  return agentName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 function scanOrgAgentSkills(workspacePath: string): DiskSkill[] {
@@ -74,11 +67,6 @@ function scanOrgAgentSkills(workspacePath: string): DiskSkill[] {
   }
 
   return skills
-}
-
-export function buildOrgAgentSkillSource(agentName: string): string {
-  const slug = slugifyAgentName(agentName) || 'unknown-agent'
-  return `org-agent:${slug}`
 }
 
 export async function syncOrgAgentSkills(params: {

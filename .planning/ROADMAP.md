@@ -71,3 +71,13 @@ Plans:
   3. The parent task's status badge updates automatically as subtasks move through the board: showing in-progress when any subtask is active, and complete only when all subtasks are done
   4. Cancelling or deleting a parent task removes its child tasks without leaving orphaned rows in the tasks table
 **Plans**: TBD
+
+### Phase 8: Skills catalog UI scalability and navigation
+
+**Goal:** Restructure the skills catalog UI so imported and global skills are easier to distinguish, large agent catalogs remain navigable without excessive scrolling, and key summary/info controls stay visible instead of being pushed to the bottom of the page.
+**Requirements**: TBD
+**Depends on:** Phase 7
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 8 to break down)
