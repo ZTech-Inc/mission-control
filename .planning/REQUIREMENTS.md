@@ -9,7 +9,7 @@ Requirements for milestone v1.1 Agent Gateway Integration. Each maps to roadmap 
 
 ### Agent Profiles
 
-- [ ] **PROF-01**: User can view structured agent profile showing name, role, skills, KPIs, org path, and protocol stack
+- [x] **PROF-01**: User can view structured agent profile showing name, role, skills, KPIs, org path, and protocol stack
 - [x] **PROF-02**: Agent metadata fields (skills, KPIs, protocol stack, deliverables, dependencies) are stored as queryable DB columns, not buried in JSON blob
 - [x] **PROF-03**: Org scanner parses deliverables, dependencies, reporting chain, and protocol stack from AGENT.md/IDENTITY.md
 
@@ -66,7 +66,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROF-01 | Phase 4 | Pending |
+| PROF-01 | Phase 4 | Complete |
 | PROF-02 | Phase 4 | Complete |
 | PROF-03 | Phase 4 | Complete |
 | SKIL-01 | Phase 5 | Pending |
