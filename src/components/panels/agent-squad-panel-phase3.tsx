@@ -9,6 +9,7 @@ import { createClientLogger } from '@/lib/client-logger'
 import { AgentAvatar } from '@/components/ui/agent-avatar'
 import {
   OverviewTab,
+  ProfileTab,
   SoulTab,
   MemoryTab,
   TasksTab,
@@ -911,7 +912,7 @@ function AgentDetailModalPhase3({
   onDelete: (agentId: number, removeWorkspace: boolean) => Promise<void>
 }) {
   const [agentState, setAgentState] = useState<Agent & { config?: any; working_memory?: string }>(agent as Agent & { config?: any; working_memory?: string })
-  const [activeTab, setActiveTab] = useState<'overview' | 'soul' | 'memory' | 'config' | 'tasks' | 'activity' | 'files' | 'tools' | 'channels' | 'cron' | 'models'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'soul' | 'memory' | 'config' | 'tasks' | 'activity' | 'files' | 'tools' | 'channels' | 'cron' | 'models'>('overview')
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({
     role: agent.role,
@@ -1138,6 +1139,7 @@ function AgentDetailModalPhase3({
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: 'O' },
+    { id: 'profile', label: 'Profile', icon: 'P' },
     { id: 'files', label: 'Files', icon: 'F' },
     { id: 'tools', label: 'Tools', icon: 'W' },
     { id: 'models', label: 'Models', icon: 'P' },
@@ -1303,6 +1305,10 @@ function AgentDetailModalPhase3({
               loadingHeartbeat={loadingHeartbeat}
               onPerformHeartbeat={performHeartbeat}
             />
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileTab agent={agentState} />
           )}
           
           {activeTab === 'soul' && (

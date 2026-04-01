@@ -69,19 +69,16 @@ See which agent is working on what, delegate tasks to the right agent, and manag
 - **Supported runtimes:** Claude Code (local CLI sessions), OpenClaw (already has update/doctor banners in the UI), Codex (OpenAI's agent)
 - **Current shipped milestone:** v1.0 delivered agent chat spaces, persisted lead assignment flows, and improved teams/departments operational panels
 
-## Current State
+## Current Milestone: v1.1 Agent Gateway Integration
 
-- Shipped `v1.0 Agent Chat Spaces` on 2026-04-01
-- Milestone scope completed across 3 phases, 15 plans, and 25 recorded tasks
-- The app now supports embedded department/team chat, persisted team/department lead management, filesystem-backed org docs, and richer team/department operator workflows
-- Planning artifacts for v1.0 are archived under `.planning/milestones/`
+**Goal:** Enable the full agent lifecycle — from enriched metadata profiles and skills import through multi-runtime execution and hierarchical task delegation.
 
-## Next Milestone Goals
-
-- Complete deeper agent metadata ingestion from `AGENT.md`, `IDENTITY.md`, `SOUL.md`, and `USER.md`
-- Import and expose skills metadata from agent `skills/` directories
-- Expand runtime control and delegation flows across Claude Code, OpenClaw, and Codex
-- Strengthen hierarchical task delegation from department leads to team leads to sub-agents
+**Target features:**
+- Parse agent definition files (AGENT.md, IDENTITY.md, SOUL.md, USER.md) into rich agent profiles
+- Import and expose skills metadata from agent `skills/` subdirectories
+- Multi-runtime agent execution gateway (Claude Code, OpenClaw, Codex)
+- Task delegation to running persistent agents with status tracking
+- Hierarchical task flow: user → department lead → team lead → sub-agents
 
 ## Constraints
 
@@ -118,4 +115,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after v1.0 milestone completion*
+*Last updated: 2026-04-01 after v1.1 milestone start*

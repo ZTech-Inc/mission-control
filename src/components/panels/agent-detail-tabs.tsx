@@ -7,29 +7,9 @@ import { Loader } from '@/components/ui/loader'
 import { createClientLogger } from '@/lib/client-logger'
 import Link from 'next/link'
 import { useMissionControl } from '@/store'
-import type { Team, Department } from '@/store'
+import type { Agent, Team, Department } from '@/store'
 
 const log = createClientLogger('AgentDetailTabs')
-
-interface Agent {
-  id: number
-  name: string
-  role: string
-  session_key?: string
-  soul_content?: string
-  working_memory?: string
-  status: 'offline' | 'idle' | 'busy' | 'error'
-  last_seen?: number
-  last_activity?: string
-  created_at: number
-  updated_at: number
-  taskStats?: {
-    total: number
-    assigned: number
-    in_progress: number
-    completed: number
-  }
-}
 
 interface WorkItem {
   type: string
@@ -64,6 +44,125 @@ const statusIcons: Record<string, string> = {
   idle: 'o',
   busy: '~',
   error: '!',
+}
+
+function ProfileChip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+      {label}
+    </span>
+  )
+}
+
+function ParseBadge() {
+  return (
+    <span className="inline-flex items-center rounded border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+      could not parse
+    </span>
+  )
+}
+
+function ProfileField({
+  label,
+  values,
+  canParse,
+}: {
+  label: string
+  values?: string[]
+  canParse: boolean
+}) {
+  const items = values?.filter(Boolean) ?? []
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+          {items.length === 0 && canParse ? <ParseBadge /> : null}
+        </div>
+        <button
+          type="button"
+          onClick={() => {}}
+          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          edit
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.length > 0
+          ? items.map((item) => <ProfileChip key={`${label}-${item}`} label={item} />)
+          : !canParse
+            ? <span className="text-xs text-muted-foreground">None</span>
+            : null}
+      </div>
+    </div>
+  )
+}
+
+function ProfileTextField({
+  label,
+  value,
+  fallback,
+  mono = false,
+}: {
+  label: string
+  value?: string
+  fallback: string
+  mono?: boolean
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <button
+          type="button"
+          onClick={() => {}}
+          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          edit
+        </button>
+      </div>
+      <div className={`text-sm text-foreground ${mono ? 'font-mono text-xs' : ''}`}>
+        {value || <span className="text-muted-foreground">{fallback}</span>}
+      </div>
+    </div>
+  )
+}
+
+export function ProfileTab({ agent }: { agent: Agent }) {
+  const hasScannedSource = Boolean(agent.content_hash)
+
+  return (
+    <div className="space-y-6 p-2">
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Capabilities</h3>
+        <ProfileField label="Skills" values={agent.skills} canParse={hasScannedSource} />
+        <ProfileField label="Protocol Stack" values={agent.protocol_stack} canParse={hasScannedSource} />
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Performance</h3>
+        <ProfileField label="KPIs" values={agent.kpis} canParse={hasScannedSource} />
+        <ProfileField label="Deliverables" values={agent.deliverables} canParse={hasScannedSource} />
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Organization</h3>
+        <ProfileField label="Dependencies" values={agent.dependencies} canParse={hasScannedSource} />
+        <ProfileTextField
+          label="Runtime"
+          value={agent.preferred_runtime}
+          fallback="Not specified"
+        />
+        <ProfileTextField
+          label="OpenClaw ID"
+          value={agent.openclaw_id}
+          fallback="Not derived"
+          mono
+        />
+      </section>
+    </div>
+  )
 }
 
 // Overview Tab Component
