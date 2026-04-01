@@ -4,8 +4,8 @@ milestone: v1.1
 milestone_name: Agent Gateway Integration
 current_phase: 04
 status: completed
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-04-01T09:39:59.285Z"
+stopped_at: Completed 04-02-PLAN.md; shipped for review in PR #6 with verification gap recorded
+last_updated: "2026-04-01T10:17:09.630Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 4
@@ -30,6 +30,7 @@ See: .planning/PROJECT.md
 **Current phase:** 04
 **Status:** Phase 04 implementation complete; verification gap recorded; Phase 05 not started
 **Last completed plan:** 04-02-PLAN.md
+**Shipping:** PR #6 open against `main`
 **Verification:** `gaps_found` in `04-VERIFICATION.md` based on existing evidence; the forced org scan/profile population path remains the open blocker
 **Progress:** 1/4 phases complete
 
@@ -90,3 +91,4 @@ See: .planning/PROJECT.md
 - 2026-04-01: Roadmap created — 4 phases (4-7), 11/11 requirements mapped
 - 2026-04-01: Completed 04-01 with migration 051, parser extraction, and enriched Agent typing
 - 2026-04-01: Completed 04-02 with scanner/API wiring, Profile tab UI, browser verification, and docs closeout without starting Phase 05
+- 2026-04-01: Shipped Phase 04 branch for review as PR #6 while preserving the evidence-backed verification gap in `04-VERIFICATION.md`
