@@ -22,6 +22,7 @@ export function useOrgData() {
   const setDepartments = useMissionControl((state) => state.setDepartments)
   const setTeams = useMissionControl((state) => state.setTeams)
   const setAgentTeamAssignments = useMissionControl((state) => state.setAgentTeamAssignments)
+  const setAgents = useMissionControl((state) => state.setAgents)
   const [orgSource, setOrgSource] = useState<'mock' | 'filesystem'>('mock')
   const [orgRootPath, setOrgRootPath] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -44,13 +45,23 @@ export function useOrgData() {
 
     async function loadSnapshot() {
       try {
-        const response = await fetch('/api/org/scan', { cache: 'no-store' })
-        if (!response.ok) {
-          throw new Error(`Failed to load org snapshot (${response.status})`)
+        const [snapshotResponse, agentsResponse] = await Promise.all([
+          fetch('/api/org/scan', { cache: 'no-store' }),
+          fetch('/api/agents?limit=1000', { cache: 'no-store' }),
+        ])
+
+        if (!snapshotResponse.ok) {
+          throw new Error(`Failed to load org snapshot (${snapshotResponse.status})`)
         }
 
-        const snapshot = (await response.json()) as OrgSnapshot
+        if (!agentsResponse.ok) {
+          throw new Error(`Failed to load agents (${agentsResponse.status})`)
+        }
+
+        const snapshot = (await snapshotResponse.json()) as OrgSnapshot
+        const agentsPayload = (await agentsResponse.json()) as { agents?: ReturnType<typeof useMissionControl.getState>['agents'] }
         applySnapshot(snapshot)
+        setAgents(agentsPayload.agents ?? [])
       } catch (error) {
         if (!mounted) return
         setSyncError(error instanceof Error ? error.message : 'Failed to load org snapshot')
@@ -93,7 +104,7 @@ export function useOrgData() {
         eventSourceRef.current = null
       }
     }
-  }, [setAgentTeamAssignments, setDepartments, setTeams])
+  }, [setAgentTeamAssignments, setAgents, setDepartments, setTeams])
 
   return {
     orgSource,
