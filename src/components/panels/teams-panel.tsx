@@ -14,6 +14,7 @@ import {
   MemoryTab,
   ModelsTab,
   OverviewTab,
+  ProfileTab,
   SoulTab,
   TasksTab,
   ToolsTab,
@@ -33,6 +34,7 @@ interface TeamDetailProps {
 
 const DETAIL_TABS = [
   'Overview',
+  'Profile',
   'Files',
   'Tools',
   'Models',
@@ -68,6 +70,8 @@ function DetailTabContent({ agent, tab }: { agent: Agent; tab: DetailTabName }) 
           onPerformHeartbeat={noopAsync}
         />
       )
+    case 'Profile':
+      return <ProfileTab agent={agent} />
     case 'Files':
       return <FilesTab agent={agent} />
     case 'Tools':

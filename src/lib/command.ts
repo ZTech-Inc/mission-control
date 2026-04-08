@@ -6,6 +6,7 @@ interface CommandOptions {
   env?: NodeJS.ProcessEnv
   timeoutMs?: number
   input?: string
+  onData?: (chunk: string) => void
 }
 
 interface CommandResult {
@@ -37,11 +38,15 @@ export function runCommand(
     }
 
     child.stdout.on('data', (data) => {
-      stdout += data.toString()
+      const chunk = data.toString()
+      stdout += chunk
+      options.onData?.(chunk)
     })
 
     child.stderr.on('data', (data) => {
-      stderr += data.toString()
+      const chunk = data.toString()
+      stderr += chunk
+      options.onData?.(chunk)
     })
 
     child.on('error', (error) => {
@@ -72,8 +77,18 @@ export function runCommand(
 }
 
 export function runOpenClaw(args: string[], options: CommandOptions = {}) {
+  // Explicitly pass OPENCLAW_STATE_DIR so the CLI uses the exact resolved path.
+  // Without this, the CLI may interpret OPENCLAW_HOME as a parent directory and
+  // append ".openclaw" to it — causing double-nesting when OPENCLAW_HOME is
+  // already set to the state directory (e.g. /root/.openclaw → /root/.openclaw/.openclaw).
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    OPENCLAW_STATE_DIR: config.openclawStateDir,
+    ...options.env,
+  }
   return runCommand(config.openclawBin, args, {
     ...options,
+    env,
     cwd: options.cwd || config.openclawStateDir || process.cwd()
   })
 }

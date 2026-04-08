@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
+import { writeTeamMetadata } from '@/lib/org-metadata'
 import { getOrgSnapshot, invalidateOrgSnapshot } from '@/lib/org-scanner'
 import { orgWatcher } from '@/lib/org-watcher'
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
   const body = parsed.data
   const teamPath = path.join(config.agentsDir, body.department_name, body.name)
   mkdirSync(teamPath, { recursive: true })
+  writeTeamMetadata(teamPath, {})
 
   const externalId = stableNumber(`team:${teamPath}`)
   const db = getDatabase()

@@ -140,7 +140,18 @@ function detectHermes(): RuntimeStatus {
 
   if (installed) {
     try {
-      const candidates = [process.env.HERMES_BIN, 'hermes-agent', 'hermes'].filter(Boolean) as string[]
+      const path = require('node:path')
+      const dataDir = path.resolve(config.dataDir || '.data')
+      const homeDir = require('node:os').homedir()
+      const candidates = [
+        process.env.HERMES_BIN,
+        path.join(dataDir, '.local', 'bin', 'hermes'),
+        path.join(dataDir, '.hermes', 'hermes-agent', 'venv', 'bin', 'hermes'),
+        path.join(homeDir, '.local', 'bin', 'hermes'),
+        path.join(homeDir, '.hermes', 'hermes-agent', 'venv', 'bin', 'hermes'),
+        'hermes-agent',
+        'hermes',
+      ].filter(Boolean) as string[]
       for (const bin of candidates) {
         try {
           const result = require('node:child_process').spawnSync(bin, ['--version'], { stdio: 'pipe', timeout: 1200 })
@@ -176,17 +187,62 @@ function detectClaude(): RuntimeStatus {
   const meta = RUNTIME_META.claude
   const { installed, version } = detectBinary(['claude'])
 
-  // Check authentication: ~/.claude/ directory with credentials
+  // Detect Claude Code authentication. Claude supports two auth modes:
+  //
+  // 1. claude.ai subscription (OAuth): stores account info in ~/.claude.json
+  //    under the `oauthAccount` key. No credential file is written inside
+  //    ~/.claude/ — the managed key lives in memory/keychain.
+  //
+  // 2. Anthropic Console (API key): may store a `claudeAiOauth` token in
+  //    ~/.claude/.credentials.json (created by older versions) or simply
+  //    rely on the ANTHROPIC_API_KEY env var.
+  //
+  // Strategy: check ~/.claude.json first (most common), then
+  // ~/.claude/.credentials.json, then fall back to `claude auth status --json`.
   let authenticated = false
   if (installed) {
     try {
       const homedir = require('node:os').homedir()
       const path = require('node:path')
-      authenticated = existsSync(path.join(homedir, '.claude', 'credentials.json'))
-        || existsSync(path.join(homedir, '.claude', '.credentials'))
-        || existsSync(path.join(homedir, '.claude', 'settings.json'))
+      const fs = require('node:fs')
+
+      // Primary: ~/.claude.json (claude.ai subscription login)
+      const claudeJsonPath = path.join(homedir, '.claude.json')
+      if (existsSync(claudeJsonPath)) {
+        const parsed = JSON.parse(fs.readFileSync(claudeJsonPath, 'utf8'))
+        if (parsed.oauthAccount?.emailAddress) {
+          authenticated = true
+        }
+      }
+
+      // Secondary: ~/.claude/.credentials.json (API key / older OAuth flow)
+      if (!authenticated) {
+        const credPath = path.join(homedir, '.claude', '.credentials.json')
+        if (existsSync(credPath)) {
+          const parsed = JSON.parse(fs.readFileSync(credPath, 'utf8'))
+          authenticated = !!(parsed.claudeAiOauth?.accessToken || parsed.apiKey)
+        }
+      }
     } catch {
-      // ignore
+      // ignore parse errors
+    }
+
+    // Fallback: run `claude auth status --json` (covers env-var API key auth
+    // and any future auth mechanisms that don't write a file)
+    if (!authenticated) {
+      try {
+        const { spawnSync } = require('node:child_process')
+        const result = spawnSync('claude', ['auth', 'status', '--json'], {
+          stdio: 'pipe',
+          timeout: 5000,
+        })
+        if (result.status === 0) {
+          const json = JSON.parse(result.stdout?.toString() || '{}')
+          authenticated = json.loggedIn === true
+        }
+      } catch {
+        // ignore — binary may not support --json flag in older versions
+      }
     }
   }
 
@@ -291,12 +347,17 @@ function getInstallEnv(): NodeJS.ProcessEnv {
   try { mkdirSync(npmPrefix, { recursive: true }) } catch {}
   try { mkdirSync(path.join(homedir, '.npm'), { recursive: true }) } catch {}
 
+  // Include common install destinations in PATH so tools installed by
+  // sub-installers (e.g., uv installing Python to ~/.local/bin) are found
+  const localBin = path.join(homedir, '.local', 'bin')
+  try { mkdirSync(localBin, { recursive: true }) } catch {}
+
   return {
     ...process.env,
     HOME: homedir,
     npm_config_prefix: npmPrefix,
     npm_config_cache: path.join(homedir, '.npm'),
-    PATH: `${npmPrefix}/bin:${process.env.PATH || ''}`,
+    PATH: `${localBin}:${npmPrefix}/bin:${homedir}/bin:/usr/local/bin:${process.env.PATH || ''}`,
   }
 }
 
@@ -316,14 +377,21 @@ async function runInstallCmd(cmd: string, args: string[], job: InstallJob): Prom
 
 async function installOpenClawLocal(job: InstallJob): Promise<void> {
   job.output += '> Installing OpenClaw...\n'
-  const env = getInstallEnv()
+  const env = {
+    ...getInstallEnv(),
+    NONINTERACTIVE: '1',
+    CI: '1',
+  }
   try {
-    const result = await runCommand('bash', ['-c', 'curl -fsSL https://get.openclaw.dev | bash'], {
+    const result = await runCommand('bash', ['-c', 'set -o pipefail; curl -fsSL https://get.openclaw.dev | bash -s -- --non-interactive'], {
       timeoutMs: 300_000, env,
+      onData: (chunk) => { job.output += chunk },
     })
-    if (result.stdout) job.output += result.stdout + '\n'
-    if (result.stderr) job.output += result.stderr + '\n'
-    if (result.code === 0) {
+
+    // Verify the binary actually exists after install
+    const { installed: verified } = detectBinary([config.openclawBin || 'openclaw'])
+
+    if (result.code === 0 && verified) {
       job.output += '\n> OpenClaw installed. Running initial setup...\n'
       try {
         const onboard = await runCommand('openclaw', ['onboard', '--non-interactive'], { timeoutMs: 60_000, env })
@@ -334,6 +402,10 @@ async function installOpenClawLocal(job: InstallJob): Promise<void> {
       }
       job.status = 'success'
       job.output += '\n> OpenClaw installed successfully.\n'
+    } else if (result.code === 0 && !verified) {
+      job.status = 'failed'
+      job.error = 'Install command succeeded but openclaw binary was not found. curl may not be installed.'
+      job.output += '\n> Install command ran but openclaw was not detected. Is curl installed?\n'
     } else {
       job.status = 'failed'
       job.error = `Install exited with code ${result.code}`
@@ -349,18 +421,36 @@ async function installOpenClawLocal(job: InstallJob): Promise<void> {
 
 async function installHermesLocal(job: InstallJob): Promise<void> {
   job.output += '> Installing Hermes Agent via official installer...\n'
-  const env = getInstallEnv()
+  const env = {
+    ...getInstallEnv(),
+    // Non-interactive: prevent installer from reading /dev/tty
+    HERMES_NONINTERACTIVE: '1',
+    NONINTERACTIVE: '1',
+    CI: '1',
+    DEBIAN_FRONTEND: 'noninteractive',
+  }
   try {
-    const result = await runCommand('bash', ['-c', 'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash'], {
+    // Use --skip-setup since MC handles setup in its own UI
+    // Stream output to job in real-time so the UI shows progress
+    const result = await runCommand('bash', ['-c', 'set -o pipefail; curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash -s -- --skip-setup'], {
       timeoutMs: 600_000, env,
+      onData: (chunk) => { job.output += chunk },
     })
-    if (result.stdout) job.output += result.stdout + '\n'
-    if (result.stderr) job.output += result.stderr + '\n'
-    if (result.code === 0) {
+
+    // Verify install actually worked — check for the binary
+    clearHermesDetectionCache()
+    logger.info({ dataDir: config.dataDir, homeDir: require('node:os').homedir() }, 'Verifying hermes install...')
+    const verified = isHermesInstalled()
+    logger.info({ verified }, 'Hermes install verification result')
+
+    if (result.code === 0 && verified) {
       job.status = 'success'
       job.output += '\n> Hermes Agent installed successfully.\n'
       job.output += '> Run "hermes" to start chatting, or "hermes setup" for full configuration.\n'
-      clearHermesDetectionCache()
+    } else if (result.code === 0 && !verified) {
+      job.status = 'failed'
+      job.error = 'Install command succeeded but hermes binary was not found. curl may not be installed.'
+      job.output += '\n> Install command ran but hermes was not detected. Is curl installed?\n'
     } else {
       job.status = 'failed'
       job.error = `Installer exited with code ${result.code}`

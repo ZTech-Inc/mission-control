@@ -7,6 +7,7 @@ import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
 import { getOrgSnapshot, invalidateOrgSnapshot } from '@/lib/org-scanner'
+import { writeDepartmentMetadata } from '@/lib/org-metadata'
 import { orgWatcher } from '@/lib/org-watcher'
 
 const createDepartmentSchema = z.object({
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
   const body = parsed.data
   const deptPath = path.join(config.agentsDir, body.name)
   mkdirSync(deptPath, { recursive: true })
+  writeDepartmentMetadata(deptPath, {})
 
   const externalId = stableNumber(`dept:${deptPath}`)
   const db = getDatabase()

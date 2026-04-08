@@ -1,55 +1,70 @@
 # Roadmap — ZTech Mission Control
 
-## Milestone 1: Agent Chat Spaces
+## Milestones
 
-**Goal:** Enable operators to chat with department heads, team leads, and individual agents through distinct chat contexts within the existing ChatWorkspace.
+- ✅ **v1.0 Agent Chat Spaces** — Phases 1-3 shipped 2026-04-01. See `.planning/milestones/v1.0-ROADMAP.md`
+- **v1.1 Agent Gateway Integration** — Phases 4-7 (active)
 
-### Phase 1: Agent Chat Spaces UI
+## Phases
 
-**Goal:** Implement space selector, conversation lists, context headers, and status badges for department/team/agent chat spaces.
+- [x] **Phase 4: Agent Profile Enrichment** — Parse agent definition files into structured DB columns and render rich profiles in the UI
+- [ ] **Phase 5: Skills Import and Linking** — Import SKILL.md files from agent `skills/` subdirectories and link inline skill names to catalog entries
+- [ ] **Phase 6: Multi-Runtime Gateway** — Extend dispatch to Claude Code and Codex runtimes with runtime status visible on agent cards
+- [ ] **Phase 7: Hierarchical Task Delegation** — Add parent-child task model and lead delegation UI with subtask status rollup
 
-**Scope:**
-- ChatSpaceSelector segmented control (departments/teams/agents)
-- SpaceConversationList with entity-specific rendering per space
-- ChatContextHeader with entity context and status display
-- AgentStatusBadge unified status component
-- Zustand state additions (activeChatSpace, lastConversationBySpace)
-- Chat space utility functions for entity derivation
-- Busy/offline/error agent messaging with queue hints
-- Conversation ID format extension (dept:<id>, team:<id>)
-- Empty states for all spaces
-- Keyboard navigation and ARIA accessibility
+## Progress
 
-**Requirements:** REQ-CHAT-SPACES
-**Delivers:** UI components, state management, chat space utilities
-**Status:** Complete (2026-03-30)
-**Verification:** Passed via `01-VERIFICATION.md`
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 4. Agent Profile Enrichment | 2/2 | Complete   | 2026-04-01 |
+| 5. Skills Import and Linking | 0/? | Not started | - |
+| 6. Multi-Runtime Gateway | 0/? | Not started | - |
+| 7. Hierarchical Task Delegation | 0/? | Not started | - |
 
-### Phase 2: Add way to promote agents to team lead
+## Phase Details
 
-**Goal:** Add API-backed persistence for promoting/demoting agents to team lead roles and assigning department leads, with inline confirmation UX and visual feedback.
-**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20
-**Depends on:** Phase 1
-**Plans:** 3 plans
-
+### Phase 4: Agent Profile Enrichment
+**Goal**: Agent definition files (AGENT.md, IDENTITY.md, SOUL.md, USER.md) are fully parsed and their structured fields — skills, KPIs, deliverables, dependencies, protocol stack, reporting chain — are stored as queryable schema columns and rendered in the agent detail panel.
+**Depends on**: Phase 3 (v1.0) — org scanner, agents table, agent detail panel all exist
+**Requirements**: PROF-01, PROF-02, PROF-03
+**Success Criteria** (what must be TRUE):
+  1. Viewing an agent's detail panel shows name, role, skills, KPIs, org path, protocol stack, and deliverables as structured fields — not a raw JSON blob
+  2. The agents table has discrete columns for `protocol_stack`, `kpis`, `deliverables`, `dependencies`, `preferred_runtime`, and `workspace_path` that can be queried directly via SQL
+  3. Running an org rescan for a directory of agents populates all new profile fields without overwriting manually assigned lead roles
+  4. An agent's `openclawId` is derived and stored at import time so that downstream dispatch does not rely on display-name matching
+**Plans:** 2/2 plans complete
 Plans:
-- [x] 02-00-PLAN.md — Wave 0: test stubs for API routes and org-scanner source priority
-- [x] 02-01-PLAN.md — Data foundation: migration, scanner fix, snapshot propagation, API routes
-- [x] 02-02-PLAN.md — Store actions and panel UX: promote confirmation, lead badge, department lead selector
+- [x] 04-01-PLAN.md — Migration 051, profile parser module with tests, Agent type update
+- [x] 04-02-PLAN.md — Wire parser into org-scanner, update API, build ProfileTab UI
 
-### Phase 3: improve the teams and department panels
+### Phase 5: Skills Import and Linking
+**Goal**: SKILL.md files from each agent's `skills/` subdirectory are imported into the global skills catalog with isolated source keys, and agent profiles visually link inline skill names to their corresponding catalog entries.
+**Depends on**: Phase 4 — `workspace_path` must be populated for the importer to locate agent skill directories
+**Requirements**: SKIL-01, SKIL-02
+**Success Criteria** (what must be TRUE):
+  1. After an org scan, the skills catalog contains entries for every SKILL.md file found under agent `skills/` subdirectories, each attributed to its source agent via a namespaced key (`org-agent:<name>`)
+  2. Skill entries imported from agent directories do not disappear when the global `syncSkillsFromDisk()` routine runs
+  3. In an agent's profile panel, inline skill names that match a catalog entry are rendered as clickable links that open the corresponding SKILL.md detail
+**Plans**: TBD
 
-**Goal:** Enhance Teams and Department panels with inline agent details, working creation buttons, chat agent selection, doc management, and department manager terminology rename.
-**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12, D-13, D-14, D-15, D-16, D-17, D-18, D-19, D-20, D-21, D-22, D-23, D-24, D-25
-**Depends on:** Phase 2
-**Plans:** 8 plans
+### Phase 6: Multi-Runtime Gateway
+**Goal**: Operators can spawn agent sessions and dispatch tasks on Claude Code and Codex runtimes — not just OpenClaw — and agent cards show which runtime each agent uses along with that runtime's live availability.
+**Depends on**: Phase 4 — `preferred_runtime` and `workspace_path` in agent config are required for runtime routing
+**Requirements**: RUNT-01, RUNT-02, RUNT-03
+**Success Criteria** (what must be TRUE):
+  1. User can dispatch a task to an agent whose preferred runtime is Claude Code and receive a non-null session ID with streaming status updates
+  2. User can dispatch a task to an agent whose preferred runtime is Codex and receive output back via the standard task response surface
+  3. Every agent card shows a runtime badge (e.g. "Claude Code", "OpenClaw", "Codex") alongside a live/offline indicator that reflects the runtime's current availability
+  4. When dispatching a specific task, the user can override the agent's default runtime and select a different supported runtime from a dropdown
+**Plans**: TBD
 
-Plans:
-- [x] 03-01-PLAN.md — Manager terminology rename + org-scanner MANAGER/ handling + isReadOnly bypass
-- [x] 03-02-PLAN.md — API routes for team/department/agent creation
-- [x] 03-03-PLAN.md — Docs panel fixes + real API integration
-- [x] 03-04-PLAN.md — Inline agent details card in Teams Overview tab
-- [x] 03-05-PLAN.md — Creation button prominence + modals + department manager card
-- [x] 03-06-PLAN.md — Chat tab agent selector with conversation history
-- [x] 03-07-PLAN.md — Gap closure: wrap Add Member form in modal dialog (D-08)
-- [ ] 03-08-PLAN.md — Gap closure: visual verification checkpoint (D-05, D-06, D-12)
+### Phase 7: Hierarchical Task Delegation
+**Goal**: Tasks support a parent-child hierarchy, team and department leads can break an incoming task into subtasks and assign them to team members, and parent task status automatically reflects subtask completion progress.
+**Depends on**: Phase 4 (agent identity correct), Phase 5 (skills context for leads), Phase 6 (all runtimes dispatchable)
+**Requirements**: DELG-01, DELG-02, DELG-03
+**Success Criteria** (what must be TRUE):
+  1. The `tasks` table has a `parent_task_id` column with `ON DELETE CASCADE` and a `delegated_by` field, and all existing task queries remain unaffected by the migration
+  2. A team lead agent can receive a task, open a delegation breakdown surface, create named subtasks with assignees, and submit them — resulting in child tasks visible under the parent in the task board
+  3. The parent task's status badge updates automatically as subtasks move through the board: showing in-progress when any subtask is active, and complete only when all subtasks are done
+  4. Cancelling or deleting a parent task removes its child tasks without leaving orphaned rows in the tasks table
+**Plans**: TBD

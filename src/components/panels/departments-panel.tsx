@@ -190,7 +190,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
         </div>
       </div>
 
-      <div className={tab === 'chat' ? 'flex-1 min-h-0' : 'flex-1 overflow-auto'}>
+      <div className={tab === 'chat' || tab === 'docs' ? 'flex-1 min-h-0 flex flex-col' : 'flex-1 overflow-auto'}>
         {tab === 'overview' && (
           <div className="p-6 max-w-5xl space-y-6">
             <div className="bg-[hsl(var(--surface-1))] border border-border/50 rounded-lg p-5">
@@ -600,7 +600,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
         )}
 
         {tab === 'docs' && (
-          <div className="p-6">
+          <div className="flex-1 min-h-0 p-6">
             <OrgDocsPanel entityType="department" entityId={dept.id} />
           </div>
         )}
