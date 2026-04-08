@@ -4,8 +4,9 @@ phase: 04-agent-profile-enrichment
 source:
   - .planning/phases/04-agent-profile-enrichment/04-01-SUMMARY.md
   - .planning/phases/04-agent-profile-enrichment/04-02-SUMMARY.md
+  - .planning/phases/04-agent-profile-enrichment/04-03-SUMMARY.md
 started: 2026-04-01T09:54:53Z
-updated: 2026-04-01T10:08:42Z
+updated: 2026-04-08T09:19:12Z
 ---
 
 ## Current Test
@@ -20,9 +21,9 @@ result: pass
 
 ### 2. Force Org Scan Persists Enriched Profile Fields
 expected: After forcing or triggering an org scan, agent records should pick up enriched profile metadata from AGENT.md or IDENTITY.md, including protocol stack, KPIs, deliverables, dependencies, preferred runtime, and a derived OpenClaw ID.
-result: issue
-reported: "After force scan, the Profile tab mostly shows 'could not parse' badges and 'Not specified' runtime instead of populated enriched profile fields."
-severity: major
+result: pass
+reported: "`pnpm test -- --run src/lib/__tests__/org-scanner-profile-rescan.test.ts src/lib/__tests__/agent-profile-parser.test.ts` passes. The new regression proves force rescans keep the SQLite enriched profile columns populated and that the org-data refresh path reloads `/api/agents`, so the Teams Profile tab receives the updated metadata after `/api/org/scan`."
+severity: none
 
 ### 3. Agents API Returns Structured Profile Data
 expected: The agents API responses should expose the enriched profile fields as usable arrays and strings, not raw JSON-string blobs, so profile data is readable by clients without extra parsing.
@@ -39,20 +40,12 @@ result: pass
 ## Summary
 
 total: 5
-passed: 4
-issues: 1
+passed: 5
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
 
 ## Gaps
 
-- truth: "After forcing or triggering an org scan, agent records should pick up enriched profile metadata from AGENT.md or IDENTITY.md, including protocol stack, KPIs, deliverables, dependencies, preferred runtime, and a derived OpenClaw ID."
-  status: failed
-  reason: "User reported: After force scan, the Profile tab mostly shows 'could not parse' badges and 'Not specified' runtime instead of populated enriched profile fields."
-  severity: major
-  test: 2
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+None.

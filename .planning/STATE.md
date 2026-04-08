@@ -1,18 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Agent Gateway Integration
+milestone: v1.0
+milestone_name: milestone
 current_phase: 04
-status: completed
-stopped_at: Completed 04-02-PLAN.md; shipped for review in PR #6 with verification gap recorded
-last_updated: "2026-04-01T10:17:09.630Z"
-last_activity: 2026-04-01
+status: executing
+last_updated: "2026-04-08T09:19:12Z"
+last_activity: 2026-04-08
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  completed_phases: 0
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Session State
@@ -22,16 +20,16 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** See which agent is working on what, delegate tasks to the right agent, and manage the entire agent task force from one screen.
-**Current focus:** Phase 04 complete — waiting for explicit Phase 05 start
+**Current focus:** Phase 04 — agent-profile-enrichment
 
 ## Position
 
 **Milestone:** v1.1 Agent Gateway Integration
 **Current phase:** 04
-**Status:** Phase 04 implementation complete; verification gap recorded; Phase 05 not started
-**Last completed plan:** 04-02-PLAN.md
+**Status:** Executing Phase 04 closeout
+**Last completed plan:** 04-03-PLAN.md
 **Shipping:** PR #6 open against `main`
-**Verification:** `gaps_found` in `04-VERIFICATION.md` based on existing evidence; the forced org scan/profile population path remains the open blocker
+**Verification:** `passed` in `04-VERIFICATION.md`; the forced org scan/profile gap was closed on April 8, 2026 by refreshing the agent store after org scans and backing it with regression coverage
 **Progress:** 1/4 phases complete
 
 ```
@@ -41,7 +39,7 @@ See: .planning/PROJECT.md
 [    ] Phase 7: Hierarchical Task Delegation
 ```
 
-**Last activity:** 2026-04-01
+**Last activity:** 2026-04-08
 
 ## Decisions
 
@@ -80,9 +78,10 @@ See: .planning/PROJECT.md
 
 | Phase | Plans | Status | Notes |
 |------|-------|--------|-------|
-| 04 | 2/2 | Complete with gap | Implementation complete; verification recorded a forced-rescan profile population gap |
+| 04 | 3/3 | Complete | Forced rescan profile gap closed with verified client-refresh regression coverage |
 | Phase 04 P01 | 4 min | 2 tasks | 5 files |
 | Phase 04 P02 | 12 min | 2 tasks | 8 files |
+| Phase 04 P03 | 17 min | 3 tasks | 7 files |
 
 ## Session Log
 
@@ -92,3 +91,4 @@ See: .planning/PROJECT.md
 - 2026-04-01: Completed 04-01 with migration 051, parser extraction, and enriched Agent typing
 - 2026-04-01: Completed 04-02 with scanner/API wiring, Profile tab UI, browser verification, and docs closeout without starting Phase 05
 - 2026-04-01: Shipped Phase 04 branch for review as PR #6 while preserving the evidence-backed verification gap in `04-VERIFICATION.md`
+- 2026-04-08: Completed 04-03 by diagnosing the remaining force-scan issue as stale client agent data, refreshing `/api/agents` inside `useOrgData()`, and re-running verification to close the gap
