@@ -14,6 +14,29 @@ import { resolveWithin } from '@/lib/paths';
 import path from 'node:path';
 import { getAgentType } from '@/lib/agent-workspace';
 
+function parseJsonArray(value: unknown): string[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string')
+
+  try {
+    const parsed = JSON.parse(String(value))
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function deserializeAgentProfile(agent: any) {
+  return {
+    ...agent,
+    skills: parseJsonArray(agent.skills),
+    protocol_stack: parseJsonArray(agent.protocol_stack),
+    kpis: parseJsonArray(agent.kpis),
+    deliverables: parseJsonArray(agent.deliverables),
+    dependencies: parseJsonArray(agent.dependencies),
+  }
+}
+
 /**
  * GET /api/agents - List all agents with optional filtering
  * Query params: status, role, limit, offset
@@ -61,9 +84,9 @@ export async function GET(request: NextRequest) {
     
     const stmt = db.prepare(query);
     const agents = stmt.all(...params) as Agent[];
-    
-    // Parse JSON config field
-    const agentsWithParsedData = agents.map(agent => ({
+
+    // Parse JSON config field and deserialize profile array fields
+    const agentsWithParsedData = agents.map(agent => deserializeAgentProfile({
       ...agent,
       config: enrichAgentConfigFromWorkspace(agent.config ? JSON.parse(agent.config) : {})
     }));

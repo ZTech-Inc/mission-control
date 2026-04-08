@@ -183,6 +183,16 @@ export interface Agent {
   hidden?: number
   config?: JsonValue
   agentType?: 'openclaw' | 'claude-code' | 'codex' | 'generic'
+  openclaw_id?: string
+  skills?: string[]
+  protocol_stack?: string[]
+  kpis?: string[]
+  deliverables?: string[]
+  dependencies?: string[]
+  preferred_runtime?: string
+  workspace_path?: string
+  content_hash?: string
+  source?: string
   taskStats?: {
     total: number
     assigned: number
