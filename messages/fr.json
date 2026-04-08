@@ -220,7 +220,7 @@
     "createAndQueue": "Créer + Mettre en file"
   },
   "localModeBanner": {
-    "noGatewayDetected": "Aucune passerelle OpenClaw détectée",
+    "noGatewayDetected": "Aucune passerelle détectée",
     "runningInLocalMode": " — en mode local. Surveillance des sessions Claude Code, tâches et données locales.",
     "configureGateway": "Configurer la passerelle"
   },
@@ -280,7 +280,7 @@
     "availableInFullMode": "{panel} est disponible en mode Complet.",
     "switchToFull": "Passer en mode Complet",
     "goToOverview": "Aller à l'aperçu",
-    "requiresGateway": "{panel} nécessite une connexion à la passerelle OpenClaw.",
+    "requiresGateway": "{panel} nécessite une connexion à la passerelle.",
     "configureGateway": "Configurez une passerelle pour activer ce panneau."
   },
   "onboarding": {
@@ -309,7 +309,17 @@
       "gatewayRegistered": "Passerelle : Mission Control enregistré",
       "gatewayRegistrationPending": "Enregistrement de la passerelle en attente",
       "skipSetup": "Passer la configuration",
-      "getStarted": "Commencer"
+      "getStarted": "Commencer",
+      "runtimesReady": "{installed} of {total} runtimes ready",
+      "noRuntimesDetected": "No agent runtimes detected",
+      "installAtLeastOne": "Install at least one to get started.",
+      "goToSettings": "Go to Settings",
+      "runtimeAuthenticated": "Authenticated",
+      "runtimeConfigured": "Configured",
+      "runtimeNotAuthenticated": "Not authenticated",
+      "runtimeNotInstalled": "Not installed",
+      "runtimesLoading": "Detecting runtimes...",
+      "yourFleetIsReady": "Your agent fleet is ready."
     },
     "interfaceMode": {
       "title": "Choisissez la disposition de votre station",
@@ -327,7 +337,7 @@
     },
     "gatewayLink": {
       "title": "Lien de la passerelle",
-      "description": "Mission Control enregistre son origine auprès de la passerelle OpenClaw pour se connecter via WebSocket et gérer les agents à distance.",
+      "description": "Mission Control enregistre son origine auprès de la passerelle pour se connecter via WebSocket et gérer les agents à distance.",
       "originRegistered": "Origine de la passerelle enregistrée",
       "originAdded": "Origine de Mission Control ajoutée aux allowedOrigins de la passerelle",
       "registrationPending": "Enregistrement en attente — sera configuré lors de la prochaine vérification des capacités",
@@ -362,8 +372,8 @@
     "gatewayConnected": "Passerelle connectée",
     "gatewayDisconnected": "Passerelle déconnectée",
     "refresh": "Actualiser",
-    "noChannelsConfigured": "Aucun canal configuré. Configurez des plateformes de messagerie (WhatsApp, Telegram, Discord, Slack, etc.) dans les paramètres de la passerelle OpenClaw.",
-    "gatewayUnreachable": "Impossible d'atteindre la passerelle OpenClaw. Vérifiez qu'elle est en cours d'exécution et accessible.",
+    "noChannelsConfigured": "Aucun canal configuré. Configurez des plateformes de messagerie (WhatsApp, Telegram, Discord, Slack, etc.) dans les paramètres de la passerelle.",
+    "gatewayUnreachable": "Impossible d'atteindre la passerelle. Vérifiez qu'elle est en cours d'exécution et accessible.",
     "statusConnected": "Connecté",
     "statusRunning": "En cours d'exécution",
     "statusConfigured": "Configuré",
@@ -593,12 +603,15 @@
     "dismissError": "Fermer l'erreur",
     "taskBoardAriaLabel": "Tableau des tâches",
     "columnAriaLabel": "Colonne {title}, {count} tâches",
+    "colBacklog": "File d'attente",
     "colInbox": "Boîte de réception",
     "colAssigned": "Assigné",
     "colAwaitingOwner": "En attente du propriétaire",
     "colInProgress": "En cours",
     "colReview": "Révision",
     "colQualityReview": "Révision qualité",
+    "colFailed": "Échoué",
+    "retryTask": "Réessayer",
     "colDone": "Terminé",
     "recurring": "RÉCURRENT",
     "spawned": "GÉNÉRÉ",
@@ -1531,7 +1544,7 @@
     "addAgent": "+ Ajouter un agent",
     "refresh": "Actualiser",
     "noAgents": "Aucun agent trouvé",
-    "noAgentsHint": "Les agents locaux sont découverts automatiquement depuis les répertoires Claude, Codex et Hermes. En mode passerelle, les agents enregistrés sur votre passerelle OpenClaw apparaîtront également ici.",
+    "noAgentsHint": "Les agents locaux sont découverts automatiquement depuis les répertoires Claude, Codex et Hermes. En mode passerelle, les agents enregistrés sur votre passerelle apparaîtront également ici.",
     "addFirstAgent": "Ajoutez votre premier agent pour commencer",
     "session": "Session",
     "totalTasks": "Tâches totales",
@@ -1569,11 +1582,14 @@
     "justNow": "À l'instant",
     "minutesAgo": "il y a {count}m",
     "hoursAgo": "il y a {count}h",
-    "daysAgo": "il y a {count}j"
+    "daysAgo": "il y a {count}j",
+    "runtimeType": "Runtime",
+    "runtimeTypeAuto": "Auto-detect",
+    "runtimeTypeCustom": "Custom"
   },
   "multiGateway": {
     "title": "Gestionnaire de passerelles",
-    "description": "Gérer plusieurs connexions de passerelles OpenClaw",
+    "description": "Gérer plusieurs connexions de passerelles",
     "probeAll": "Sonder tout",
     "addGateway": "+ Ajouter une passerelle",
     "connected": "Connecté",
@@ -1583,7 +1599,7 @@
     "noGateways": "Aucune passerelle configurée",
     "addGatewayHint": "Ajouter une passerelle pour commencer à gérer les connexions",
     "discoveredGateways": "Passerelles découvertes",
-    "discoveredGatewaysDesc": "Passerelles OpenClaw trouvées sur cette machine",
+    "discoveredGatewaysDesc": "Passerelles trouvées sur cette machine",
     "refresh": "Actualiser",
     "running": "EN COURS",
     "stopped": "ARRÊTÉ",
@@ -1870,5 +1886,22 @@
     "online": "En ligne",
     "busy": "Occupé",
     "errors": "Erreurs"
+  },
+  "gatewayControl": {
+    "title": "Gateway Control",
+    "description": "Start, stop, restart, and diagnose your agent gateways.",
+    "noGatewaysInstalled": "No gateways installed",
+    "installHint": "Install Hermes Agent or OpenClaw from Settings to enable gateway features.",
+    "running": "Running",
+    "stopped": "Stopped",
+    "start": "Start",
+    "stop": "Stop",
+    "restart": "Restart",
+    "diagnose": "Diagnose",
+    "starting": "Starting...",
+    "stopping": "Stopping...",
+    "restarting": "Restarting...",
+    "diagnosing": "Diagnosing...",
+    "notInstalled": "Not installed"
   }
 }

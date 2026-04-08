@@ -220,7 +220,7 @@
     "createAndQueue": "إنشاء + إضافة للقائمة"
   },
   "localModeBanner": {
-    "noGatewayDetected": "لم يتم الكشف عن بوابة OpenClaw",
+    "noGatewayDetected": "لم يتم الكشف عن بوابة",
     "runningInLocalMode": " — يعمل في الوضع المحلي. مراقبة جلسات Claude Code والمهام والبيانات المحلية.",
     "configureGateway": "تكوين البوابة"
   },
@@ -280,7 +280,7 @@
     "availableInFullMode": "{panel} متاح في الوضع الكامل.",
     "switchToFull": "التبديل إلى الوضع الكامل",
     "goToOverview": "الانتقال إلى النظرة العامة",
-    "requiresGateway": "{panel} يتطلب اتصالاً ببوابة OpenClaw.",
+    "requiresGateway": "{panel} يتطلب اتصالاً ببوابة.",
     "configureGateway": "قم بتكوين بوابة لتفعيل هذه اللوحة."
   },
   "onboarding": {
@@ -309,7 +309,17 @@
       "gatewayRegistered": "البوابة: Mission Control مسجل",
       "gatewayRegistrationPending": "تسجيل البوابة معلق",
       "skipSetup": "تخطي الإعداد",
-      "getStarted": "ابدأ الآن"
+      "getStarted": "ابدأ الآن",
+      "runtimesReady": "{installed} of {total} runtimes ready",
+      "noRuntimesDetected": "No agent runtimes detected",
+      "installAtLeastOne": "Install at least one to get started.",
+      "goToSettings": "Go to Settings",
+      "runtimeAuthenticated": "Authenticated",
+      "runtimeConfigured": "Configured",
+      "runtimeNotAuthenticated": "Not authenticated",
+      "runtimeNotInstalled": "Not installed",
+      "runtimesLoading": "Detecting runtimes...",
+      "yourFleetIsReady": "Your agent fleet is ready."
     },
     "interfaceMode": {
       "title": "اختر تخطيط محطتك",
@@ -327,7 +337,7 @@
     },
     "gatewayLink": {
       "title": "رابط البوابة",
-      "description": "يسجل Mission Control أصله لدى بوابة OpenClaw للاتصال عبر WebSocket وإدارة الوكلاء عن بُعد.",
+      "description": "يسجل Mission Control أصله لدى بوابة للاتصال عبر WebSocket وإدارة الوكلاء عن بُعد.",
       "originRegistered": "تم تسجيل أصل البوابة",
       "originAdded": "تمت إضافة أصل Mission Control إلى allowedOrigins للبوابة",
       "registrationPending": "التسجيل معلق — سيتم تكوينه عند فحص القدرات التالي",
@@ -362,8 +372,8 @@
     "gatewayConnected": "البوابة متصلة",
     "gatewayDisconnected": "البوابة غير متصلة",
     "refresh": "تحديث",
-    "noChannelsConfigured": "لا توجد قنوات مُهيَّأة بعد. قم بتهيئة منصات المراسلة (WhatsApp، Telegram، Discord، Slack، إلخ) في إعدادات بوابة OpenClaw.",
-    "gatewayUnreachable": "تعذّر الوصول إلى بوابة OpenClaw. تحقق من أنها تعمل ويمكن الوصول إليها.",
+    "noChannelsConfigured": "لا توجد قنوات مُهيَّأة بعد. قم بتهيئة منصات المراسلة (WhatsApp، Telegram، Discord، Slack، إلخ) في إعدادات بوابة.",
+    "gatewayUnreachable": "تعذّر الوصول إلى بوابة. تحقق من أنها تعمل ويمكن الوصول إليها.",
     "statusConnected": "متصل",
     "statusRunning": "يعمل",
     "statusConfigured": "مُهيَّأ",
@@ -593,12 +603,15 @@
     "dismissError": "إغلاق الخطأ",
     "taskBoardAriaLabel": "لوحة المهام",
     "columnAriaLabel": "عمود {title}، {count} مهمة",
+    "colBacklog": "قائمة الانتظار",
     "colInbox": "البريد الوارد",
     "colAssigned": "مُخصّص",
     "colAwaitingOwner": "بانتظار المالك",
     "colInProgress": "قيد التنفيذ",
     "colReview": "المراجعة",
     "colQualityReview": "مراجعة الجودة",
+    "colFailed": "فشل",
+    "retryTask": "إعادة المحاولة",
     "colDone": "مكتمل",
     "recurring": "متكرر",
     "spawned": "مُنشأ",
@@ -1531,7 +1544,7 @@
     "addAgent": "+ إضافة وكيل",
     "refresh": "تحديث",
     "noAgents": "لم يُعثر على وكلاء",
-    "noAgentsHint": "يتم اكتشاف الوكلاء المحليين تلقائيًا من أدلة Claude و Codex و Hermes. في وضع البوابة، سيظهر هنا أيضًا الوكلاء المسجلون في بوابة OpenClaw الخاصة بك.",
+    "noAgentsHint": "يتم اكتشاف الوكلاء المحليين تلقائيًا من أدلة Claude و Codex و Hermes. في وضع البوابة، سيظهر هنا أيضًا الوكلاء المسجلون في بوابة الخاصة بك.",
     "addFirstAgent": "أضف وكيلك الأول للبدء",
     "session": "الجلسة",
     "totalTasks": "إجمالي المهام",
@@ -1569,7 +1582,10 @@
     "justNow": "الآن",
     "minutesAgo": "منذ {count} د",
     "hoursAgo": "منذ {count} س",
-    "daysAgo": "منذ {count} ي"
+    "daysAgo": "منذ {count} ي",
+    "runtimeType": "Runtime",
+    "runtimeTypeAuto": "Auto-detect",
+    "runtimeTypeCustom": "Custom"
   },
   "multiGateway": {
     "title": "مدير البوابات",
@@ -1583,7 +1599,7 @@
     "noGateways": "لم يتم تكوين بوابات",
     "addGatewayHint": "أضف بوابة لبدء إدارة الاتصالات",
     "discoveredGateways": "البوابات المكتشفة",
-    "discoveredGatewaysDesc": "بوابات OpenClaw الموجودة على هذا الجهاز",
+    "discoveredGatewaysDesc": "البوابات الموجودة على هذا الجهاز",
     "refresh": "تحديث",
     "running": "تعمل",
     "stopped": "متوقفة",
@@ -1870,5 +1886,22 @@
     "online": "متصل",
     "busy": "مشغول",
     "errors": "أخطاء"
+  },
+  "gatewayControl": {
+    "title": "Gateway Control",
+    "description": "Start, stop, restart, and diagnose your agent gateways.",
+    "noGatewaysInstalled": "No gateways installed",
+    "installHint": "Install Hermes Agent or OpenClaw from Settings to enable gateway features.",
+    "running": "Running",
+    "stopped": "Stopped",
+    "start": "Start",
+    "stop": "Stop",
+    "restart": "Restart",
+    "diagnose": "Diagnose",
+    "starting": "Starting...",
+    "stopping": "Stopping...",
+    "restarting": "Restarting...",
+    "diagnosing": "Diagnosing...",
+    "notInstalled": "Not installed"
   }
 }
