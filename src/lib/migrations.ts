@@ -1507,6 +1507,15 @@ const migrations: Migration[] = [
         db.exec(`ALTER TABLE agents ADD COLUMN skills TEXT`)
       }
     }
+  },
+  {
+    id: '053_agent_runtime_type',
+    up(db: Database.Database) {
+      const cols = db.prepare(`PRAGMA table_info(agents)`).all() as Array<{ name: string }>
+      if (!cols.some((col) => col.name === 'runtime_type')) {
+        db.exec(`ALTER TABLE agents ADD COLUMN runtime_type TEXT DEFAULT NULL`)
+      }
+    }
   }
 ]
 

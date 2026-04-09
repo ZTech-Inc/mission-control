@@ -22,7 +22,7 @@ interface Task {
   id: number
   title: string
   description?: string
-  status: 'inbox' | 'assigned' | 'in_progress' | 'review' | 'quality_review' | 'done' | 'awaiting_owner'
+  status: 'backlog' | 'inbox' | 'assigned' | 'awaiting_owner' | 'in_progress' | 'review' | 'quality_review' | 'done' | 'failed'
   priority: 'low' | 'medium' | 'high' | 'critical' | 'urgent'
   assigned_to?: string
   created_by: string
@@ -45,6 +45,8 @@ interface Task {
   github_pr_number?: number
   github_pr_state?: string
   comment_count?: number
+  error_message?: string
+  dispatch_attempts?: number
 }
 
 interface Agent {
@@ -88,6 +90,7 @@ interface MentionOption {
 }
 
 const STATUS_COLUMN_KEYS = [
+  { key: 'backlog', titleKey: 'colBacklog', color: 'bg-slate-500/20 text-slate-400' },
   { key: 'inbox', titleKey: 'colInbox', color: 'bg-secondary text-foreground' },
   { key: 'assigned', titleKey: 'colAssigned', color: 'bg-blue-500/20 text-blue-400' },
   { key: 'awaiting_owner', titleKey: 'colAwaitingOwner', color: 'bg-orange-500/20 text-orange-400' },
@@ -95,6 +98,7 @@ const STATUS_COLUMN_KEYS = [
   { key: 'review', titleKey: 'colReview', color: 'bg-purple-500/20 text-purple-400' },
   { key: 'quality_review', titleKey: 'colQualityReview', color: 'bg-indigo-500/20 text-indigo-400' },
   { key: 'done', titleKey: 'colDone', color: 'bg-green-500/20 text-green-400' },
+  { key: 'failed', titleKey: 'colFailed', color: 'bg-red-500/20 text-red-400' },
 ]
 
 const AWAITING_OWNER_KEYWORDS = [
@@ -1484,6 +1488,33 @@ function TaskDetailModal({
           )}
         </div>
 
+        {/* Failed task: error message + retry button */}
+        {task.status === 'failed' && (
+          <div className="mx-6 mb-2 p-3 rounded-lg border border-red-500/20 bg-red-500/5 space-y-2">
+            {task.error_message && (
+              <p className="text-xs text-red-400 font-mono whitespace-pre-wrap">{task.error_message}</p>
+            )}
+            {task.dispatch_attempts != null && task.dispatch_attempts > 0 && (
+              <p className="text-2xs text-muted-foreground">Dispatch attempts: {task.dispatch_attempts}</p>
+            )}
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/tasks/${task.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'assigned', dispatch_attempts: 0, error_message: null }),
+                  })
+                  if (res.ok) onClose()
+                } catch { /* ignore */ }
+              }}
+              className="text-xs px-3 py-1.5 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30 transition-colors"
+            >
+              {t('retryTask')}
+            </button>
+          </div>
+        )}
+
         {/* Content */}
         <div className="px-6 py-4">
           <div className="flex gap-1.5 mb-4" role="tablist" aria-label={t('taskDetailTabs')}>
@@ -1937,9 +1968,11 @@ function ClaudeCodeTasksSection() {
                 </div>
                 <div className="space-y-1">
                   {tasks.map((task: any) => (
-                    <div key={task.id} className="flex items-center gap-3 px-3 py-2 rounded bg-surface-1 border border-border text-sm">
-                      <span className={`text-[10px] font-mono ${statusColor(task.status)}`}>{task.status}</span>
-                      <span className="text-foreground flex-1 truncate">{task.subject}</span>
+                    <div key={task.id} className={`flex items-center gap-3 px-3 py-2 rounded bg-surface-1 border border-border text-sm ${task.stale ? 'opacity-50' : ''}`}>
+                      <span className={`text-[10px] font-mono ${task.stale ? 'text-muted-foreground/50' : statusColor(task.status)}`}>
+                        {task.stale ? 'stale' : task.status}
+                      </span>
+                      <span className={`flex-1 truncate ${task.stale ? 'text-muted-foreground' : 'text-foreground'}`}>{task.subject}</span>
                       {task.owner && <span className="text-[10px] text-muted-foreground">{task.owner}</span>}
                       {task.blockedBy?.length > 0 && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">{t('blocked')}</span>

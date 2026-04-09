@@ -220,7 +220,7 @@
     "createAndQueue": "创建并排队"
   },
   "localModeBanner": {
-    "noGatewayDetected": "未检测到 OpenClaw 网关",
+    "noGatewayDetected": "未检测到网关",
     "runningInLocalMode": " — 正在以本地模式运行。监控 Claude Code 会话、任务和本地数据。",
     "configureGateway": "配置网关"
   },
@@ -280,7 +280,7 @@
     "availableInFullMode": "{panel}在完整模式下可用。",
     "switchToFull": "切换到完整模式",
     "goToOverview": "前往概览",
-    "requiresGateway": "{panel}需要 OpenClaw 网关连接。",
+    "requiresGateway": "{panel}需要 网关连接。",
     "configureGateway": "配置网关以启用此面板。"
   },
   "onboarding": {
@@ -309,7 +309,17 @@
       "gatewayRegistered": "网关：Mission Control 已注册",
       "gatewayRegistrationPending": "网关注册待处理",
       "skipSetup": "跳过设置",
-      "getStarted": "开始使用"
+      "getStarted": "开始使用",
+      "runtimesReady": "{installed} of {total} runtimes ready",
+      "noRuntimesDetected": "No agent runtimes detected",
+      "installAtLeastOne": "Install at least one to get started.",
+      "goToSettings": "Go to Settings",
+      "runtimeAuthenticated": "Authenticated",
+      "runtimeConfigured": "Configured",
+      "runtimeNotAuthenticated": "Not authenticated",
+      "runtimeNotInstalled": "Not installed",
+      "runtimesLoading": "Detecting runtimes...",
+      "yourFleetIsReady": "Your agent fleet is ready."
     },
     "interfaceMode": {
       "title": "选择您的站点布局",
@@ -327,7 +337,7 @@
     },
     "gatewayLink": {
       "title": "网关链接",
-      "description": "Mission Control 将其来源注册到 OpenClaw 网关，以便通过 WebSocket 连接并远程管理智能体。",
+      "description": "Mission Control 将其来源注册到 网关，以便通过 WebSocket 连接并远程管理智能体。",
       "originRegistered": "网关来源已注册",
       "originAdded": "Mission Control 来源已添加到网关 allowedOrigins",
       "registrationPending": "注册待处理 — 将在下次能力检查时配置",
@@ -362,8 +372,8 @@
     "gatewayConnected": "网关已连接",
     "gatewayDisconnected": "网关已断开",
     "refresh": "刷新",
-    "noChannelsConfigured": "尚未配置频道。请在 OpenClaw 网关设置中配置消息平台（WhatsApp、Telegram、Discord、Slack 等）。",
-    "gatewayUnreachable": "无法连接 OpenClaw 网关，请确认其正在运行并可访问。",
+    "noChannelsConfigured": "尚未配置频道。请在 网关设置中配置消息平台（WhatsApp、Telegram、Discord、Slack 等）。",
+    "gatewayUnreachable": "无法连接 网关，请确认其正在运行并可访问。",
     "statusConnected": "已连接",
     "statusRunning": "运行中",
     "statusConfigured": "已配置",
@@ -831,12 +841,15 @@
     "dismissError": "关闭错误",
     "taskBoardAriaLabel": "任务看板",
     "columnAriaLabel": "{title} 列，{count} 个任务",
+    "colBacklog": "待办",
     "colInbox": "收件箱",
     "colAssigned": "已分配",
     "colAwaitingOwner": "等待所有者",
     "colInProgress": "进行中",
     "colReview": "审查",
     "colQualityReview": "质量审查",
+    "colFailed": "失败",
+    "retryTask": "重试",
     "colDone": "完成",
     "recurring": "循环",
     "spawned": "已生成",
@@ -1769,7 +1782,7 @@
     "addAgent": "+ 添加代理",
     "refresh": "刷新",
     "noAgents": "未找到代理",
-    "noAgentsHint": "本地代理会从 Claude、Codex 和 Hermes 目录自动发现。在网关模式下，注册到 OpenClaw 网关的代理也会显示在此处。",
+    "noAgentsHint": "本地代理会从 Claude、Codex 和 Hermes 目录自动发现。在网关模式下，注册到 网关的代理也会显示在此处。",
     "addFirstAgent": "添加您的第一个代理以开始使用",
     "session": "会话",
     "totalTasks": "任务总数",
@@ -1807,11 +1820,14 @@
     "justNow": "刚刚",
     "minutesAgo": "{count}分钟前",
     "hoursAgo": "{count}小时前",
-    "daysAgo": "{count}天前"
+    "daysAgo": "{count}天前",
+    "runtimeType": "Runtime",
+    "runtimeTypeAuto": "Auto-detect",
+    "runtimeTypeCustom": "Custom"
   },
   "multiGateway": {
     "title": "网关管理器",
-    "description": "管理多个 OpenClaw 网关连接",
+    "description": "管理多个 网关连接",
     "probeAll": "探测全部",
     "addGateway": "+ 添加网关",
     "connected": "已连接",
@@ -1821,7 +1837,7 @@
     "noGateways": "未配置网关",
     "addGatewayHint": "添加网关以开始管理连接",
     "discoveredGateways": "发现的网关",
-    "discoveredGatewaysDesc": "在此计算机上发现的 OpenClaw 网关",
+    "discoveredGatewaysDesc": "在此计算机上发现的 网关",
     "refresh": "刷新",
     "running": "运行中",
     "stopped": "已停止",
@@ -1870,5 +1886,22 @@
     "addGatewaySubmit": "添加网关",
     "failedToAdd": "添加网关失败",
     "networkError": "网络错误"
+  },
+  "gatewayControl": {
+    "title": "Gateway Control",
+    "description": "Start, stop, restart, and diagnose your agent gateways.",
+    "noGatewaysInstalled": "No gateways installed",
+    "installHint": "Install Hermes Agent or OpenClaw from Settings to enable gateway features.",
+    "running": "Running",
+    "stopped": "Stopped",
+    "start": "Start",
+    "stop": "Stop",
+    "restart": "Restart",
+    "diagnose": "Diagnose",
+    "starting": "Starting...",
+    "stopping": "Stopping...",
+    "restarting": "Restarting...",
+    "diagnosing": "Diagnosing...",
+    "notInstalled": "Not installed"
   }
 }

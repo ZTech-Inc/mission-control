@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-status: executing
-last_updated: "2026-04-01T12:51:42.560Z"
-last_activity: 2026-04-01
+current_phase: 04
+status: complete
+last_updated: "2026-04-08T09:25:10.972Z"
+last_activity: 2026-04-08
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 4
+  total_plans: 3
   completed_plans: 3
+  percent: 100
 ---
 
 # Session State
@@ -20,7 +21,7 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** See which agent is working on what, delegate tasks to the right agent, and manage the entire agent task force from one screen.
-**Current focus:** Phase 05 — skills-import-and-linking
+**Current focus:** Phase 04 complete — ready for Phase 05 planning
 
 ## Position
 
@@ -40,7 +41,7 @@ See: .planning/PROJECT.md
 [    ] Phase 8: Skills catalog UI scalability and navigation
 ```
 
-**Last activity:** 2026-04-01
+**Last activity:** 2026-04-08
 
 ## Decisions
 
@@ -100,4 +101,4 @@ See: .planning/PROJECT.md
 - 2026-04-01: Completed 04-01 with migration 051, parser extraction, and enriched Agent typing
 - 2026-04-01: Completed 04-02 with scanner/API wiring, Profile tab UI, browser verification, and docs closeout without starting Phase 05
 - 2026-04-01: Shipped Phase 04 branch for review as PR #6 while preserving the evidence-backed verification gap in `04-VERIFICATION.md`
-- 2026-04-01: Completed 05-01 with org-agent skill import, catalog API support, and read-only Skills panel exposure
+- 2026-04-08: Completed 04-03 by diagnosing the remaining force-scan issue as stale client agent data, refreshing `/api/agents` inside `useOrgData()`, and re-running verification to close the gap
