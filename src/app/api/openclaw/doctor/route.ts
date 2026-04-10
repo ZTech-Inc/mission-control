@@ -38,6 +38,30 @@ function buildMissingOpenClawStatus(detail: string): OpenClawDoctorStatus {
   }
 }
 
+type SafeCommandResult = {
+  ok: boolean
+  output: string
+  code: number
+}
+
+async function runOpenClawSafe(args: string[], timeoutMs: number): Promise<SafeCommandResult> {
+  try {
+    const result = await runOpenClaw(args, { timeoutMs })
+    return {
+      ok: true,
+      output: `${result.stdout}\n${result.stderr}`.trim(),
+      code: result.code ?? 0,
+    }
+  } catch (error) {
+    const { detail, code } = getCommandDetail(error)
+    return {
+      ok: false,
+      output: detail,
+      code: code ?? 1,
+    }
+  }
+}
+
 export async function GET(request: Request) {
   const auth = requireRole(request, 'admin')
   if ('error' in auth) {
@@ -76,8 +100,23 @@ export async function POST(request: Request) {
   try {
     const progress: Array<{ step: string; detail: string }> = []
 
-    const fixResult = await runOpenClaw(['doctor', '--fix'], { timeoutMs: 120000 })
-    progress.push({ step: 'doctor', detail: 'Applied OpenClaw doctor config fixes.' })
+    const fixResult = await runOpenClawSafe(['doctor', '--fix'], 120000)
+    if (isMissingOpenClaw(fixResult.output)) {
+      return NextResponse.json(
+        {
+          error: 'OpenClaw is not installed or not reachable',
+          status: buildMissingOpenClawStatus(fixResult.output),
+        },
+        { status: 422 },
+      )
+    }
+
+    progress.push({
+      step: 'doctor',
+      detail: fixResult.ok
+        ? 'Applied OpenClaw doctor config fixes.'
+        : 'OpenClaw doctor --fix reported unresolved issues.',
+    })
 
     try {
       await runOpenClaw(['sessions', 'cleanup', '--all-agents', '--enforce', '--fix-missing'], { timeoutMs: 120000 })
@@ -96,8 +135,18 @@ export async function POST(request: Request) {
           : `No orphan transcript files found across ${orphanFix.storesScanned} session store(s).`,
     })
 
-    const postFix = await runOpenClaw(['doctor'], { timeoutMs: 15000 })
-    const status = parseOpenClawDoctorOutput(`${postFix.stdout}\n${postFix.stderr}`, postFix.code ?? 0, {
+    const postFix = await runOpenClawSafe(['doctor'], 15000)
+    if (isMissingOpenClaw(postFix.output)) {
+      return NextResponse.json(
+        {
+          error: 'OpenClaw is not installed or not reachable',
+          status: buildMissingOpenClawStatus(postFix.output),
+        },
+        { status: 422 },
+      )
+    }
+
+    const status = parseOpenClawDoctorOutput(postFix.output, postFix.code, {
       stateDir: config.openclawStateDir,
     })
 
@@ -115,8 +164,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      success: true,
-      output: `${fixResult.stdout}\n${fixResult.stderr}`.trim(),
+      success: status.healthy,
+      output: fixResult.output,
       progress,
       status,
     })

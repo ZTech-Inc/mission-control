@@ -72,15 +72,31 @@ function OpenClawSetup({ onClose, onComplete }: { onClose: () => void; onComplet
     setError(null)
     try {
       const res = await fetch('/api/openclaw/doctor', { method: 'POST' })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.success) {
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        if (data?.status) {
+          setHealthStatus(data.status)
+          setStep(data.status.healthy ? 'done' : 'verify')
+          setOutput(data.status.raw || data.detail || data.error || 'Fix attempt completed with warnings')
+        }
+        setError(data?.detail || data?.error || `Doctor fix failed (${res.status})`)
+        return
+      }
+
+      if (data?.status) {
+        setHealthStatus(data.status)
+        if (data.status.healthy) {
           setStep('done')
           setOutput('All issues resolved')
         } else {
-          setOutput(data.output || 'Fix attempt completed with warnings')
+          setStep('verify')
+          setOutput(data.status.raw || data.output || 'Fix attempt completed with warnings')
         }
+        return
       }
+
+      setOutput(data?.output || 'Fix attempt completed with warnings')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Doctor fix failed')
     } finally {
