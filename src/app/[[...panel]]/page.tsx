@@ -41,6 +41,7 @@ import { ChatPagePanel } from '@/components/panels/chat-page-panel'
 import { DepartmentsPanel } from '@/components/panels/departments-panel'
 import { TeamsPanel } from '@/components/panels/teams-panel'
 import { ChatPanel } from '@/components/chat/chat-panel'
+import { STORAGE_GATEWAY_URL } from '@/lib/device-identity'
 import { getPluginPanel } from '@/lib/plugins'
 import { shouldRedirectDashboardToHttps } from '@/lib/browser-security'
 import { useTranslations } from 'next-intl'
@@ -178,8 +179,9 @@ export default function Home() {
       return
     }
 
-    const connectWithEnvFallback = () => {
-      const explicitWsUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || ''
+    const connectWithEnvFallback = (localGatewayUrl: string | null) => {
+      // localStorage user choice takes priority over env vars
+      const explicitWsUrl = localGatewayUrl || process.env.NEXT_PUBLIC_GATEWAY_URL || ''
       const gatewayPort = process.env.NEXT_PUBLIC_GATEWAY_PORT || '18789'
       const gatewayHost = process.env.NEXT_PUBLIC_GATEWAY_HOST || window.location.hostname
       const gatewayProto =
@@ -267,6 +269,8 @@ export default function Home() {
     fetch('/api/status?action=capabilities')
       .then(res => res.ok ? res.json() : null)
       .then(async data => {
+        const localGatewayUrl = localStorage.getItem(STORAGE_GATEWAY_URL)
+
         if (data?.subscription) {
           setSubscription(data.subscription)
         }
@@ -276,6 +280,24 @@ export default function Home() {
         if (data?.interfaceMode === 'essential' || data?.interfaceMode === 'full') {
           setInterfaceMode(data.interfaceMode)
         }
+
+        // User's explicit gateway URL choice (localStorage) takes PRIORITY over server's gateway flag.
+        // If user chose a URL from login page, always connect to it.
+        if (localGatewayUrl) {
+          // User explicitly chose a gateway URL — always set full mode
+          setDashboardMode('full')
+          setGatewayAvailable(true)
+          if (data?.claudeHome) {
+            setLocalSessionsAvailable(true)
+          }
+          setCapabilitiesChecked(true)
+          markStep('capabilities')
+          connect(localGatewayUrl)
+          markStep('connect')
+          return
+        }
+
+        // No user-chosen URL — use server's gateway flag to decide
         if (data && data.gateway === false) {
           setDashboardMode('local')
           setGatewayAvailable(false)
@@ -295,9 +317,10 @@ export default function Home() {
         setCapabilitiesChecked(true)
         markStep('capabilities')
 
+        // No user choice + server gateway flag false → try primary gateway / env fallback
         const primaryConnect = await connectWithPrimaryGateway()
         if (!primaryConnect.connected && !primaryConnect.attempted) {
-          connectWithEnvFallback()
+          connectWithEnvFallback(null)
         }
         markStep('connect')
       })
@@ -306,7 +329,7 @@ export default function Home() {
         setCapabilitiesChecked(true)
         markStep('capabilities')
         markStep('connect')
-        connectWithEnvFallback()
+        connectWithEnvFallback(null)
       })
 
     // Check onboarding state
