@@ -217,6 +217,7 @@ export function AgentCommsPanel() {
     sessions,
     connection,
     currentUser,
+    agents: knownAgents,
   } = useMissionControl()
 
   // Fetch DB-backed comms messages
@@ -350,7 +351,14 @@ export function AgentCommsPanel() {
   }
 
   const sourceMode = commsData?.source?.mode || 'empty'
-  const agents = commsData?.graph.agentStats.map(s => s.agent) || []
+  const knownAgentNames = useMemo(
+    () => new Set((knownAgents || []).map((agent: any) => String(agent?.name || '').toLowerCase()).filter(Boolean)),
+    [knownAgents]
+  )
+  const agents = useMemo(
+    () => (commsData?.graph.agentStats.map(s => s.agent) || []).filter((name) => knownAgentNames.has(String(name).toLowerCase())),
+    [commsData?.graph.agentStats, knownAgentNames]
+  )
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { chat: 0, tools: 0, trace: 0, system: 0, safety: 0 }

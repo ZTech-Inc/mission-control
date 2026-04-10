@@ -6,6 +6,7 @@ import { getDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { archiveOrphanTranscriptsForStateDir } from '@/lib/openclaw-doctor-fix'
 import { parseOpenClawDoctorOutput } from '@/lib/openclaw-doctor'
+import type { OpenClawDoctorStatus } from '@/lib/openclaw-doctor'
 
 function getCommandDetail(error: unknown): { detail: string; code: number | null } {
   const err = error as {
@@ -25,6 +26,18 @@ function isMissingOpenClaw(detail: string): boolean {
   return /enoent|not installed|not reachable|command not found/i.test(detail)
 }
 
+function buildMissingOpenClawStatus(detail: string): OpenClawDoctorStatus {
+  return {
+    level: 'warning',
+    category: 'general',
+    healthy: false,
+    summary: 'OpenClaw CLI is not installed or not reachable from Mission Control.',
+    issues: ['Set OPENCLAW_BIN to a reachable OpenClaw executable or install OpenClaw globally.'],
+    canFix: false,
+    raw: detail || 'OpenClaw command is unavailable.',
+  }
+}
+
 export async function GET(request: Request) {
   const auth = requireRole(request, 'admin')
   if ('error' in auth) {
@@ -41,7 +54,9 @@ export async function GET(request: Request) {
   } catch (error) {
     const { detail, code } = getCommandDetail(error)
     if (isMissingOpenClaw(detail)) {
-      return NextResponse.json({ error: 'OpenClaw is not installed or not reachable' }, { status: 400 })
+      return NextResponse.json(buildMissingOpenClawStatus(detail), {
+        headers: { 'Cache-Control': 'no-store' },
+      })
     }
 
     return NextResponse.json(parseOpenClawDoctorOutput(detail, code ?? 1, {
@@ -108,7 +123,13 @@ export async function POST(request: Request) {
   } catch (error) {
     const { detail, code } = getCommandDetail(error)
     if (isMissingOpenClaw(detail)) {
-      return NextResponse.json({ error: 'OpenClaw is not installed or not reachable' }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'OpenClaw is not installed or not reachable',
+          status: buildMissingOpenClawStatus(detail),
+        },
+        { status: 422 },
+      )
     }
 
     logger.error({ err: error }, 'OpenClaw doctor fix failed')

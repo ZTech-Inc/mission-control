@@ -229,12 +229,17 @@ export function OverviewTab({
         })
       })
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Failed to send message')
+      if (!response.ok) throw new Error(data?.error || 'Failed to send message')
       setDirectMessage('')
-      setMessageStatus(t('messageSent'))
+      if (data?.deliveryMode === 'queued-offline') {
+        setMessageStatus('Message queued (agent offline)')
+      } else {
+        setMessageStatus(t('messageSent'))
+      }
       setTimeout(() => setMessageStatus(null), 2000)
-    } catch (error) {
-      setMessageStatus(t('messageFailed'))
+    } catch (error: any) {
+      const detail = error?.message ? ` (${error.message})` : ''
+      setMessageStatus(`${t('messageFailed')}${detail}`)
     }
   }
 

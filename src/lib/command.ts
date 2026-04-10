@@ -77,6 +77,9 @@ export function runCommand(
 }
 
 export function runOpenClaw(args: string[], options: CommandOptions = {}) {
+  const openclawEntry = (process.env.OPENCLAW_ENTRY || '').trim()
+  const commandArgs = openclawEntry ? [openclawEntry, ...args] : args
+
   // Explicitly pass OPENCLAW_STATE_DIR so the CLI uses the exact resolved path.
   // Without this, the CLI may interpret OPENCLAW_HOME as a parent directory and
   // append ".openclaw" to it — causing double-nesting when OPENCLAW_HOME is
@@ -86,7 +89,7 @@ export function runOpenClaw(args: string[], options: CommandOptions = {}) {
     OPENCLAW_STATE_DIR: config.openclawStateDir,
     ...options.env,
   }
-  return runCommand(config.openclawBin, args, {
+  return runCommand(config.openclawBin, commandArgs, {
     ...options,
     env,
     cwd: options.cwd || config.openclawStateDir || process.cwd()

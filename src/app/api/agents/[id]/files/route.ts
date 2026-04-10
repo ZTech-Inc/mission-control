@@ -39,6 +39,17 @@ const FILE_ALIASES: Record<string, string[]> = {
   "MISSION.md": ["MISSION.md", "mission.md"],
   "USER.md": ["USER.md", "user.md"],
 };
+const DEFAULT_WORKSPACE_FILES = [
+  "agent.md",
+  "identity.md",
+  "soul.md",
+  "WORKING.md",
+  "MEMORY.md",
+  "TOOLS.md",
+  "AGENTS.md",
+  "MISSION.md",
+  "USER.md",
+];
 
 function resolveAgentWorkspacePath(workspace: string): string {
   if (isAbsolute(workspace)) return resolve(workspace);
@@ -127,10 +138,16 @@ export async function GET(
     }
 
     if (candidates.length === 0) {
-      return NextResponse.json(
-        { error: "Agent workspace is not configured" },
-        { status: 400 },
-      );
+      const files: Record<string, { exists: boolean; content: string }> = {};
+      for (const file of DEFAULT_WORKSPACE_FILES) {
+        files[file] = { exists: false, content: "" };
+      }
+      return NextResponse.json({
+        agent: { id: agent.id, name: agent.name },
+        workspace: null,
+        workspaceConfigured: false,
+        files,
+      });
     }
     const safeWorkspace = candidates[0];
     const requested = (
@@ -138,17 +155,7 @@ export async function GET(
     ).trim();
     const files = requested
       ? [requested]
-      : [
-          "agent.md",
-          "identity.md",
-          "soul.md",
-          "WORKING.md",
-          "MEMORY.md",
-          "TOOLS.md",
-          "AGENTS.md",
-          "MISSION.md",
-          "USER.md",
-        ];
+      : DEFAULT_WORKSPACE_FILES;
 
     const payload: Record<string, { exists: boolean; content: string }> = {};
     for (const file of files) {

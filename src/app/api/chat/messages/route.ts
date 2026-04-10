@@ -33,6 +33,7 @@ type ChatAttachmentInput = {
 const COORDINATOR_AGENT =
   String(process.env.MC_COORDINATOR_AGENT || process.env.NEXT_PUBLIC_COORDINATOR_AGENT || 'coordinator').trim() ||
   'coordinator'
+const LIVE_DIRECT_CONNECTION_WINDOW_SECONDS = 180
 
 function parseGatewayJson(raw: string): any | null {
   const trimmed = String(raw || '').trim()
@@ -398,29 +399,54 @@ export async function POST(request: NextRequest) {
 
     // Create notification for recipient if specified
     if (to) {
-      db_helpers.createNotification(
-        to,
-        'chat_message',
-        `Message from ${from}`,
-        content.substring(0, 200) + (content.length > 200 ? '...' : ''),
-        'message',
-        messageId,
-        workspaceId
-      )
+      const messagePreview = content.substring(0, 200) + (content.length > 200 ? '...' : '')
+      const enqueueNotification = (recipient: string) => {
+        if (!recipient) return
+        db_helpers.createNotification(
+          recipient,
+          'chat_message',
+          `Message from ${from}`,
+          messagePreview,
+          'message',
+          messageId,
+          workspaceId
+        )
+      }
+
+      enqueueNotification(to)
 
       // Optionally forward to agent via gateway
       if (body.forward) {
         forwardInfo = { attempted: true, delivered: false }
 
-        const agent = db
-          .prepare('SELECT * FROM agents WHERE lower(name) = lower(?) AND workspace_id = ?')
-          .get(to, workspaceId) as any
+        const normalizedTo = String(to).trim().toLowerCase()
+        const devAliasTarget =
+          String(process.env.MC_DEV_ALIAS_TARGET || process.env.NEXT_PUBLIC_DEV_ALIAS_TARGET || 'codex-main').trim() ||
+          'codex-main'
+        const aliasAgent =
+          normalizedTo === 'dev'
+            ? (db
+                .prepare('SELECT * FROM agents WHERE lower(name) = lower(?) AND workspace_id = ?')
+                .get(devAliasTarget, workspaceId) as any)
+            : null
+        const deliveryTargetName = aliasAgent?.name ? String(aliasAgent.name) : String(to)
+
+        const agent =
+          aliasAgent ||
+          (db
+            .prepare('SELECT * FROM agents WHERE lower(name) = lower(?) AND workspace_id = ?')
+            .get(deliveryTargetName, workspaceId) as any)
+
+        if (aliasAgent?.name && aliasAgent.name.toLowerCase() !== normalizedTo) {
+          enqueueNotification(String(aliasAgent.name))
+        }
 
         const explicitSessionKey = typeof body.sessionKey === 'string' && body.sessionKey
           ? body.sessionKey
           : null
         const sessions = getAllGatewaySessions()
         const isCoordinatorSend = String(to).toLowerCase() === COORDINATOR_AGENT.toLowerCase()
+        const sessionLookupName = isCoordinatorSend ? String(to) : deliveryTargetName
         const allAgents = isCoordinatorSend
           ? (db
               .prepare('SELECT name, session_key, config FROM agents WHERE workspace_id = ?')
@@ -433,11 +459,11 @@ export async function POST(request: NextRequest) {
           : null
 
         const coordinatorResolution = resolveCoordinatorDeliveryTarget({
-          to: String(to),
+          to: isCoordinatorSend ? String(to) : deliveryTargetName,
           coordinatorAgent: COORDINATOR_AGENT,
           directAgent: agent
             ? {
-                name: String(agent.name || to),
+                name: String(agent.name || deliveryTargetName),
                 session_key: typeof agent.session_key === 'string' ? agent.session_key : null,
                 config: typeof agent.config === 'string' ? agent.config : null,
               }
@@ -450,12 +476,14 @@ export async function POST(request: NextRequest) {
 
         // Use explicit session key from caller if provided, then DB, then on-disk lookup
         let sessionKey: string | null = coordinatorResolution.sessionKey
+        const now = Math.floor(Date.now() / 1000)
+        const liveDirectCutoff = now - LIVE_DIRECT_CONNECTION_WINDOW_SECONDS
 
         // Fallback: derive session from on-disk gateway session stores
         if (!sessionKey) {
           const match = sessions.find(
             (s) =>
-              s.agent.toLowerCase() === String(to).toLowerCase() ||
+              s.agent.toLowerCase() === sessionLookupName.toLowerCase() ||
               s.agent.toLowerCase() === coordinatorResolution.deliveryName.toLowerCase() ||
               s.agent.toLowerCase() === String(coordinatorResolution.openclawAgentId || '').toLowerCase()
           )
@@ -464,8 +492,75 @@ export async function POST(request: NextRequest) {
 
         // Prefer configured openclawId when present, fallback to normalized name
         let openclawAgentId: string | null = coordinatorResolution.openclawAgentId
+        const resolvedDeliveryAgent = db
+          .prepare('SELECT id, name FROM agents WHERE lower(name) = lower(?) AND workspace_id = ?')
+          .get(coordinatorResolution.deliveryName, workspaceId) as { id: number; name: string } | undefined
+        const fallbackConnectedCoordinatorAgent =
+          isCoordinatorSend && !resolvedDeliveryAgent
+            ? (db
+                .prepare(
+                  `SELECT a.id, a.name, dc.connection_id
+                   FROM direct_connections dc
+                   JOIN agents a ON a.id = dc.agent_id
+                   WHERE dc.status = 'connected'
+                     AND dc.workspace_id = ?
+                     AND a.workspace_id = ?
+                     AND COALESCE(dc.last_heartbeat, dc.updated_at) >= ?
+                   ORDER BY dc.updated_at DESC
+                   LIMIT 1`
+                )
+                .get(workspaceId, workspaceId, liveDirectCutoff) as { id: number; name: string; connection_id?: string } | undefined)
+            : undefined
+        const deliveryAgent = resolvedDeliveryAgent || fallbackConnectedCoordinatorAgent
+        const activeDirectConnection = fallbackConnectedCoordinatorAgent?.connection_id
+          ? ({ connection_id: fallbackConnectedCoordinatorAgent.connection_id } as { connection_id?: string })
+          : deliveryAgent
+          ? (db
+              .prepare(
+                `SELECT connection_id
+                 FROM direct_connections
+                 WHERE agent_id = ?
+                   AND status = 'connected'
+                   AND workspace_id = ?
+                   AND COALESCE(last_heartbeat, updated_at) >= ?
+                 ORDER BY updated_at DESC
+                 LIMIT 1`
+              )
+              .get(deliveryAgent.id, workspaceId, liveDirectCutoff) as { connection_id?: string } | undefined)
+          : undefined
+        const canFallbackToDirectQueue = Boolean(activeDirectConnection?.connection_id && deliveryAgent?.name)
+        const listConnectedDirectAgents = () =>
+          db
+            .prepare(
+              `SELECT a.name, dc.connection_id
+               FROM direct_connections dc
+               JOIN agents a ON a.id = dc.agent_id
+               WHERE dc.status = 'connected'
+                 AND dc.workspace_id = ?
+                 AND a.workspace_id = ?
+                 AND COALESCE(dc.last_heartbeat, dc.updated_at) >= ?
+               ORDER BY dc.updated_at DESC`
+            )
+            .all(workspaceId, workspaceId, liveDirectCutoff) as Array<{ name?: string; connection_id?: string }>
+        const markDirectQueueDelivery = (
+          agentName: string | null | undefined,
+          connectionId: string | null | undefined,
+        ): boolean => {
+          if (!forwardInfo) return false
+          const resolvedAgentName = String(agentName || '').trim()
+          const resolvedConnectionId = String(connectionId || '').trim()
+          if (!resolvedAgentName || !resolvedConnectionId) return false
 
-        if (!sessionKey && !openclawAgentId) {
+          if (resolvedAgentName.toLowerCase() !== String(to).toLowerCase()) {
+            enqueueNotification(resolvedAgentName)
+          }
+          forwardInfo.delivered = true
+          forwardInfo.session = `direct:${resolvedConnectionId}`
+          forwardInfo.reason = 'fallback_direct_queue'
+          return true
+        }
+
+        if (!sessionKey && !canFallbackToDirectQueue) {
           forwardInfo.reason = 'no_active_session'
 
           // For coordinator messages, emit an immediate visible status reply
@@ -483,6 +578,21 @@ export async function POST(request: NextRequest) {
                 )
             } catch (e) {
               logger.error({ err: e }, 'Failed to create offline status reply')
+            }
+          } else if (typeof conversation_id === 'string') {
+            try {
+              createChatReply(
+                db,
+                workspaceId,
+                conversation_id,
+                String(to),
+                from,
+                'Message received, but no live runtime session is available right now.',
+                'status',
+                { status: 'offline', reason: 'no_active_session' }
+              )
+            } catch (e) {
+              logger.error({ err: e }, 'Failed to create non-coordinator offline status reply')
             }
           }
         } else {
@@ -507,7 +617,9 @@ export async function POST(request: NextRequest) {
               if (typeof acceptedPayload?.runId === 'string' && acceptedPayload.runId) {
                 forwardInfo.runId = acceptedPayload.runId
               }
-            } else {
+            } else if (canFallbackToDirectQueue && deliveryAgent?.name) {
+              markDirectQueueDelivery(deliveryAgent.name, activeDirectConnection?.connection_id)
+            } else if (openclawAgentId) {
               const invokeParams: any = {
                 message: `Message from ${from}: ${content}`,
                 idempotencyKey,
@@ -538,6 +650,10 @@ export async function POST(request: NextRequest) {
           } catch (err) {
             // OpenClaw may return accepted JSON on stdout but still emit a late stderr warning.
             // Treat accepted runs as successful delivery.
+            const errAny = err as any
+            const gatewayCliUnavailable =
+              String(errAny?.code || '') === 'ENOENT' &&
+              /openclaw|clawdbot/i.test(String(errAny?.path || ''))
             const maybeStdout = String((err as any)?.stdout || '')
             const acceptedPayload = parseGatewayJson(maybeStdout)
             if (maybeStdout.includes('"status": "accepted"') || maybeStdout.includes('"status":"accepted"')) {
@@ -546,25 +662,87 @@ export async function POST(request: NextRequest) {
               if (typeof acceptedPayload?.runId === 'string' && acceptedPayload.runId) {
                 forwardInfo.runId = acceptedPayload.runId
               }
+            } else if (canFallbackToDirectQueue && deliveryAgent?.name) {
+              markDirectQueueDelivery(deliveryAgent.name, activeDirectConnection?.connection_id)
+              logger.warn(
+                { err, to, deliveryAgent: deliveryAgent.name },
+                'Gateway delivery failed, falling back to direct-connection notification queue'
+              )
             } else {
-              forwardInfo.reason = 'gateway_send_failed'
-              logger.error({ err }, 'Failed to forward message via gateway')
-
-              // For coordinator messages, emit visible status when send fails
-              if (typeof conversation_id === 'string' && conversation_id.startsWith('coord:')) {
-                try {
-                  createChatReply(
-                    db,
-                    workspaceId,
-                    conversation_id,
-                    COORDINATOR_AGENT,
-                    from,
-                    'I received your message, but delivery to the live coordinator runtime failed. Please restart the coordinator/gateway session and retry.',
-                    'status',
-                    { status: 'delivery_failed', reason: 'gateway_send_failed' }
+              let recoveredByDirectQueue = false
+              if (isCoordinatorSend) {
+                const emergencyFallback = listConnectedDirectAgents()[0]
+                recoveredByDirectQueue = markDirectQueueDelivery(
+                  emergencyFallback?.name,
+                  emergencyFallback?.connection_id,
+                )
+                if (recoveredByDirectQueue) {
+                  logger.warn(
+                    { err, to, deliveryAgent: emergencyFallback?.name || null },
+                    'Recovered coordinator delivery via emergency direct-connection queue fallback'
                   )
-                } catch (e) {
-                  logger.error({ err: e }, 'Failed to create gateway failure status reply')
+                }
+              } else {
+                // Alias fallback for non-coordinator targets (e.g. "Dev") when there is
+                // exactly one connected direct agent and gateway delivery is unavailable.
+                const connectedAgents = listConnectedDirectAgents()
+                if (connectedAgents.length === 1) {
+                  recoveredByDirectQueue = markDirectQueueDelivery(
+                    connectedAgents[0]?.name,
+                    connectedAgents[0]?.connection_id,
+                  )
+                  if (recoveredByDirectQueue) {
+                    logger.warn(
+                      { err, to, deliveryAgent: connectedAgents[0]?.name || null },
+                      'Recovered delivery via single connected direct-agent alias fallback'
+                    )
+                  }
+                }
+              }
+              if (!recoveredByDirectQueue) {
+                forwardInfo.reason = gatewayCliUnavailable ? 'gateway_unavailable' : 'gateway_send_failed'
+                logger.error(
+                  { err },
+                  gatewayCliUnavailable
+                    ? 'Gateway delivery unavailable: openclaw CLI is not installed or not in PATH'
+                    : 'Failed to forward message via gateway'
+                )
+
+                // For coordinator messages, emit visible status when send fails
+                if (typeof conversation_id === 'string' && conversation_id.startsWith('coord:')) {
+                  try {
+                    createChatReply(
+                      db,
+                      workspaceId,
+                      conversation_id,
+                      COORDINATOR_AGENT,
+                      from,
+                      gatewayCliUnavailable
+                        ? 'I received your message, but coordinator runtime delivery is unavailable on this host (openclaw CLI not found). Connect a live direct agent or install/configure OpenClaw gateway tooling.'
+                        : 'I received your message, but delivery to the live coordinator runtime failed. Please restart the coordinator/gateway session and retry.',
+                      'status',
+                      { status: 'delivery_failed', reason: forwardInfo.reason }
+                    )
+                  } catch (e) {
+                    logger.error({ err: e }, 'Failed to create gateway failure status reply')
+                  }
+                } else if (typeof conversation_id === 'string') {
+                  try {
+                    createChatReply(
+                      db,
+                      workspaceId,
+                      conversation_id,
+                      String(to),
+                      from,
+                      gatewayCliUnavailable
+                        ? 'Message delivery is unavailable on this host (openclaw CLI not found).'
+                        : 'Message delivery failed for the live runtime session.',
+                      'status',
+                      { status: 'delivery_failed', reason: forwardInfo.reason }
+                    )
+                  } catch (e) {
+                    logger.error({ err: e }, 'Failed to create non-coordinator failure status reply')
+                  }
                 }
               }
             }
@@ -706,6 +884,89 @@ export async function POST(request: NextRequest) {
                   { status: 'unknown', runId: forwardInfo.runId }
                 )
               }
+            }
+          }
+
+          // For non-coordinator direct messages, mirror runtime replies back into the same thread.
+          if (
+            typeof conversation_id === 'string' &&
+            !conversation_id.startsWith('coord:') &&
+            forwardInfo.delivered &&
+            forwardInfo.runId
+          ) {
+            const replyAgentName = String(to || 'agent').trim() || 'agent'
+            try {
+              const waitResult = await runOpenClaw(
+                [
+                  'gateway',
+                  'call',
+                  'agent.wait',
+                  '--timeout',
+                  '8000',
+                  '--params',
+                  JSON.stringify({ runId: forwardInfo.runId, timeoutMs: 6000 }),
+                  '--json',
+                ],
+                { timeoutMs: 9000 }
+              )
+
+              const waitPayload = parseGatewayJson(waitResult.stdout)
+              const waitStatus = String(waitPayload?.status || '').toLowerCase()
+
+              if (waitStatus === 'error') {
+                const reason =
+                  typeof waitPayload?.error === 'string'
+                    ? waitPayload.error
+                    : 'Unknown runtime error'
+                createChatReply(
+                  db,
+                  workspaceId,
+                  conversation_id,
+                  replyAgentName,
+                  from,
+                  `Execution failed: ${reason}`,
+                  'status',
+                  { status: 'error', runId: forwardInfo.runId }
+                )
+              } else if (waitStatus === 'timeout') {
+                createChatReply(
+                  db,
+                  workspaceId,
+                  conversation_id,
+                  replyAgentName,
+                  from,
+                  'Request accepted and still processing. A textual response was not available yet.',
+                  'status',
+                  { status: 'processing', runId: forwardInfo.runId }
+                )
+              } else {
+                const replyText = extractReplyText(waitPayload)
+                if (replyText) {
+                  createChatReply(
+                    db,
+                    workspaceId,
+                    conversation_id,
+                    replyAgentName,
+                    from,
+                    replyText,
+                    'text',
+                    { status: waitStatus || 'completed', runId: forwardInfo.runId }
+                  )
+                } else {
+                  createChatReply(
+                    db,
+                    workspaceId,
+                    conversation_id,
+                    replyAgentName,
+                    from,
+                    'Execution completed, but no textual response payload was returned.',
+                    'status',
+                    { status: waitStatus || 'completed', runId: forwardInfo.runId }
+                  )
+                }
+              }
+            } catch (waitErr) {
+              logger.warn({ err: waitErr, runId: forwardInfo.runId }, 'Non-coordinator wait/readback failed')
             }
           }
         }
