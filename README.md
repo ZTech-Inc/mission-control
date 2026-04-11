@@ -26,6 +26,8 @@ Manage AI agent fleets, dispatch tasks, track costs, and coordinate multi-agent 
 ## Contents
 
 - [Quick Start](#quick-start)
+- [Org Sync](#org-sync)
+- [Fresh Setup for ZTech-Style Orgs](#fresh-setup-for-ztech-style-orgs)
 - [Why teams adopt Mission Control](#why-teams-adopt-mission-control)
 - [Use-case recipes](#use-case-recipes)
 - [Getting Started with Agents](#getting-started-with-agents)
@@ -89,6 +91,29 @@ pnpm dev                    # http://localhost:3000/setup
 ```bash
 docker compose up           # auto-generates credentials, persists across restarts
 ```
+
+## Org Sync
+
+Mission Control can pull your organizational structure directly from a GitHub repository such as a private `ZTech_Agents` repo. This is intended for setups where departments, teams, agents, and supporting files are maintained in Git and need to stay aligned with the live control plane.
+
+### Settings -> Org Sync
+
+Go to `http://127.0.0.1:3000/settings`
+
+Open the `Org Sync` category.
+
+In `GitHub Access`, paste your token and click `Save Token`.
+
+In `Repository Sync`, click `Sync Now`.
+
+You can also trigger the same sync from the `Departments` and `Teams` panels using the `Sync GitHub` button in the top-right header.
+
+### Repo-backed org requirements
+
+- Set `AGENTS_DIR` or `MISSION_CONTROL_AGENTS_DIR` to the local working directory where the org repo should be cloned or updated.
+- Configure `org.github_repo` and `org.github_branch` in Settings if you need a repo or branch other than the defaults.
+- For private repositories, save a valid `GITHUB_TOKEN` in Settings -> `Org Sync` before syncing.
+- Sync pulls the repo, rescans the org snapshot, and refreshes departments, teams, and agent assignments in Mission Control.
 
 ### Prebuilt Images
 
@@ -167,6 +192,57 @@ curl "$MC_URL/api/tasks/queue?agent=scout" \
 For the full walkthrough, see the **[Quickstart Guide](docs/quickstart.md)**.
 
 ---
+
+## Fresh Setup for ZTech-Style Orgs
+
+The ZTech operating model described in the business concept is a strict hierarchy: `CEO/CTO -> Department -> Team -> Agent`. Mission Control now supports that model best when the source of truth lives in Git and the UI syncs from that repo.
+
+### Recommended first-time rollout
+
+1. Install and boot Mission Control locally or on your server.
+2. Point `AGENTS_DIR` to the local checkout path that should hold your org repo.
+3. Create the human control layer first: `CEO` and `CTO` as the top admin operators.
+4. Store the organizational source of truth in `ZTech_Agents` using the department -> team -> agent folder model.
+5. Open `Settings -> Org Sync`, save the GitHub token, and run `Sync Now`.
+6. Verify that departments, teams, and assignments appear correctly in the `Departments`, `Teams`, and `Agents` views.
+7. Connect provider sessions, gateways, and runtimes only after the org structure is in place.
+
+### Structure alignment with the business concept
+
+- Leadership: two human executives, `CEO` and `CTO`, remain the final approval and control layer.
+- Organization: departments own domains, teams own execution lanes, and agents operate as the specialized unit of work.
+- Delegation path: executive direction should flow to department managers, then team leads, then specialist agents.
+- Scaling model: new teams and agents should be introduced through the Git repo first, then synced into Mission Control.
+- Control model: use repo sync for structure, Mission Control for operations, sessions, monitoring, tasking, and runtime orchestration.
+
+### Suggested clean-room bootstrap order
+
+- `Executive Office & Governance`
+- `Revenue Engine`
+- `Sales, Solutions & Partnerships`
+- `Client Success & Managed Services`
+- `Delivery PMO & Operations`
+- `Experience Design & Creative`
+- `Engineering & Product Delivery`
+- `AI Systems, Data & Automation`
+- `Trust, Quality & Compliance`
+- `Finance, People & Knowledge Ops`
+- `Frontier Labs`
+- `Vertical Solutions & Advisory`
+- `In-House Products`
+- `R&D & Innovation`
+
+This mirrors the 14-department operating model in the business concept and gives Mission Control a predictable hierarchy for routing, ownership, and future automation.
+
+### Fresh environment checklist
+
+- Mission Control installed and reachable at `http://127.0.0.1:3000`
+- `AGENTS_DIR` configured to a persistent path
+- `ZTech_Agents` GitHub access configured in `Settings -> Org Sync`
+- `CEO` and `CTO` created as admin-level control users
+- Department managers assigned
+- Team leads assigned
+- Runtime sessions connected after the org sync is complete
 
 ## Documentation
 
