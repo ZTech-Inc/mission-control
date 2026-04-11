@@ -1518,6 +1518,78 @@ const migrations: Migration[] = [
     }
   },
   {
+    id: '054_session_pool',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS ai_session_accounts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          label TEXT NOT NULL,
+          provider TEXT NOT NULL,
+          runtime_type TEXT,
+          preferred_model TEXT,
+          credential_ref TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          enabled INTEGER NOT NULL DEFAULT 1,
+          priority INTEGER NOT NULL DEFAULT 100,
+          weight INTEGER NOT NULL DEFAULT 1,
+          max_agents INTEGER,
+          soft_limit_pct REAL NOT NULL DEFAULT 80,
+          hard_limit_pct REAL NOT NULL DEFAULT 95,
+          monthly_budget_usd REAL,
+          daily_token_limit INTEGER,
+          daily_request_limit INTEGER,
+          consecutive_failures INTEGER NOT NULL DEFAULT 0,
+          last_success_at INTEGER,
+          last_failure_at INTEGER,
+          cooldown_until INTEGER,
+          notes TEXT,
+          metadata TEXT NOT NULL DEFAULT '{}',
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          UNIQUE(workspace_id, label)
+        );
+
+        CREATE TABLE IF NOT EXISTS ai_session_allocations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          agent_id INTEGER NOT NULL,
+          account_id INTEGER NOT NULL,
+          allocation_mode TEXT NOT NULL DEFAULT 'fallback',
+          rank INTEGER NOT NULL DEFAULT 0,
+          assigned_reason TEXT,
+          metadata TEXT NOT NULL DEFAULT '{}',
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+          FOREIGN KEY (account_id) REFERENCES ai_session_accounts(id) ON DELETE CASCADE,
+          UNIQUE(workspace_id, agent_id, rank),
+          UNIQUE(workspace_id, agent_id, account_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS ai_session_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          account_id INTEGER,
+          agent_id INTEGER,
+          event_type TEXT NOT NULL,
+          detail TEXT NOT NULL DEFAULT '{}',
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          FOREIGN KEY (account_id) REFERENCES ai_session_accounts(id) ON DELETE CASCADE,
+          FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ai_session_accounts_workspace_id ON ai_session_accounts(workspace_id);
+        CREATE INDEX IF NOT EXISTS idx_ai_session_accounts_provider ON ai_session_accounts(workspace_id, provider);
+        CREATE INDEX IF NOT EXISTS idx_ai_session_accounts_enabled ON ai_session_accounts(workspace_id, enabled, status);
+        CREATE INDEX IF NOT EXISTS idx_ai_session_allocations_agent_id ON ai_session_allocations(workspace_id, agent_id);
+        CREATE INDEX IF NOT EXISTS idx_ai_session_allocations_account_id ON ai_session_allocations(workspace_id, account_id);
+        CREATE INDEX IF NOT EXISTS idx_ai_session_events_workspace_id ON ai_session_events(workspace_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_ai_session_events_account_id ON ai_session_events(workspace_id, account_id, created_at);
+      `)
+    }
+  },
+  {
     id: '050_mcp_call_receipt_signing',
     up(db: Database.Database) {
       // Add Ed25519 receipt signing columns to the MCP audit log.

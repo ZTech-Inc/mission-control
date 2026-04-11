@@ -12,6 +12,7 @@ export const MODEL_CATALOG: ModelConfig[] = [
   { alias: 'sonnet', name: 'anthropic/claude-sonnet-4-6', provider: 'anthropic', description: 'Standard workhorse', costPer1k: 3.0 },
   { alias: 'opus', name: 'anthropic/claude-opus-4-6', provider: 'anthropic', description: 'Premium quality', costPer1k: 15.0 },
   // OpenAI
+  { alias: 'gpt-5.4', name: 'openai/gpt-5.4', provider: 'openai', description: 'GPT-5.4 frontier model', costPer1k: 2.5 },
   { alias: 'gpt-4.1', name: 'openai/gpt-4.1', provider: 'openai', description: 'GPT-4.1 flagship', costPer1k: 2.0 },
   { alias: 'gpt-4.1-mini', name: 'openai/gpt-4.1-mini', provider: 'openai', description: 'GPT-4.1 Mini, fast + cheap', costPer1k: 0.4 },
   { alias: 'gpt-4.1-nano', name: 'openai/gpt-4.1-nano', provider: 'openai', description: 'GPT-4.1 Nano, ultra-fast', costPer1k: 0.1 },
@@ -21,6 +22,9 @@ export const MODEL_CATALOG: ModelConfig[] = [
   { alias: 'gemini-2.5-flash', name: 'google/gemini-2.5-flash', provider: 'google', description: 'Gemini 2.5 Flash, fast', costPer1k: 0.15 },
   // Local / open-source
   { alias: 'deepseek', name: 'ollama/deepseek-r1:14b', provider: 'ollama', description: 'Local reasoning (free)', costPer1k: 0.0 },
+  // xAI Grok
+  { alias: 'grok-3-mini', name: 'grok/grok-3-mini', provider: 'grok', description: 'Grok fast reasoning model', costPer1k: 0.3 },
+  { alias: 'grok-3', name: 'grok/grok-3', provider: 'grok', description: 'Grok higher-quality reasoning model', costPer1k: 1.0 },
   // Groq (hosted inference)
   { alias: 'groq-fast', name: 'groq/llama-3.1-8b-instant', provider: 'groq', description: '840 tok/s, ultra fast', costPer1k: 0.05 },
   { alias: 'groq', name: 'groq/llama-3.3-70b-versatile', provider: 'groq', description: 'Fast + quality balance', costPer1k: 0.59 },

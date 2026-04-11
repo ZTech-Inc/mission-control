@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+
 import { getDatabase, db_helpers } from './db'
 import { runOpenClaw } from './command'
 import { callOpenClawGateway } from './openclaw-gateway'
@@ -6,6 +8,18 @@ import { logger } from './logger'
 import { config } from './config'
 import { syncTaskOutbound } from './github-sync-engine'
 import { resolveTaskHierarchyDecision, type TaskHierarchyAssignment, type TaskHierarchyDepartmentManager } from './task-routing'
+import {
+  listDispatchCandidatesForAgent,
+  logSessionPoolEvent,
+  markSessionAccountFailure,
+  markSessionAccountSuccess,
+  type SessionDispatchCandidate,
+} from './session-pool'
+import {
+  callDirectProviderText,
+  supportsDirectCredentialRef,
+  supportsDirectProvider,
+} from './provider-direct'
 
 /** Sync task to GitHub/GNAP and broadcast escalation if task failed */
 function syncAndEscalateIfFailed(task: { id: number; title: string; status: string; priority: string; project_id?: number | null; workspace_id: number; description?: string | null }, newStatus: string, errorMsg?: string, dispatchAttempts?: number): void {
@@ -67,9 +81,9 @@ interface AvailableAgent {
  * to the OpenClaw gateway. Uses keyword signals on title + description.
  *
  * Tiers:
- *   ROUTINE  → cheap model (Haiku)   — file ops, status checks, formatting
- *   MODERATE → mid model  (Sonnet)   — code gen, summaries, analysis, drafts
- *   COMPLEX  → premium model (Opus)  — debugging, architecture, novel problems
+ *   ROUTINE  â†’ cheap model (Haiku)   â€” file ops, status checks, formatting
+ *   MODERATE â†’ mid model  (Sonnet)   â€” code gen, summaries, analysis, drafts
+ *   COMPLEX  â†’ premium model (Opus)  â€” debugging, architecture, novel problems
  *
  * The caller may override this by setting agent.config.dispatchModel.
  */
@@ -85,7 +99,7 @@ function classifyTaskModel(task: DispatchableTask): string | null {
   const text = `${task.title} ${task.description ?? ''}`.toLowerCase()
   const priority = task.priority?.toLowerCase() ?? ''
 
-  // Complex signals → Opus
+  // Complex signals â†’ Opus
   const complexSignals = [
     'debug', 'diagnos', 'architect', 'design system', 'security audit',
     'root cause', 'investigate', 'incident', 'failure', 'broken', 'not working',
@@ -95,7 +109,7 @@ function classifyTaskModel(task: DispatchableTask): string | null {
     return '9router/cc/claude-opus-4-6'
   }
 
-  // Size heuristics → Opus for large/complex tasks
+  // Size heuristics â†’ Opus for large/complex tasks
   const descLength = (task.description ?? '').length
   if (descLength > 2000) return '9router/cc/claude-opus-4-6'
   try {
@@ -104,7 +118,7 @@ function classifyTaskModel(task: DispatchableTask): string | null {
     if (row?.estimated_hours && row.estimated_hours >= 4) return '9router/cc/claude-opus-4-6'
   } catch { /* ignore */ }
 
-  // Routine signals → Haiku
+  // Routine signals â†’ Haiku
   const routineSignals = [
     'status check', 'health check', 'ping', 'list ', 'fetch ', 'format',
     'rename', 'move file', 'read file', 'update readme', 'bump version',
@@ -198,7 +212,7 @@ function parseAgentResponse(stdout: string): AgentResponseParsed {
     // Last resort: stringify the whole response
     return { text: JSON.stringify(parsed, null, 2), sessionId }
   } catch {
-    // Not valid JSON — return raw stdout if non-empty
+    // Not valid JSON â€” return raw stdout if non-empty
     return { text: stdout.trim() || null, sessionId: null }
   }
 }
@@ -212,8 +226,11 @@ function getAnthropicApiKey(): string | null {
 }
 
 function isGatewayAvailable(): boolean {
-  // Gateway is available if OpenClaw is installed OR a gateway is registered in the DB
-  if (config.openclawHome) return true
+  try {
+    if (config.openclawConfigPath && existsSync(config.openclawConfigPath)) return true
+  } catch {
+    // ignore
+  }
   try {
     const db = getDatabase()
     const row = db.prepare('SELECT COUNT(*) as c FROM gateways').get() as { c: number } | undefined
@@ -238,7 +255,7 @@ function classifyDirectModel(task: DispatchableTask): string {
   const text = `${task.title} ${task.description ?? ''}`.toLowerCase()
   const priority = task.priority?.toLowerCase() ?? ''
 
-  // Complex → Opus
+  // Complex â†’ Opus
   const complexSignals = [
     'debug', 'diagnos', 'architect', 'design system', 'security audit',
     'root cause', 'investigate', 'incident', 'refactor', 'migration',
@@ -247,7 +264,7 @@ function classifyDirectModel(task: DispatchableTask): string {
     return 'claude-opus-4-6'
   }
 
-  // Size heuristics → Opus for large/complex tasks
+  // Size heuristics â†’ Opus for large/complex tasks
   const descLength = (task.description ?? '').length
   if (descLength > 2000) return 'claude-opus-4-6'
   try {
@@ -256,7 +273,7 @@ function classifyDirectModel(task: DispatchableTask): string {
     if (row?.estimated_hours && row.estimated_hours >= 4) return 'claude-opus-4-6'
   } catch { /* ignore */ }
 
-  // Routine → Haiku
+  // Routine â†’ Haiku
   const routineSignals = [
     'status check', 'health check', 'format', 'rename', 'summarize',
     'translate', 'quick ', 'simple ', 'routine ', 'minor ',
@@ -265,8 +282,24 @@ function classifyDirectModel(task: DispatchableTask): string {
     return 'claude-haiku-4-5-20251001'
   }
 
-  // Default → Sonnet
+  // Default â†’ Sonnet
   return 'claude-sonnet-4-6'
+}
+
+function classifyTaskReasoningEffort(task: DispatchableTask): 'low' | 'medium' | 'high' | 'xhigh' {
+  const text = `${task.title} ${task.description ?? ''}`.toLowerCase()
+  const priority = task.priority?.toLowerCase() ?? ''
+
+  if (priority === 'critical' || /architect|security|debug|root cause|migration|incident|complex|novel/i.test(text)) {
+    return 'xhigh'
+  }
+  if (priority === 'high' || /analysis|investigate|review|plan|design|implement|refactor/i.test(text)) {
+    return 'high'
+  }
+  if (/quick |simple |routine |format|rename|summarize|translate|status check|health check/i.test(text)) {
+    return 'low'
+  }
+  return 'medium'
 }
 
 function getAgentSoulContent(task: DispatchableTask): string | null {
@@ -284,11 +317,12 @@ function getAgentSoulContent(task: DispatchableTask): string | null {
 async function callClaudeDirectly(
   task: DispatchableTask,
   prompt: string,
+  overrideModel?: string | null,
 ): Promise<AgentResponseParsed> {
   const apiKey = getAnthropicApiKey()
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set — cannot dispatch without gateway')
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set â€” cannot dispatch without gateway')
 
-  const model = classifyDirectModel(task)
+  const model = overrideModel || classifyDirectModel(task)
   const soul = getAgentSoulContent(task)
 
   const messages: Array<{ role: string; content: string }> = [
@@ -338,7 +372,7 @@ async function callClaudeDirectly(
       const db = getDatabase()
       const now = Math.floor(Date.now() / 1000)
       db.prepare(`
-        INSERT INTO token_usage (model, session_id, input_tokens, output_tokens, total_tokens, cost, created_at, workspace_id)
+        INSERT INTO token_usage (model, session_id, input_tokens, output_tokens, total_tokens, cost_usd, created_at, workspace_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         model,
@@ -354,6 +388,195 @@ async function callClaudeDirectly(
   }
 
   return { text, sessionId: null }
+}
+
+function isRetryableDispatchError(error: unknown): boolean {
+  const message = String((error as Error | undefined)?.message || '').toLowerCase()
+  return [
+    '429',
+    'rate limit',
+    'auth',
+    'unauthorized',
+    'forbidden',
+    'timeout',
+    'timed out',
+    'session',
+    'gateway',
+    'provider',
+    'unavailable',
+    'overloaded',
+  ].some((needle) => message.includes(needle))
+}
+
+function buildDefaultDirectCandidates(task: DispatchableTask): SessionDispatchCandidate[] {
+  const candidates: SessionDispatchCandidate[] = []
+  const directModel = classifyDirectModel(task)
+  const reasoningEffort = classifyTaskReasoningEffort(task)
+
+  if (getAnthropicApiKey()) {
+    candidates.push({
+      accountId: 0,
+      label: 'anthropic-default',
+      provider: 'anthropic',
+      runtimeType: 'claude',
+      preferredModel: directModel,
+      credentialRef: 'ANTHROPIC_API_KEY',
+      suggestedModel: directModel,
+      reasoningEffort,
+      healthState: 'healthy',
+      allocationMode: 'primary',
+      rank: 0,
+    })
+  }
+
+  if (process.env.OPENAI_API_KEY) {
+    candidates.push({
+      accountId: 0,
+      label: 'openai-default',
+      provider: 'openai',
+      runtimeType: 'codex',
+      preferredModel: 'openai/codex-mini-latest',
+      credentialRef: 'auto',
+      suggestedModel: 'openai/codex-mini-latest',
+      reasoningEffort,
+      healthState: 'healthy',
+      allocationMode: 'primary',
+      rank: 1,
+    })
+  }
+
+  if (process.env.OPENROUTER_API_KEY) {
+    candidates.push({
+      accountId: 0,
+      label: 'openrouter-default',
+      provider: 'openrouter',
+      runtimeType: 'openrouter',
+      preferredModel: 'openrouter/anthropic/claude-sonnet-4',
+      credentialRef: 'OPENROUTER_API_KEY',
+      suggestedModel: 'openrouter/anthropic/claude-sonnet-4',
+      reasoningEffort: null,
+      healthState: 'healthy',
+      allocationMode: 'fallback',
+      rank: 2,
+    })
+  }
+
+  if (process.env.XAI_API_KEY || process.env.GROK_API_KEY || process.env.GROQ_API_KEY) {
+    candidates.push({
+      accountId: 0,
+      label: 'grok-default',
+      provider: 'grok',
+      runtimeType: 'custom',
+      preferredModel: 'grok/grok-3-mini',
+      credentialRef: process.env.XAI_API_KEY
+        ? 'XAI_API_KEY'
+        : process.env.GROK_API_KEY
+          ? 'GROK_API_KEY'
+          : 'GROQ_API_KEY',
+      suggestedModel: 'grok/grok-3-mini',
+      reasoningEffort,
+      healthState: 'healthy',
+      allocationMode: 'fallback',
+      rank: 3,
+    })
+  }
+
+  if (process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY) {
+    candidates.push({
+      accountId: 0,
+      label: 'google-default',
+      provider: 'google',
+      runtimeType: 'custom',
+      preferredModel: 'google/gemini-2.5-flash',
+      credentialRef: process.env.GOOGLE_API_KEY ? 'GOOGLE_API_KEY' : 'GEMINI_API_KEY',
+      suggestedModel: 'google/gemini-2.5-flash',
+      reasoningEffort,
+      healthState: 'healthy',
+      allocationMode: 'fallback',
+      rank: 4,
+    })
+  }
+
+  return candidates
+}
+
+async function runDirectDispatchChain(
+  task: DispatchableTask,
+  prompt: string,
+  dispatchChain: SessionDispatchCandidate[],
+): Promise<{ agentResponse: AgentResponseParsed; selectedDispatchCandidate: SessionDispatchCandidate | null }> {
+  const directCandidates = dispatchChain.filter(
+    (candidate) =>
+      supportsDirectProvider(candidate.provider) &&
+      supportsDirectCredentialRef(candidate.provider, candidate.credentialRef || null),
+  )
+  if (directCandidates.length === 0) {
+    throw new Error('No direct provider accounts configured')
+  }
+
+  const soul = getAgentSoulContent(task)
+  let lastError: unknown = null
+  let failedCandidate: SessionDispatchCandidate | null = null
+
+  for (const candidate of directCandidates) {
+    const directModel =
+      candidate.suggestedModel ||
+      candidate.preferredModel ||
+      (candidate.provider === 'anthropic' ? classifyDirectModel(task) : null)
+
+    try {
+      const result = await callDirectProviderText({
+        provider: candidate.provider,
+        model: directModel,
+        prompt,
+        system: soul,
+        credentialRef: candidate.credentialRef || null,
+        reasoningEffort: candidate.reasoningEffort || null,
+      })
+
+      if (candidate.accountId > 0) {
+        markSessionAccountSuccess(task.workspace_id, candidate.accountId, task.agent_id)
+      }
+      if (failedCandidate?.accountId && candidate.accountId > 0 && failedCandidate.accountId !== candidate.accountId) {
+        logSessionPoolEvent(task.workspace_id, {
+          accountId: candidate.accountId,
+          agentId: task.agent_id,
+          eventType: 'failover',
+          detail: {
+            taskId: task.id,
+            fromAccountId: failedCandidate.accountId,
+            toAccountId: candidate.accountId,
+            fromLabel: failedCandidate.label,
+            toLabel: candidate.label,
+            model: result.model,
+            reasoningEffort: candidate.reasoningEffort || null,
+            mode: 'direct',
+          },
+        })
+      }
+
+      return {
+        agentResponse: {
+          text: result.text,
+          sessionId: null,
+        },
+        selectedDispatchCandidate: candidate.accountId > 0 ? candidate : null,
+      }
+    } catch (error) {
+      lastError = error
+      if (candidate.accountId > 0) {
+        markSessionAccountFailure(
+          task.workspace_id,
+          candidate.accountId,
+          task.agent_id,
+          String((error as Error)?.message || 'direct_dispatch_failed'),
+        )
+      }
+      failedCandidate = candidate.accountId > 0 ? candidate : failedCandidate
+    }
+  }
+
+  throw lastError || new Error('Direct provider dispatch failed')
 }
 
 interface ReviewableTask {
@@ -467,7 +690,7 @@ export async function runAegisReviews(): Promise<{ ok: boolean; message: string 
       let agentResponse: AgentResponseParsed
 
       if (!isGatewayAvailable() && getAnthropicApiKey()) {
-        // Direct Claude API review — no gateway needed
+        // Direct Claude API review â€” no gateway needed
         const reviewTask: DispatchableTask = {
           id: task.id, title: task.title, description: task.description,
           status: 'quality_review', priority: 'high', assigned_to: 'aegis',
@@ -527,7 +750,7 @@ export async function runAegisReviews(): Promise<{ ok: boolean; message: string 
         const maxAegisRetries = 3
 
         if (newAttempts >= maxAegisRetries) {
-          // Too many rejections — move to failed
+          // Too many rejections â€” move to failed
           db.prepare('UPDATE tasks SET status = ?, error_message = ?, dispatch_attempts = ?, updated_at = ? WHERE id = ?')
             .run('failed', `Aegis rejected ${newAttempts} times. Last: ${verdict.notes}`, newAttempts, now, task.id)
 
@@ -639,13 +862,13 @@ export async function requeueStaleTasks(): Promise<{ ok: boolean; message: strin
 
     if (newAttempts >= maxDispatchRetries) {
       db.prepare('UPDATE tasks SET status = ?, error_message = ?, dispatch_attempts = ?, updated_at = ? WHERE id = ?')
-        .run('failed', `Task stuck in_progress ${newAttempts} times — agent "${task.assigned_to}" offline. Moved to failed.`, newAttempts, now, task.id)
+        .run('failed', `Task stuck in_progress ${newAttempts} times â€” agent "${task.assigned_to}" offline. Moved to failed.`, newAttempts, now, task.id)
 
       eventBus.broadcast('task.status_changed', {
         id: task.id,
         status: 'failed',
         previous_status: 'in_progress',
-        error_message: `Stale task — agent offline after ${newAttempts} attempts`,
+        error_message: `Stale task â€” agent offline after ${newAttempts} attempts`,
         reason: 'stale_task_max_retries',
       })
 
@@ -757,12 +980,18 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
         ? taskMeta.target_session
         : null
 
-      let agentResponse: AgentResponseParsed
-      const useDirectApi = !isGatewayAvailable() && getAnthropicApiKey()
-
-      if (useDirectApi && !targetSession) {
-        // Direct Claude API dispatch — no gateway needed
-        agentResponse = await callClaudeDirectly(task, prompt)
+      let agentResponse: AgentResponseParsed = { text: null, sessionId: null }
+      let selectedDispatchCandidate: SessionDispatchCandidate | null = null
+      const sessionCandidates = targetSession
+        ? []
+        : listDispatchCandidatesForAgent(task.workspace_id, task.agent_id).filter(
+            (candidate) => !['disabled', 'failed', 'cooldown', 'exhausted'].includes(candidate.healthState)
+          )
+      const directFallbackCandidates = sessionCandidates.length > 0 ? sessionCandidates : buildDefaultDirectCandidates(task)
+      if (!targetSession && !isGatewayAvailable()) {
+        const directResult = await runDirectDispatchChain(task, prompt, directFallbackCandidates)
+        agentResponse = directResult.agentResponse
+        selectedDispatchCandidate = directResult.selectedDispatchCandidate
       } else if (targetSession) {
         // Dispatch to a specific existing session via chat.send
         logger.info({ taskId: task.id, targetSession, agent: task.agent_name }, 'Dispatching task to targeted session')
@@ -786,34 +1015,95 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
           sessionId: sendResult?.runId || targetSession,
         }
       } else {
-        // Step 1: Invoke via gateway (new session)
+        // Invoke via gateway and fail over through the pool allocation chain on provider/session failures.
         const gatewayAgentId = resolveGatewayAgentId(task)
-        const dispatchModel = classifyTaskModel(task)
-        const invokeParams: Record<string, unknown> = {
-          message: prompt,
-          agentId: gatewayAgentId,
-          idempotencyKey: `task-dispatch-${task.id}-${Date.now()}`,
-          deliver: false,
+        const defaultModel = classifyTaskModel(task)
+        const dispatchChain: SessionDispatchCandidate[] = sessionCandidates.length > 0
+          ? sessionCandidates
+          : [{
+              accountId: 0,
+              label: 'default',
+              provider: 'default',
+              runtimeType: null,
+              preferredModel: defaultModel,
+              credentialRef: null,
+              suggestedModel: defaultModel,
+              reasoningEffort: null,
+              healthState: 'healthy',
+              allocationMode: 'primary',
+              rank: 0,
+            }]
+
+        let lastError: unknown = null
+        let failedCandidate: SessionDispatchCandidate | null = null
+
+        for (const candidate of dispatchChain) {
+            const invokeParams: Record<string, unknown> = {
+              message: prompt,
+              agentId: gatewayAgentId,
+              idempotencyKey: `task-dispatch-${task.id}-${Date.now()}`,
+              deliver: false,
+            }
+            const dispatchModel = candidate.suggestedModel || defaultModel
+            if (dispatchModel) invokeParams.model = dispatchModel
+            if (candidate.reasoningEffort) invokeParams.reasoningEffort = candidate.reasoningEffort
+
+          try {
+            const finalResult = await runOpenClaw(
+              ['gateway', 'call', 'agent', '--expect-final', '--timeout', '120000', '--params', JSON.stringify(invokeParams), '--json'],
+              { timeoutMs: 125_000 }
+            )
+            const finalPayload = parseGatewayJson(finalResult.stdout)
+              ?? parseGatewayJson(String((finalResult as any)?.stderr || ''))
+
+            agentResponse = parseAgentResponse(
+              finalPayload?.result ? JSON.stringify(finalPayload.result) : finalResult.stdout
+            )
+            if (!agentResponse.sessionId && finalPayload?.result?.meta?.agentMeta?.sessionId) {
+              agentResponse.sessionId = finalPayload.result.meta.agentMeta.sessionId
+            }
+            if (candidate.accountId > 0) {
+              markSessionAccountSuccess(task.workspace_id, candidate.accountId, task.agent_id)
+              selectedDispatchCandidate = candidate
+            }
+            if (failedCandidate?.accountId && candidate.accountId > 0 && failedCandidate.accountId !== candidate.accountId) {
+              logSessionPoolEvent(task.workspace_id, {
+                accountId: candidate.accountId,
+                agentId: task.agent_id,
+                eventType: 'failover',
+                detail: {
+                  taskId: task.id,
+                  fromAccountId: failedCandidate.accountId,
+                  toAccountId: candidate.accountId,
+                  fromLabel: failedCandidate.label,
+                  toLabel: candidate.label,
+                  model: dispatchModel,
+                  reasoningEffort: candidate.reasoningEffort || null,
+                },
+              })
+            }
+            lastError = null
+            break
+          } catch (error) {
+            lastError = error
+            if (candidate.accountId > 0) {
+              markSessionAccountFailure(task.workspace_id, candidate.accountId, task.agent_id, String((error as Error)?.message || 'dispatch_failed'))
+            }
+            failedCandidate = candidate.accountId > 0 ? candidate : failedCandidate
+            if (!isRetryableDispatchError(error)) break
+          }
         }
-        // Route to appropriate model tier based on task complexity.
-        // null = no override, agent uses its own configured default model.
-        if (dispatchModel) invokeParams.model = dispatchModel
 
-        // Use --expect-final to block until the agent completes and returns the full
-        // response payload (result.payloads[0].text). The two-step agent → agent.wait
-        // pattern only returns lifecycle metadata and never includes the agent's text.
-        const finalResult = await runOpenClaw(
-          ['gateway', 'call', 'agent', '--expect-final', '--timeout', '120000', '--params', JSON.stringify(invokeParams), '--json'],
-          { timeoutMs: 125_000 }
-        )
-        const finalPayload = parseGatewayJson(finalResult.stdout)
-          ?? parseGatewayJson(String((finalResult as any)?.stderr || ''))
-
-        agentResponse = parseAgentResponse(
-          finalPayload?.result ? JSON.stringify(finalPayload.result) : finalResult.stdout
-        )
-        if (!agentResponse.sessionId && finalPayload?.result?.meta?.agentMeta?.sessionId) {
-          agentResponse.sessionId = finalPayload.result.meta.agentMeta.sessionId
+        if (lastError) {
+          const shouldTryDirectFallback = isRetryableDispatchError(lastError)
+          const hasDirectFallback = directFallbackCandidates.some((candidate) => supportsDirectProvider(candidate.provider))
+          if (shouldTryDirectFallback && hasDirectFallback) {
+            const directResult = await runDirectDispatchChain(task, prompt, directFallbackCandidates)
+            agentResponse = directResult.agentResponse
+            selectedDispatchCandidate = directResult.selectedDispatchCandidate
+          } else {
+            throw lastError
+          }
         }
       } // end else (new session dispatch)
 
@@ -835,8 +1125,15 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
       if (agentResponse.sessionId) {
         existingMeta.dispatch_session_id = agentResponse.sessionId
       }
+      if (selectedDispatchCandidate?.accountId) {
+        existingMeta.session_pool_account_id = selectedDispatchCandidate.accountId
+        existingMeta.session_pool_account_label = selectedDispatchCandidate.label
+        existingMeta.session_pool_provider = selectedDispatchCandidate.provider
+        existingMeta.session_pool_model = selectedDispatchCandidate.suggestedModel || null
+        existingMeta.session_pool_reasoning_effort = selectedDispatchCandidate.reasoningEffort || null
+      }
 
-      // Update task: status → review, set outcome
+      // Update task: status â†’ review, set outcome
       db.prepare(`
         UPDATE tasks SET status = ?, outcome = ?, resolution = ?, metadata = ?, updated_at = ? WHERE id = ?
       `).run('review', 'success', truncated, JSON.stringify(existingMeta), Math.floor(Date.now() / 1000), task.id)
@@ -873,7 +1170,7 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
         'task',
         task.id,
         task.agent_name,
-        `Agent completed task "${task.title}" — awaiting review`,
+        `Agent completed task "${task.title}" â€” awaiting review`,
         { response_length: agentResponse.text.length, dispatch_session_id: agentResponse.sessionId },
         task.workspace_id
       )
@@ -890,7 +1187,7 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
       const maxDispatchRetries = 5
 
       if (newAttempts >= maxDispatchRetries) {
-        // Too many failures — move to failed
+        // Too many failures â€” move to failed
         db.prepare('UPDATE tasks SET status = ?, error_message = ?, dispatch_attempts = ?, updated_at = ? WHERE id = ?')
           .run('failed', `Dispatch failed ${newAttempts} times. Last: ${errorMsg.substring(0, 5000)}`, newAttempts, Math.floor(Date.now() / 1000), task.id)
 
@@ -947,7 +1244,7 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
 // Auto-routing: assign inbox tasks to available agents
 // ---------------------------------------------------------------------------
 
-/** Role affinity mapping — which task keywords match which agent roles. */
+/** Role affinity mapping â€” which task keywords match which agent roles. */
 const ROLE_AFFINITY: Record<string, string[]> = {
   coder: ['code', 'implement', 'build', 'fix', 'bug', 'test', 'unit test', 'refactor', 'feature', 'api', 'endpoint', 'function', 'class', 'module', 'component', 'deploy', 'ci', 'pipeline'],
   researcher: ['research', 'investigate', 'analyze', 'compare', 'find', 'discover', 'audit', 'review', 'survey', 'benchmark', 'evaluate', 'assess', 'competitor', 'market', 'trend'],
@@ -1028,7 +1325,7 @@ function selectBestAutoRouteCandidate(
 
 /**
  * Auto-route inbox tasks to the best available agent.
- * Runs before dispatch — moves tasks from inbox → assigned.
+ * Runs before dispatch â€” moves tasks from inbox â†’ assigned.
  */
 export async function autoRouteInboxTasks(): Promise<{ ok: boolean; message: string }> {
   const db = getDatabase()

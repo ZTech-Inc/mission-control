@@ -45,6 +45,19 @@ interface ExportData {
 
 interface TaskMetadataRow extends TaskCostMetadata {}
 
+interface SessionCostSummary {
+  sessionId: string
+  sessionKey?: string
+  model: string
+  totalTokens: number
+  inputTokens: number
+  outputTokens: number
+  totalCost: number
+  requestCount: number
+  firstSeen: string
+  lastSeen: string
+}
+
 function extractAgentName(sessionId: string): string {
   const trimmed = sessionId.trim()
   if (!trimmed) return 'unknown'
@@ -301,6 +314,45 @@ function loadTaskMetadataById(workspaceId: number, taskIds: number[]): Record<nu
   return out
 }
 
+function buildSessionCostSummaries(records: TokenUsageRecord[]): SessionCostSummary[] {
+  const grouped = new Map<string, SessionCostSummary>()
+
+  for (const record of records) {
+    const existing = grouped.get(record.sessionId)
+    if (!existing) {
+      grouped.set(record.sessionId, {
+        sessionId: record.sessionId,
+        sessionKey: record.sessionId,
+        model: record.model,
+        totalTokens: record.totalTokens,
+        inputTokens: record.inputTokens,
+        outputTokens: record.outputTokens,
+        totalCost: record.cost,
+        requestCount: 1,
+        firstSeen: new Date(record.timestamp).toISOString(),
+        lastSeen: new Date(record.timestamp).toISOString(),
+      })
+      continue
+    }
+
+    existing.totalTokens += record.totalTokens
+    existing.inputTokens += record.inputTokens
+    existing.outputTokens += record.outputTokens
+    existing.totalCost += record.cost
+    existing.requestCount += 1
+    if (!existing.model && record.model) existing.model = record.model
+    if (record.timestamp < Date.parse(existing.firstSeen)) {
+      existing.firstSeen = new Date(record.timestamp).toISOString()
+    }
+    if (record.timestamp > Date.parse(existing.lastSeen)) {
+      existing.lastSeen = new Date(record.timestamp).toISOString()
+    }
+  }
+
+  return Array.from(grouped.values())
+    .sort((left, right) => right.totalCost - left.totalCost)
+}
+
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -451,6 +503,14 @@ export async function GET(request: NextRequest) {
         timeframe,
         recordCount: filteredData.length,
         attributedRecordCount: filteredData.filter((record) => Number.isFinite(record.taskId)).length,
+      })
+    }
+
+    if (action === 'session-costs' || action === 'session_costs' || action === 'sessioncosts') {
+      return NextResponse.json({
+        sessions: buildSessionCostSummaries(filteredData),
+        timeframe,
+        recordCount: filteredData.length,
       })
     }
 
