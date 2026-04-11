@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'node:crypto'
 import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { constants, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { homedir } from 'node:os'
 import { requireRole } from '@/lib/auth'
+import { getDatabase } from '@/lib/db'
 import { resolveWithin } from '@/lib/paths'
 import { checkSkillSecurity } from '@/lib/skill-registry'
 
@@ -133,10 +134,46 @@ function normalizeSkillName(raw: string): string | null {
   return value
 }
 
+function isOrgAgentSource(source: string): boolean {
+  return source.startsWith('org-agent:')
+}
+
 function getRootBySource(roots: SkillRoot[], sourceRaw: string | null): SkillRoot | null {
   const source = String(sourceRaw || '').trim()
   if (!source) return null
   return roots.find((r) => r.source === source) || null
+}
+
+function getSkillRowFromDB(source: string, name: string): Pick<SkillSummary, 'source' | 'name' | 'path'> | null {
+  try {
+    const db = getDatabase()
+    const row = db
+      .prepare('SELECT source, name, path FROM skills WHERE source = ? AND name = ?')
+      .get(source, name) as { source: string; name: string; path: string } | undefined
+    return row ?? null
+  } catch {
+    return null
+  }
+}
+
+function resolveSkillDocPath(
+  roots: SkillRoot[],
+  source: string,
+  name: string,
+): { skillPath: string; skillDocPath: string } | null {
+  const root = roots.find((entry) => entry.source === source)
+  if (root) {
+    const skillPath = join(root.path, name)
+    return { skillPath, skillDocPath: join(skillPath, 'SKILL.md') }
+  }
+
+  const row = getSkillRowFromDB(source, name)
+  if (!row?.path) return null
+
+  return {
+    skillPath: row.path,
+    skillDocPath: join(row.path, 'SKILL.md'),
+  }
 }
 
 async function upsertSkill(root: SkillRoot, name: string, content: string) {
@@ -195,9 +232,8 @@ async function deleteSkill(root: SkillRoot, name: string) {
  */
 function getSkillsFromDB(): SkillSummary[] {
   try {
-    const { getDatabase } = require('@/lib/db')
     const db = getDatabase()
-    const rows = db.prepare('SELECT name, source, path, description, registry_slug, security_status FROM skills ORDER BY name').all() as Array<{
+    const rows = db.prepare('SELECT name, source, path, description, registry_slug, security_status FROM skills ORDER BY source, name').all() as Array<{
       name: string; source: string; path: string; description: string | null; registry_slug: string | null; security_status: string | null
     }>
     return rows.map(r => ({
@@ -228,10 +264,14 @@ export async function GET(request: NextRequest) {
     if (!source || !name) {
       return NextResponse.json({ error: 'source and valid name are required' }, { status: 400 })
     }
-    const root = roots.find((r) => r.source === source)
-    if (!root) return NextResponse.json({ error: 'Invalid source' }, { status: 400 })
-    const skillPath = join(root.path, name)
-    const skillDocPath = join(skillPath, 'SKILL.md')
+    const resolved = resolveSkillDocPath(roots, source, name)
+    if (!resolved) {
+      return NextResponse.json(
+        { error: isOrgAgentSource(source) ? 'SKILL.md not found' : 'Invalid source' },
+        { status: isOrgAgentSource(source) ? 404 : 400 },
+      )
+    }
+    const { skillPath, skillDocPath } = resolved
     if (!(await pathReadable(skillDocPath))) {
       return NextResponse.json({ error: 'SKILL.md not found' }, { status: 404 })
     }
@@ -257,10 +297,14 @@ export async function GET(request: NextRequest) {
     if (!source || !name) {
       return NextResponse.json({ error: 'source and valid name are required' }, { status: 400 })
     }
-    const root = roots.find((r) => r.source === source)
-    if (!root) return NextResponse.json({ error: 'Invalid source' }, { status: 400 })
-    const skillPath = join(root.path, name)
-    const skillDocPath = join(skillPath, 'SKILL.md')
+    const resolved = resolveSkillDocPath(roots, source, name)
+    if (!resolved) {
+      return NextResponse.json(
+        { error: isOrgAgentSource(source) ? 'SKILL.md not found' : 'Invalid source' },
+        { status: isOrgAgentSource(source) ? 404 : 400 },
+      )
+    }
+    const { skillDocPath } = resolved
     if (!(await pathReadable(skillDocPath))) {
       return NextResponse.json({ error: 'SKILL.md not found' }, { status: 404 })
     }
@@ -300,10 +344,13 @@ export async function GET(request: NextRequest) {
   }
   for (const skill of merged) {
     if (!groupMap.has(skill.source)) {
-      groupMap.set(skill.source, { source: skill.source, path: '', skills: [] })
+      groupMap.set(skill.source, { source: skill.source, path: dirname(skill.path), skills: [] })
     }
     const group = groupMap.get(skill.source)
-    if (group) group.skills.push(skill)
+    if (group) {
+      if (!group.path) group.path = dirname(skill.path)
+      group.skills.push(skill)
+    }
   }
   for (const group of groupMap.values()) {
     group.skills.sort((a, b) => a.name.localeCompare(b.name))
@@ -311,18 +358,16 @@ export async function GET(request: NextRequest) {
 
   const sourceOrder = new Map<string, number>()
   roots.forEach((root, index) => sourceOrder.set(root.source, index))
-  const deduped = new Map<string, SkillSummary>()
-  const orderedForDedup = merged
+  const orderedSkills = merged
     .slice()
     .sort((a, b) => {
       const aOrder = sourceOrder.has(a.source) ? sourceOrder.get(a.source)! : Number.MAX_SAFE_INTEGER
       const bOrder = sourceOrder.has(b.source) ? sourceOrder.get(b.source)! : Number.MAX_SAFE_INTEGER
       if (aOrder !== bOrder) return aOrder - bOrder
-      return a.name.localeCompare(b.name)
+      const byName = a.name.localeCompare(b.name)
+      if (byName !== 0) return byName
+      return a.source.localeCompare(b.source)
     })
-  for (const skill of orderedForDedup) {
-    if (!deduped.has(skill.name)) deduped.set(skill.name, skill)
-  }
 
   const rootGroups = roots
     .map((root) => groupMap.get(root.source))
@@ -332,9 +377,9 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => a.source.localeCompare(b.source))
 
   return NextResponse.json({
-    skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
+    skills: orderedSkills,
     groups: [...rootGroups, ...dynamicGroups],
-    total: deduped.size,
+    total: orderedSkills.length,
   })
 }
 
