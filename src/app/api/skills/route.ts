@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'node:crypto'
 import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { constants } from 'node:fs'
+import { constants, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { requireRole } from '@/lib/auth'
@@ -26,6 +26,19 @@ function resolveSkillRoot(
 ): string {
   const override = process.env[envName]
   return override && override.trim().length > 0 ? override.trim() : fallback
+}
+
+function resolveProjectAgentsSkillsDir(cwd: string): string {
+  const explicit = process.env.MC_SKILLS_PROJECT_AGENTS_DIR
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+
+  const configuredAgentsDir = process.env.MISSION_CONTROL_AGENTS_DIR
+  if (configuredAgentsDir && configuredAgentsDir.trim().length > 0) {
+    const skillsLibraryDir = join(configuredAgentsDir.trim(), '.skills_library')
+    if (existsSync(skillsLibraryDir)) return skillsLibraryDir
+  }
+
+  return join(cwd, '.agents', 'skills')
 }
 
 async function pathReadable(path: string): Promise<boolean> {
@@ -81,7 +94,7 @@ function getSkillRoots(): SkillRoot[] {
   const roots: SkillRoot[] = [
     { source: 'user-agents', path: resolveSkillRoot('MC_SKILLS_USER_AGENTS_DIR', join(home, '.agents', 'skills')) },
     { source: 'user-codex', path: resolveSkillRoot('MC_SKILLS_USER_CODEX_DIR', join(home, '.codex', 'skills')) },
-    { source: 'project-agents', path: resolveSkillRoot('MC_SKILLS_PROJECT_AGENTS_DIR', join(cwd, '.agents', 'skills')) },
+    { source: 'project-agents', path: resolveProjectAgentsSkillsDir(cwd) },
     { source: 'project-codex', path: resolveSkillRoot('MC_SKILLS_PROJECT_CODEX_DIR', join(cwd, '.codex', 'skills')) },
   ]
   // Add OpenClaw gateway skill roots when configured
@@ -177,17 +190,16 @@ async function deleteSkill(root: SkillRoot, name: string) {
 }
 
 /**
- * Try to serve skill list from DB (fast path).
- * Falls back to filesystem scan if DB has no data yet.
+ * Read persisted skill metadata from DB.
+ * Live filesystem scan is still merged in GET so UI reflects disk changes immediately.
  */
-function getSkillsFromDB(): SkillSummary[] | null {
+function getSkillsFromDB(): SkillSummary[] {
   try {
     const { getDatabase } = require('@/lib/db')
     const db = getDatabase()
     const rows = db.prepare('SELECT name, source, path, description, registry_slug, security_status FROM skills ORDER BY name').all() as Array<{
       name: string; source: string; path: string; description: string | null; registry_slug: string | null; security_status: string | null
     }>
-    if (rows.length === 0) return null // DB empty — fall back to fs scan
     return rows.map(r => ({
       id: `${r.source}:${r.name}`,
       name: r.name,
@@ -198,7 +210,7 @@ function getSkillsFromDB(): SkillSummary[] | null {
       security_status: r.security_status,
     }))
   } catch {
-    return null
+    return []
   }
 }
 
@@ -266,36 +278,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ source, name, security })
   }
 
-  // Try DB-backed fast path first
-  const dbSkills = getSkillsFromDB()
-  if (dbSkills) {
-    // Group by source for the groups response
-    const groupMap = new Map<string, { source: string; path: string; skills: SkillSummary[] }>()
-    for (const root of roots) {
-      groupMap.set(root.source, { source: root.source, path: root.path, skills: [] })
-    }
-    for (const skill of dbSkills) {
-      // Dynamically add workspace-* groups not already in roots
-      if (!groupMap.has(skill.source) && skill.source.startsWith('workspace-')) {
-        groupMap.set(skill.source, { source: skill.source, path: '', skills: [] })
-      }
-      const group = groupMap.get(skill.source)
-      if (group) group.skills.push(skill)
-    }
-
-    const deduped = new Map<string, SkillSummary>()
-    for (const skill of dbSkills) {
-      if (!deduped.has(skill.name)) deduped.set(skill.name, skill)
-    }
-
-    return NextResponse.json({
-      skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
-      groups: Array.from(groupMap.values()),
-      total: deduped.size,
-    })
-  }
-
-  // Fallback: filesystem scan (first load before sync runs)
   const bySource = await Promise.all(
     roots.map(async (root) => ({
       source: root.source,
@@ -304,15 +286,54 @@ export async function GET(request: NextRequest) {
     }))
   )
 
-  const all = bySource.flatMap((group) => group.skills)
+  const dbSkills = getSkillsFromDB()
+  const diskSkills = bySource.flatMap((group) => group.skills)
+
+  const mergedBySourceAndName = new Map<string, SkillSummary>()
+  for (const skill of dbSkills) mergedBySourceAndName.set(`${skill.source}:${skill.name}`, skill)
+  for (const skill of diskSkills) mergedBySourceAndName.set(`${skill.source}:${skill.name}`, skill)
+  const merged = Array.from(mergedBySourceAndName.values())
+
+  const groupMap = new Map<string, { source: string; path: string; skills: SkillSummary[] }>()
+  for (const root of roots) {
+    groupMap.set(root.source, { source: root.source, path: root.path, skills: [] })
+  }
+  for (const skill of merged) {
+    if (!groupMap.has(skill.source)) {
+      groupMap.set(skill.source, { source: skill.source, path: '', skills: [] })
+    }
+    const group = groupMap.get(skill.source)
+    if (group) group.skills.push(skill)
+  }
+  for (const group of groupMap.values()) {
+    group.skills.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  const sourceOrder = new Map<string, number>()
+  roots.forEach((root, index) => sourceOrder.set(root.source, index))
   const deduped = new Map<string, SkillSummary>()
-  for (const skill of all) {
+  const orderedForDedup = merged
+    .slice()
+    .sort((a, b) => {
+      const aOrder = sourceOrder.has(a.source) ? sourceOrder.get(a.source)! : Number.MAX_SAFE_INTEGER
+      const bOrder = sourceOrder.has(b.source) ? sourceOrder.get(b.source)! : Number.MAX_SAFE_INTEGER
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return a.name.localeCompare(b.name)
+    })
+  for (const skill of orderedForDedup) {
     if (!deduped.has(skill.name)) deduped.set(skill.name, skill)
   }
 
+  const rootGroups = roots
+    .map((root) => groupMap.get(root.source))
+    .filter((group): group is { source: string; path: string; skills: SkillSummary[] } => Boolean(group))
+  const dynamicGroups = Array.from(groupMap.values())
+    .filter((group) => !sourceOrder.has(group.source))
+    .sort((a, b) => a.source.localeCompare(b.source))
+
   return NextResponse.json({
     skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
-    groups: bySource,
+    groups: [...rootGroups, ...dynamicGroups],
     total: deduped.size,
   })
 }

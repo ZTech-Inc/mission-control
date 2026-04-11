@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
 import { useSmartPoll } from '@/lib/use-smart-poll'
 import { createClientLogger } from '@/lib/client-logger'
+import { useOrgData } from '@/lib/use-org-data'
 import { AgentAvatar } from '@/components/ui/agent-avatar'
 import {
   OverviewTab,
@@ -335,6 +336,11 @@ function AgentDepartmentGrid({
   const t = useTranslations('agentSquadPhase3')
 
   const assignmentsByAgent = new Map(agentTeamAssignments.map(a => [a.agent_id, a]))
+  const managerAgentIds = new Set(
+    departments
+      .map((department) => department.manager_agent_id)
+      .filter((agentId): agentId is number => typeof agentId === 'number')
+  )
   const teamAgents = agents.reduce((map, agent) => {
     const assignment = assignmentsByAgent.get(agent.id)
     if (assignment) {
@@ -343,7 +349,7 @@ function AgentDepartmentGrid({
     }
     return map
   }, new Map<number, Agent[]>())
-  const unassigned = agents.filter(agent => !assignmentsByAgent.has(agent.id))
+  const unassigned = agents.filter(agent => !assignmentsByAgent.has(agent.id) && !managerAgentIds.has(agent.id))
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -468,6 +474,7 @@ function AgentDepartmentGrid({
 
 export function AgentSquadPanelPhase3() {
   const t = useTranslations('agentSquadPhase3')
+  useOrgData()
   const { agents, setAgents } = useMissionControl()
   const [loading, setLoading] = useState(agents.length === 0)
   const [error, setError] = useState<string | null>(null)

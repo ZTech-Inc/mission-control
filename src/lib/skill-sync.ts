@@ -56,6 +56,19 @@ function extractDescription(content: string): string | undefined {
   return first.length > 220 ? `${first.slice(0, 217)}...` : first
 }
 
+function resolveProjectAgentsSkillsDir(cwd: string): string {
+  const explicit = process.env.MC_SKILLS_PROJECT_AGENTS_DIR
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+
+  const configuredAgentsDir = process.env.MISSION_CONTROL_AGENTS_DIR
+  if (configuredAgentsDir && configuredAgentsDir.trim().length > 0) {
+    const skillsLibraryDir = join(configuredAgentsDir.trim(), '.skills_library')
+    if (existsSync(skillsLibraryDir)) return skillsLibraryDir
+  }
+
+  return join(cwd, '.agents', 'skills')
+}
+
 function getSkillRoots(): Array<{ source: string; path: string }> {
   const home = homedir()
   const cwd = process.cwd()
@@ -63,7 +76,7 @@ function getSkillRoots(): Array<{ source: string; path: string }> {
   const roots: Array<{ source: string; path: string }> = [
     { source: 'user-agents', path: process.env.MC_SKILLS_USER_AGENTS_DIR || join(home, '.agents', 'skills') },
     { source: 'user-codex', path: process.env.MC_SKILLS_USER_CODEX_DIR || join(home, '.codex', 'skills') },
-    { source: 'project-agents', path: process.env.MC_SKILLS_PROJECT_AGENTS_DIR || join(cwd, '.agents', 'skills') },
+    { source: 'project-agents', path: resolveProjectAgentsSkillsDir(cwd) },
     { source: 'project-codex', path: process.env.MC_SKILLS_PROJECT_CODEX_DIR || join(cwd, '.codex', 'skills') },
     { source: 'openclaw', path: process.env.MC_SKILLS_OPENCLAW_DIR || join(openclawState, 'skills') },
     { source: 'workspace', path: process.env.MC_SKILLS_WORKSPACE_DIR || join(process.env.OPENCLAW_WORKSPACE_DIR || process.env.MISSION_CONTROL_WORKSPACE_DIR || join(openclawState, 'workspace'), 'skills') },

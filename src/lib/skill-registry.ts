@@ -6,6 +6,7 @@
  */
 
 import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
@@ -378,6 +379,19 @@ function skillNameFromSlug(slug: string): string {
   return parts[parts.length - 1]
 }
 
+function resolveProjectAgentsSkillsDir(cwd: string): string {
+  const explicit = process.env.MC_SKILLS_PROJECT_AGENTS_DIR
+  if (explicit && explicit.trim().length > 0) return explicit.trim()
+
+  const configuredAgentsDir = process.env.MISSION_CONTROL_AGENTS_DIR
+  if (configuredAgentsDir && configuredAgentsDir.trim().length > 0) {
+    const skillsLibraryDir = join(configuredAgentsDir.trim(), '.skills_library')
+    if (existsSync(skillsLibraryDir)) return skillsLibraryDir
+  }
+
+  return join(cwd, '.agents', 'skills')
+}
+
 function getTargetDir(targetRoot: string): string {
   const home = homedir()
   const cwd = process.cwd()
@@ -385,7 +399,7 @@ function getTargetDir(targetRoot: string): string {
   const rootMap: Record<string, string> = {
     'user-agents': process.env.MC_SKILLS_USER_AGENTS_DIR || join(home, '.agents', 'skills'),
     'user-codex': process.env.MC_SKILLS_USER_CODEX_DIR || join(home, '.codex', 'skills'),
-    'project-agents': process.env.MC_SKILLS_PROJECT_AGENTS_DIR || join(cwd, '.agents', 'skills'),
+    'project-agents': resolveProjectAgentsSkillsDir(cwd),
     'project-codex': process.env.MC_SKILLS_PROJECT_CODEX_DIR || join(cwd, '.codex', 'skills'),
     'openclaw': process.env.MC_SKILLS_OPENCLAW_DIR || join(openclawState, 'skills'),
   }

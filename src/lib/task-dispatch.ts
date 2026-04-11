@@ -5,6 +5,7 @@ import { eventBus } from './event-bus'
 import { logger } from './logger'
 import { config } from './config'
 import { syncTaskOutbound } from './github-sync-engine'
+import { resolveTaskHierarchyDecision, type TaskHierarchyAssignment, type TaskHierarchyDepartmentManager } from './task-routing'
 
 /** Sync task to GitHub/GNAP and broadcast escalation if task failed */
 function syncAndEscalateIfFailed(task: { id: number; title: string; status: string; priority: string; project_id?: number | null; workspace_id: number; description?: string | null }, newStatus: string, errorMsg?: string, dispatchAttempts?: number): void {
@@ -36,6 +37,25 @@ interface DispatchableTask {
   project_ticket_no: number | null
   project_id: number | null
   tags?: string[]
+}
+
+interface AutoRouteTask {
+  id: number
+  title: string
+  description: string | null
+  priority: string
+  tags: string | null
+  workspace_id: number
+  created_by: string | null
+  metadata: string | null
+}
+
+interface AvailableAgent {
+  id: number
+  name: string
+  role: string
+  status: string
+  config: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -939,7 +959,7 @@ const ROLE_AFFINITY: Record<string, string[]> = {
 }
 
 function scoreAgentForTask(
-  agent: { name: string; role: string; status: string; config: string | null },
+  agent: AvailableAgent,
   taskText: string,
 ): number {
   // Offline agents can't take work
@@ -972,6 +992,40 @@ function scoreAgentForTask(
   return Math.max(score, 1)
 }
 
+function parseTaskMetadata(metadata: string | null): Record<string, unknown> {
+  if (!metadata) return {}
+  try {
+    const parsed = JSON.parse(metadata) as unknown
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>
+    }
+  } catch {
+    // Ignore invalid metadata and treat it as empty.
+  }
+  return {}
+}
+
+function selectBestAutoRouteCandidate(
+  db: ReturnType<typeof getDatabase>,
+  candidates: AvailableAgent[],
+  fullText: string,
+  workspaceId: number,
+): { agent: AvailableAgent; score: number } | null {
+  const scored = candidates
+    .map((agent) => ({ agent, score: scoreAgentForTask(agent, fullText) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+
+  for (const entry of scored) {
+    const inProgressCount = (db.prepare(
+      'SELECT COUNT(*) as c FROM tasks WHERE assigned_to = ? AND status = \'in_progress\' AND workspace_id = ?'
+    ).get(entry.agent.name, workspaceId) as { c: number }).c
+    if (inProgressCount < 3) return entry
+  }
+
+  return null
+}
+
 /**
  * Auto-route inbox tasks to the best available agent.
  * Runs before dispatch — moves tasks from inbox → assigned.
@@ -980,14 +1034,14 @@ export async function autoRouteInboxTasks(): Promise<{ ok: boolean; message: str
   const db = getDatabase()
 
   const inboxTasks = db.prepare(`
-    SELECT id, title, description, priority, tags, workspace_id
+    SELECT id, title, description, priority, tags, workspace_id, created_by, metadata
     FROM tasks
     WHERE status = 'inbox' AND assigned_to IS NULL
     ORDER BY
       CASE priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END ASC,
       created_at ASC
     LIMIT 5
-  `).all() as Array<{ id: number; title: string; description: string | null; priority: string; tags: string | null; workspace_id: number }>
+  `).all() as AutoRouteTask[]
 
   if (inboxTasks.length === 0) {
     return { ok: true, message: 'No inbox tasks to route' }
@@ -999,7 +1053,7 @@ export async function autoRouteInboxTasks(): Promise<{ ok: boolean; message: str
     FROM agents
     WHERE hidden = 0 AND status NOT IN ('offline', 'error')
     LIMIT 50
-  `).all() as Array<{ id: number; name: string; role: string; status: string; config: string | null }>
+  `).all() as AvailableAgent[]
 
   if (agents.length === 0) {
     return { ok: true, message: `${inboxTasks.length} inbox task(s) but no available agents` }
@@ -1007,6 +1061,31 @@ export async function autoRouteInboxTasks(): Promise<{ ok: boolean; message: str
 
   let routed = 0
   const now = Math.floor(Date.now() / 1000)
+  const hierarchyCache = new Map<number, { managers: TaskHierarchyDepartmentManager[]; assignments: TaskHierarchyAssignment[] }>()
+
+  function getHierarchyData(workspaceId: number) {
+    const cached = hierarchyCache.get(workspaceId)
+    if (cached) return cached
+
+    const managers = db.prepare(`
+      SELECT external_id as department_external_id, manager_agent_id as agent_id
+      FROM departments
+      WHERE workspace_id = ? AND manager_agent_id IS NOT NULL
+    `).all(workspaceId) as TaskHierarchyDepartmentManager[]
+
+    const assignments = db.prepare(`
+      SELECT ata.agent_id, ata.team_external_id, ata.role, t.department_external_id
+      FROM agent_team_assignments ata
+      JOIN teams t
+        ON t.workspace_id = ata.workspace_id
+       AND t.external_id = ata.team_external_id
+      WHERE ata.workspace_id = ?
+    `).all(workspaceId) as TaskHierarchyAssignment[]
+
+    const data = { managers, assignments }
+    hierarchyCache.set(workspaceId, data)
+    return data
+  }
 
   for (const task of inboxTasks) {
     const taskText = `${task.title} ${task.description || ''}`
@@ -1016,53 +1095,52 @@ export async function autoRouteInboxTasks(): Promise<{ ok: boolean; message: str
     }
     const fullText = `${taskText} ${parsedTags.join(' ')}`
 
-    // Score each agent
-    const scored = agents
-      .map(a => ({ agent: a, score: scoreAgentForTask(a, fullText) }))
-      .filter(s => s.score > 0)
-      .sort((a, b) => b.score - a.score)
+    const hierarchyData = getHierarchyData(task.workspace_id)
+    const hierarchyDecision = resolveTaskHierarchyDecision(task, agents, hierarchyData.managers, hierarchyData.assignments)
+    const hierarchyCandidateIds = new Set(hierarchyDecision?.candidateAgentIds ?? [])
+    const hierarchyCandidates = hierarchyCandidateIds.size > 0
+      ? agents.filter((agent) => hierarchyCandidateIds.has(agent.id))
+      : []
 
-    if (scored.length === 0) continue
+    const selected = selectBestAutoRouteCandidate(
+      db,
+      hierarchyCandidates.length > 0 ? hierarchyCandidates : agents,
+      fullText,
+      task.workspace_id,
+    )
+    if (!selected) continue
 
-    const best = scored[0].agent
-
-    // Check capacity — skip agents with 3+ in-progress tasks
-    const inProgressCount = (db.prepare(
-      'SELECT COUNT(*) as c FROM tasks WHERE assigned_to = ? AND status = \'in_progress\' AND workspace_id = ?'
-    ).get(best.name, task.workspace_id) as { c: number }).c
-
-    if (inProgressCount >= 3) {
-      // Try next best agent
-      const alt = scored.find(s => {
-        const c = (db.prepare(
-          'SELECT COUNT(*) as c FROM tasks WHERE assigned_to = ? AND status = \'in_progress\' AND workspace_id = ?'
-        ).get(s.agent.name, task.workspace_id) as { c: number }).c
-        return c < 3
-      })
-      if (!alt) continue // all agents at capacity
-      db.prepare('UPDATE tasks SET status = ?, assigned_to = ?, updated_at = ? WHERE id = ?')
-        .run('assigned', alt.agent.name, now, task.id)
-
-      db_helpers.logActivity('task_auto_routed', 'task', task.id, 'scheduler',
-        `Auto-assigned "${task.title}" to ${alt.agent.name} (${alt.agent.role}, score: ${alt.score})`,
-        { agent: alt.agent.name, role: alt.agent.role, score: alt.score },
-        task.workspace_id)
-
-      eventBus.broadcast('task.status_changed', { id: task.id, status: 'assigned', previous_status: 'inbox', assigned_to: alt.agent.name })
-      syncAndEscalateIfFailed(task as any, 'assigned')
-      routed++
-      continue
+    const nextMetadata = parseTaskMetadata(task.metadata)
+    if (hierarchyDecision) {
+      nextMetadata.routing_origin_agent = hierarchyDecision.originAgentName
+      nextMetadata.routing_stage = hierarchyDecision.stage
+      nextMetadata.routing_reason = hierarchyDecision.reason
+      if (hierarchyDecision.departmentExternalId != null) {
+        nextMetadata.routing_department_external_id = hierarchyDecision.departmentExternalId
+      }
+      if (hierarchyDecision.teamExternalId != null) {
+        nextMetadata.routing_team_external_id = hierarchyDecision.teamExternalId
+      }
     }
 
-    db.prepare('UPDATE tasks SET status = ?, assigned_to = ?, updated_at = ? WHERE id = ?')
-      .run('assigned', best.name, now, task.id)
+    db.prepare('UPDATE tasks SET status = ?, assigned_to = ?, metadata = ?, updated_at = ? WHERE id = ?')
+      .run('assigned', selected.agent.name, JSON.stringify(nextMetadata), now, task.id)
 
     db_helpers.logActivity('task_auto_routed', 'task', task.id, 'scheduler',
-      `Auto-assigned "${task.title}" to ${best.name} (${best.role}, score: ${scored[0].score})`,
-      { agent: best.name, role: best.role, score: scored[0].score },
+      `Auto-assigned "${task.title}" to ${selected.agent.name} (${selected.agent.role}, score: ${selected.score})`,
+      {
+        agent: selected.agent.name,
+        role: selected.agent.role,
+        score: selected.score,
+        ...(hierarchyDecision ? {
+          hierarchy_stage: hierarchyDecision.stage,
+          hierarchy_reason: hierarchyDecision.reason,
+          origin_agent: hierarchyDecision.originAgentName,
+        } : {}),
+      },
       task.workspace_id)
 
-    eventBus.broadcast('task.status_changed', { id: task.id, status: 'assigned', previous_status: 'inbox', assigned_to: best.name })
+    eventBus.broadcast('task.status_changed', { id: task.id, status: 'assigned', previous_status: 'inbox', assigned_to: selected.agent.name })
     syncAndEscalateIfFailed(task as any, 'assigned')
     routed++
   }

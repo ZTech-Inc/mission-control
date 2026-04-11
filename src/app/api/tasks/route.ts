@@ -165,7 +165,6 @@ export async function POST(request: NextRequest) {
     const body = validated.data;
 
     const user = auth.user
-    const actor = user.display_name || user.username || 'system'
     const {
       title,
       description,
@@ -173,6 +172,7 @@ export async function POST(request: NextRequest) {
       priority = 'medium',
       project_id,
       assigned_to,
+      created_by,
       due_date,
       estimated_hours,
       actual_hours,
@@ -186,6 +186,12 @@ export async function POST(request: NextRequest) {
       tags = [],
       metadata = {}
     } = body;
+    const actor =
+      (created_by && created_by.trim()) ||
+      user.agent_name ||
+      user.display_name ||
+      user.username ||
+      'system'
     const normalizedStatus = normalizeTaskCreateStatus(status, assigned_to)
 
     // Resolve project_id for the task

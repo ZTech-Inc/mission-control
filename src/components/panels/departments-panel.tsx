@@ -101,6 +101,7 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   const [isHiringManager, setIsHiringManager] = useState(false)
   const [activeDragAgent, setActiveDragAgent] = useState<Agent | null>(null)
 
+  const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agents = useMissionControl((s) => s.agents)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
@@ -158,7 +159,16 @@ function DepartmentDetail({ dept, isReadOnly }: DepartmentDetailProps) {
   }
 
   const viewTabs: DeptTab[] = ['overview', 'teams', 'agents', 'docs', 'chat']
-  const unassignedAgents = agents.filter((agent) => !agentTeamAssignments.some((assignment) => assignment.agent_id === agent.id))
+  const managerAgentIds = new Set(
+    departments
+      .map((department) => department.manager_agent_id)
+      .filter((agentId): agentId is number => typeof agentId === 'number')
+  )
+  const unassignedAgents = agents.filter(
+    (agent) =>
+      !managerAgentIds.has(agent.id) &&
+      !agentTeamAssignments.some((assignment) => assignment.agent_id === agent.id)
+  )
   const managerAgent = dept.manager_agent_id
     ? agents.find((agent) => agent.id === dept.manager_agent_id) ?? null
     : null
