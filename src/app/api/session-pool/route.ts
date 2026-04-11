@@ -363,6 +363,28 @@ async function launchCodexDesktopAuth() {
   })
 }
 
+function escapePowerShellSingleQuoted(value: string): string {
+  return value.replace(/'/g, "''")
+}
+
+async function launchCommandInNewTerminal(command: string) {
+  if (process.platform !== 'win32') {
+    throw new Error('CLI launch is currently supported only on Windows')
+  }
+  const escapedCommand = escapePowerShellSingleQuoted(command)
+  await execFileAsync('powershell.exe', [
+    '-NoProfile',
+    '-Command',
+    `Start-Process powershell -ArgumentList '-NoExit','-Command','${escapedCommand}'`,
+  ], {
+    windowsHide: true,
+  })
+}
+
+async function launchCodexCliAuth() {
+  await launchCommandInNewTerminal('codex login')
+}
+
 async function launchClaudeDesktopAuth() {
   if (process.platform !== 'win32') {
     throw new Error('Claude desktop OAuth launch is currently supported only on Windows')
@@ -375,6 +397,10 @@ async function launchClaudeDesktopAuth() {
   ], {
     windowsHide: true,
   })
+}
+
+async function launchClaudeCliAuth() {
+  await launchCommandInNewTerminal('claude login')
 }
 
 async function launchGoogleCliAuth() {
@@ -395,6 +421,14 @@ async function launchGoogleCliAuth() {
     return
   }
   await execFileAsync(shell, [`https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login`], { windowsHide: true })
+}
+
+async function launchGeminiCliAuth() {
+  await launchCommandInNewTerminal('gemini auth login')
+}
+
+async function launchGrokCliAuth() {
+  await launchCommandInNewTerminal('grok auth login')
 }
 
 type EnforceCodexAccountView = {
@@ -615,6 +649,7 @@ export async function POST(request: NextRequest) {
 
   if (action === 'start-codex-oauth') {
     const forceLaunch = body?.forceLaunch === true
+    const launchMode = String(body?.launchMode || 'desktop').trim().toLowerCase()
     const requestedEmail = String(body?.email || '').trim().toLowerCase()
     const profiles = detectLocalCodexAuthProfiles({
       homeDir: config.homeDir,
@@ -640,10 +675,15 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      await Promise.allSettled([launchCodexDesktopAuth()])
+      if (launchMode === 'cli') {
+        await launchCodexCliAuth()
+      } else {
+        await launchCodexDesktopAuth()
+      }
       return NextResponse.json({
         ok: true,
         launched: true,
+        launchMode: launchMode === 'cli' ? 'cli' : 'desktop',
         matchedProfile: matchedProfile
           ? {
             ref: matchedProfile.ref,
@@ -653,17 +693,20 @@ export async function POST(request: NextRequest) {
             expiresAt: matchedProfile.expiresAt,
           }
           : null,
-        message: 'Codex Desktop launch was attempted. Complete sign-in inside Codex Desktop. For non-desktop setup, use API Key mode (OPENAI_API_KEY). Do not reuse old /oauth/authorize links; localhost:1455 callback is app-managed and state-bound.',
+        message: launchMode === 'cli'
+          ? 'Codex CLI login was launched in a new terminal (`codex login`). Complete Sign in with ChatGPT there; it uses ChatGPT/Codex plan limits.'
+          : 'Codex Desktop launch was attempted. Complete Sign in with ChatGPT inside Codex Desktop; it uses ChatGPT/Codex plan limits. Do not reuse old /oauth/authorize links; localhost:1455 callback is app-managed and state-bound.',
       })
     } catch (error) {
       return NextResponse.json({
-        error: error instanceof Error ? error.message : 'Failed to launch Codex Desktop',
+        error: error instanceof Error ? error.message : 'Failed to launch Codex OAuth flow',
       }, { status: 500 })
     }
   }
 
   if (action === 'start-claude-oauth') {
     const forceLaunch = body?.forceLaunch === true
+    const launchMode = String(body?.launchMode || 'desktop').trim().toLowerCase()
     const requestedEmail = String(body?.email || '').trim().toLowerCase()
     const profiles = detectLocalClaudeAuthProfiles({
       homeDir: config.homeDir,
@@ -690,10 +733,15 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      await Promise.allSettled([launchClaudeDesktopAuth()])
+      if (launchMode === 'cli') {
+        await launchClaudeCliAuth()
+      } else {
+        await launchClaudeDesktopAuth()
+      }
       return NextResponse.json({
         ok: true,
         launched: true,
+        launchMode: launchMode === 'cli' ? 'cli' : 'desktop',
         oauthUrl: CLAUDE_OAUTH_URL,
         matchedProfile: matchedProfile
           ? {
@@ -704,17 +752,20 @@ export async function POST(request: NextRequest) {
             expiresAt: matchedProfile.expiresAt,
           }
           : null,
-        message: 'Claude Desktop launch was attempted. Continue in the OAuth tab, complete sign-in, then return here.',
+        message: launchMode === 'cli'
+          ? 'Claude CLI login was launched in a new terminal (`claude login`). Complete OAuth there, then return and refresh setup status.'
+          : 'Claude Desktop launch was attempted. Continue in the OAuth tab, complete sign-in, then return here.',
       })
     } catch (error) {
       return NextResponse.json({
-        error: error instanceof Error ? error.message : 'Failed to launch Claude Desktop',
+        error: error instanceof Error ? error.message : 'Failed to launch Claude OAuth flow',
       }, { status: 500 })
     }
   }
 
   if (action === 'start-google-oauth') {
     const forceLaunch = body?.forceLaunch === true
+    const launchMode = String(body?.launchMode || 'gemini-cli').trim().toLowerCase()
     const profiles = detectLocalGoogleAuthProfiles({
       homeDir: config.homeDir,
     })
@@ -734,10 +785,15 @@ export async function POST(request: NextRequest) {
       })
     }
     try {
-      await Promise.allSettled([launchGoogleCliAuth()])
+      if (launchMode === 'gcloud-cli') {
+        await launchGoogleCliAuth()
+      } else {
+        await launchGeminiCliAuth()
+      }
       return NextResponse.json({
         ok: true,
         launched: true,
+        launchMode: launchMode === 'gcloud-cli' ? 'gcloud-cli' : 'gemini-cli',
         oauthUrl: GOOGLE_GCLOUD_OAUTH_URL,
         matchedProfile: matchedProfile
           ? {
@@ -747,7 +803,9 @@ export async function POST(request: NextRequest) {
             expiresAt: matchedProfile.expiresAt,
           }
           : null,
-        message: 'Google CLI OAuth launch was attempted. Continue in the OAuth tab and finish gcloud application-default login, then return here.',
+        message: launchMode === 'gcloud-cli'
+          ? 'Google gcloud ADC login was launched in a new terminal. Complete it there, then return here.'
+          : 'Gemini CLI login was launched in a new terminal (`gemini auth login`). After sign-in, refresh setup status (profile detection remains based on local Google ADC).',
       })
     } catch (error) {
       return NextResponse.json({
@@ -757,9 +815,27 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'start-groq-oauth' || action === 'start-grok-oauth') {
+    const launchMode = String(body?.launchMode || 'cli').trim().toLowerCase()
+    if (launchMode === 'cli') {
+      try {
+        await launchGrokCliAuth()
+        return NextResponse.json({
+          ok: true,
+          launched: true,
+          launchMode: 'cli',
+          oauthUrl: GROK_XAI_PORTAL_URL,
+          message: 'Grok (xAI) CLI login was launched in a new terminal (`grok auth login`). If the CLI is unavailable, use the xAI console link to create an API key.',
+        })
+      } catch (error) {
+        return NextResponse.json({
+          error: error instanceof Error ? error.message : 'Failed to launch Grok CLI',
+        }, { status: 500 })
+      }
+    }
     return NextResponse.json({
       ok: true,
       launched: false,
+      launchMode: 'portal',
       oauthUrl: GROK_XAI_PORTAL_URL,
       message: 'Open xAI console in the OAuth tab, sign in with your X account, and create a dedicated Grok API key for this session.',
     })

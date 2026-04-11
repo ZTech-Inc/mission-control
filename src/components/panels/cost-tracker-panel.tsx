@@ -242,6 +242,10 @@ const currentCredentialIsEnvGroq = (value: string) => {
 type View = 'overview' | 'agents' | 'sessions' | 'tasks'
 type Timeframe = 'hour' | 'day' | 'week' | 'month'
 type ReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh'
+type CodexLaunchMode = 'desktop' | 'cli'
+type ClaudeLaunchMode = 'desktop' | 'cli'
+type GoogleLaunchMode = 'gemini-cli' | 'gcloud-cli'
+type GrokLaunchMode = 'cli' | 'portal'
 
 const REASONING_OPTIONS_BY_PROVIDER: Partial<Record<string, ReasoningEffort[]>> = {
   openai: ['low', 'medium', 'high', 'xhigh'],
@@ -850,19 +854,23 @@ function SessionsView({
   const [codexOauthOutput, setCodexOauthOutput] = useState<string | null>(null)
   const [codexOauthCode, setCodexOauthCode] = useState<string | null>(null)
   const [codexOauthUrl, setCodexOauthUrl] = useState<string | null>(null)
+  const [codexLaunchMode, setCodexLaunchMode] = useState<CodexLaunchMode>('desktop')
   const [codexApiKey, setCodexApiKey] = useState('')
   const [anthropicAuthMode, setAnthropicAuthMode] = useState<'oauth' | 'api'>('oauth')
+  const [anthropicLaunchMode, setAnthropicLaunchMode] = useState<ClaudeLaunchMode>('desktop')
   const [anthropicOauthEmail, setAnthropicOauthEmail] = useState('')
   const [anthropicOauthBusy, setAnthropicOauthBusy] = useState(false)
   const [anthropicOauthError, setAnthropicOauthError] = useState<string | null>(null)
   const [anthropicOauthOutput, setAnthropicOauthOutput] = useState<string | null>(null)
   const [anthropicApiKey, setAnthropicApiKey] = useState('')
   const [googleAuthMode, setGoogleAuthMode] = useState<'oauth' | 'api'>('oauth')
+  const [googleLaunchMode, setGoogleLaunchMode] = useState<GoogleLaunchMode>('gemini-cli')
   const [googleOauthBusy, setGoogleOauthBusy] = useState(false)
   const [googleOauthError, setGoogleOauthError] = useState<string | null>(null)
   const [googleOauthOutput, setGoogleOauthOutput] = useState<string | null>(null)
   const [googleApiKey, setGoogleApiKey] = useState('')
   const [groqAuthMode, setGroqAuthMode] = useState<'oauth' | 'api'>('api')
+  const [grokLaunchMode, setGrokLaunchMode] = useState<GrokLaunchMode>('cli')
   const [groqOauthBusy, setGroqOauthBusy] = useState(false)
   const [groqOauthError, setGroqOauthError] = useState<string | null>(null)
   const [groqOauthOutput, setGroqOauthOutput] = useState<string | null>(null)
@@ -1326,6 +1334,7 @@ function SessionsView({
         body: JSON.stringify({
           action: 'start-codex-oauth',
           email: codexOauthEmail.trim() || null,
+          launchMode: codexLaunchMode,
         }),
       })
       const data = await response.json().catch(() => ({}))
@@ -1405,8 +1414,8 @@ function SessionsView({
 
       if (!refreshedData?.discovery?.codexOAuth?.length) {
         setCodexOauthOutput((current) => current
-          ? `${current}\nWaiting for a new Codex OAuth profile. Finish the login flow in Codex Desktop, then click Refresh Setup Status if needed.`
-          : 'Waiting for a new Codex OAuth profile. Finish the login flow in Codex Desktop, then click Refresh Setup Status if needed.')
+          ? `${current}\nWaiting for a new Codex OAuth profile. Finish the ${codexLaunchMode === 'cli' ? 'Codex CLI' : 'Codex Desktop'} login flow, then click Refresh Setup Status if needed.`
+          : `Waiting for a new Codex OAuth profile. Finish the ${codexLaunchMode === 'cli' ? 'Codex CLI' : 'Codex Desktop'} login flow, then click Refresh Setup Status if needed.`)
       }
     } catch (err) {
       setCodexOauthError(err instanceof Error ? err.message : 'Codex OAuth failed')
@@ -1427,6 +1436,7 @@ function SessionsView({
         body: JSON.stringify({
           action: 'start-claude-oauth',
           email: anthropicOauthEmail.trim() || null,
+          launchMode: anthropicLaunchMode,
           forceLaunch: true,
         }),
       })
@@ -1489,8 +1499,8 @@ function SessionsView({
 
       if (!refreshedData?.discovery?.claudeOAuth?.length) {
         setAnthropicOauthOutput((current) => current
-          ? `${current}\nWaiting for a new Claude OAuth profile. Finish the login flow in Claude Desktop, then click Refresh Setup Status if needed.`
-          : 'Waiting for a new Claude OAuth profile. Finish the login flow in Claude Desktop, then click Refresh Setup Status if needed.')
+          ? `${current}\nWaiting for a new Claude OAuth profile. Finish the ${anthropicLaunchMode === 'cli' ? 'Claude CLI' : 'Claude Desktop'} login flow, then click Refresh Setup Status if needed.`
+          : `Waiting for a new Claude OAuth profile. Finish the ${anthropicLaunchMode === 'cli' ? 'Claude CLI' : 'Claude Desktop'} login flow, then click Refresh Setup Status if needed.`)
       }
     } catch (err) {
       setAnthropicOauthError(err instanceof Error ? err.message : 'Claude OAuth failed')
@@ -1509,6 +1519,7 @@ function SessionsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'start-google-oauth',
+          launchMode: googleLaunchMode,
           forceLaunch: true,
         }),
       })
@@ -1559,6 +1570,7 @@ function SessionsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'start-grok-oauth',
+          launchMode: grokLaunchMode,
           forceLaunch: true,
         }),
       })
@@ -2395,6 +2407,30 @@ function SessionsView({
                         onChange={(event) => setCodexOauthEmail(event.target.value)}
                       />
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">Launch target:</span>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={codexLaunchMode === 'desktop' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setCodexLaunchMode('desktop')}
+                        >
+                          Desktop
+                        </Button>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={codexLaunchMode === 'cli' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setCodexLaunchMode('cli')}
+                        >
+                          CLI
+                        </Button>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Sign in with ChatGPT / Codex OAuth (Desktop or CLI) uses your ChatGPT/Codex plan limits.
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           size="sm"
                           type="button"
@@ -2402,7 +2438,7 @@ function SessionsView({
                           onClick={connectCodexOAuth}
                           disabled={codexOauthBusy}
                         >
-                          {codexOauthBusy ? 'Connecting...' : 'Connect Codex OAuth'}
+                          {codexOauthBusy ? 'Starting sign-in...' : `Sign in with ChatGPT (${codexLaunchMode === 'cli' ? 'Codex CLI' : 'Codex Desktop'})`}
                         </Button>
                         {codexOauthUrl && (
                           <a
@@ -2468,6 +2504,27 @@ function SessionsView({
                         onChange={(event) => setAnthropicOauthEmail(event.target.value)}
                       />
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">Launch target:</span>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={anthropicLaunchMode === 'desktop' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setAnthropicLaunchMode('desktop')}
+                        >
+                          Desktop
+                        </Button>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={anthropicLaunchMode === 'cli' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setAnthropicLaunchMode('cli')}
+                        >
+                          CLI
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           size="sm"
                           type="button"
@@ -2475,7 +2532,7 @@ function SessionsView({
                           onClick={connectAnthropicOAuth}
                           disabled={anthropicOauthBusy}
                         >
-                          {anthropicOauthBusy ? 'Connecting...' : 'Connect Claude OAuth'}
+                          {anthropicOauthBusy ? 'Starting sign-in...' : `Connect Claude OAuth (${anthropicLaunchMode === 'cli' ? 'CLI' : 'Desktop'})`}
                         </Button>
                       </div>
                       {anthropicOauthError && <div className="text-xs text-red-500">{anthropicOauthError}</div>}
@@ -2522,6 +2579,27 @@ function SessionsView({
                   {googleAuthMode === 'oauth' ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">Launch target:</span>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={googleLaunchMode === 'gemini-cli' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setGoogleLaunchMode('gemini-cli')}
+                        >
+                          Gemini CLI
+                        </Button>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={googleLaunchMode === 'gcloud-cli' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setGoogleLaunchMode('gcloud-cli')}
+                        >
+                          gcloud CLI
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           size="sm"
                           type="button"
@@ -2529,7 +2607,7 @@ function SessionsView({
                           onClick={connectGoogleOAuth}
                           disabled={googleOauthBusy}
                         >
-                          {googleOauthBusy ? 'Connecting...' : 'Connect Google OAuth'}
+                          {googleOauthBusy ? 'Starting sign-in...' : `Connect Google OAuth (${googleLaunchMode === 'gemini-cli' ? 'Gemini CLI' : 'gcloud CLI'})`}
                         </Button>
                       </div>
                       {googleOauthError && <div className="text-xs text-red-500">{googleOauthError}</div>}
@@ -2576,6 +2654,27 @@ function SessionsView({
                   {groqAuthMode === 'oauth' ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">Launch target:</span>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={grokLaunchMode === 'cli' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setGrokLaunchMode('cli')}
+                        >
+                          Grok CLI
+                        </Button>
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant={grokLaunchMode === 'portal' ? 'default' : 'secondary'}
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setGrokLaunchMode('portal')}
+                        >
+                          xAI Portal
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           size="sm"
                           type="button"
@@ -2583,7 +2682,7 @@ function SessionsView({
                           onClick={connectGroqOAuth}
                           disabled={groqOauthBusy}
                         >
-                          {groqOauthBusy ? 'Connecting...' : 'Connect Grok Portal'}
+                          {groqOauthBusy ? 'Starting sign-in...' : (grokLaunchMode === 'cli' ? 'Connect Grok CLI' : 'Connect Grok Portal')}
                         </Button>
                       </div>
                       {groqOauthError && <div className="text-xs text-red-500">{groqOauthError}</div>}
