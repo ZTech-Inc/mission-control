@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMissionControl } from '@/store'
 
 interface OrgSnapshot {
@@ -27,13 +27,41 @@ export function useOrgData() {
   const [orgRootPath, setOrgRootPath] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [isSyncingGithub, setIsSyncingGithub] = useState(false)
+  const [lastGithubSyncMessage, setLastGithubSyncMessage] = useState<string | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
 
-  useEffect(() => {
-    let mounted = true
+  const applySnapshot = useCallback((snapshot: OrgSnapshot) => {
+    setDepartments(snapshot.departments)
+    setTeams(snapshot.teams)
+    setAgentTeamAssignments(snapshot.agentAssignments)
+    setOrgSource(snapshot.source)
+    setOrgRootPath(snapshot.rootPath)
+    setSyncError(null)
+    setIsLoading(false)
+  }, [setAgentTeamAssignments, setDepartments, setTeams])
 
-    function applySnapshot(snapshot: OrgSnapshot) {
-      if (!mounted) return
+  const loadSnapshot = useCallback(async (options?: { force?: boolean }) => {
+    const params = new URLSearchParams()
+    if (options?.force) params.set('force', 'true')
+    const query = params.toString()
+    const scanUrl = `/api/org/scan${query ? `?${query}` : ''}`
+    try {
+      const [snapshotResponse, agentsResponse] = await Promise.all([
+        fetch(scanUrl, { cache: 'no-store' }),
+        fetch('/api/agents?limit=1000', { cache: 'no-store' }),
+      ])
+
+      if (!snapshotResponse.ok) {
+        throw new Error(`Failed to load org snapshot (${snapshotResponse.status})`)
+      }
+
+      if (!agentsResponse.ok) {
+        throw new Error(`Failed to load agents (${agentsResponse.status})`)
+      }
+
+      const snapshot = (await snapshotResponse.json()) as OrgSnapshot
+      const agentsPayload = (await agentsResponse.json()) as { agents?: ReturnType<typeof useMissionControl.getState>['agents'] }
       setDepartments(snapshot.departments)
       setTeams(snapshot.teams)
       setAgentTeamAssignments(snapshot.agentAssignments)
@@ -41,33 +69,49 @@ export function useOrgData() {
       setOrgRootPath(snapshot.rootPath)
       setSyncError(null)
       setIsLoading(false)
+      setAgents(agentsPayload.agents ?? [])
+    } catch (error) {
+      setSyncError(error instanceof Error ? error.message : 'Failed to load org snapshot')
+      setIsLoading(false)
     }
+  }, [setAgentTeamAssignments, setAgents, setDepartments, setTeams])
 
-    async function loadSnapshot() {
-      try {
-        const [snapshotResponse, agentsResponse] = await Promise.all([
-          fetch('/api/org/scan', { cache: 'no-store' }),
-          fetch('/api/agents?limit=1000', { cache: 'no-store' }),
-        ])
-
-        if (!snapshotResponse.ok) {
-          throw new Error(`Failed to load org snapshot (${snapshotResponse.status})`)
-        }
-
-        if (!agentsResponse.ok) {
-          throw new Error(`Failed to load agents (${agentsResponse.status})`)
-        }
-
-        const snapshot = (await snapshotResponse.json()) as OrgSnapshot
-        const agentsPayload = (await agentsResponse.json()) as { agents?: ReturnType<typeof useMissionControl.getState>['agents'] }
-        applySnapshot(snapshot)
-        setAgents(agentsPayload.agents ?? [])
-      } catch (error) {
-        if (!mounted) return
-        setSyncError(error instanceof Error ? error.message : 'Failed to load org snapshot')
-        setIsLoading(false)
+  const syncFromGithub = useCallback(async () => {
+    setIsSyncingGithub(true)
+    setSyncError(null)
+    setLastGithubSyncMessage(null)
+    try {
+      const response = await fetch('/api/org/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync-github' }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(String(payload?.error || `GitHub sync failed (${response.status})`))
       }
+      await loadSnapshot({ force: true })
+      const from = String(payload?.sync?.beforeCommit || '').slice(0, 7)
+      const to = String(payload?.sync?.afterCommit || '').slice(0, 7)
+      const changed = Boolean(payload?.sync?.changed)
+      if (from && to) {
+        setLastGithubSyncMessage(changed ? `Synced ${from} -> ${to}` : `Already up to date (${to})`)
+      } else {
+        setLastGithubSyncMessage('GitHub sync completed')
+      }
+      return { ok: true as const, payload }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'GitHub sync failed'
+      setSyncError(message)
+      setLastGithubSyncMessage(null)
+      return { ok: false as const, error: message }
+    } finally {
+      setIsSyncingGithub(false)
     }
+  }, [loadSnapshot])
+
+  useEffect(() => {
+    let mounted = true
 
     loadSnapshot()
 
@@ -104,7 +148,7 @@ export function useOrgData() {
         eventSourceRef.current = null
       }
     }
-  }, [setAgentTeamAssignments, setAgents, setDepartments, setTeams])
+  }, [applySnapshot, loadSnapshot])
 
   return {
     orgSource,
@@ -112,5 +156,8 @@ export function useOrgData() {
     syncError,
     isReadOnly: orgSource === 'filesystem',
     canCreate: Boolean(orgRootPath),
+    isSyncingGithub,
+    lastGithubSyncMessage,
+    syncFromGithub,
   }
 }

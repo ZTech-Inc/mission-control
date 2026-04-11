@@ -804,7 +804,13 @@ function TeamDetail({ team, view, isReadOnly }: TeamDetailProps) {
 }
 
 export function TeamsPanel() {
-  const { isReadOnly, canCreate } = useOrgData()
+  const {
+    isReadOnly,
+    canCreate,
+    isSyncingGithub,
+    lastGithubSyncMessage,
+    syncFromGithub,
+  } = useOrgData()
   const departments = useMissionControl((s) => s.departments)
   const teams = useMissionControl((s) => s.teams)
   const agentTeamAssignments = useMissionControl((s) => s.agentTeamAssignments)
@@ -880,7 +886,22 @@ export function TeamsPanel() {
         <span className="text-[10px] text-muted-foreground/50 font-mono tabular-nums">
           {filteredTeams.length} teams / {totalAssignments} assignments
         </span>
+        {lastGithubSyncMessage && (
+          <span className="text-[10px] font-mono text-green-400/80 truncate max-w-48" title={lastGithubSyncMessage}>
+            {lastGithubSyncMessage}
+          </span>
+        )}
         <div className="w-px h-4 bg-border mx-1" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            void syncFromGithub()
+          }}
+          disabled={isSyncingGithub}
+        >
+          {isSyncingGithub ? 'Syncing...' : 'Sync GitHub'}
+        </Button>
         <Button
           variant="default"
           size="sm"

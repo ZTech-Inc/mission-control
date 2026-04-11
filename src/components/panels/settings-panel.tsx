@@ -30,6 +30,14 @@ interface ApiKeyInfo {
   last_rotated_by: string | null
 }
 
+interface IntegrationStatusResponse {
+  integrations?: Array<{
+    id: string
+    status: 'connected' | 'partial' | 'not_configured'
+    envVars?: Record<string, { set: boolean; redacted: string }>
+  }>
+}
+
 interface CoordinatorTargetAgent {
   name: string
   openclawId: string
@@ -74,16 +82,16 @@ function parseCoordinatorTargetAgents(rawAgents: any[]): CoordinatorTargetAgent[
 }
 
 const categoryLabels: Record<string, { label: string; icon: string; description: string }> = {
-  general: { label: 'General', icon: '⚙', description: 'Core Mission Control settings' },
-  security: { label: 'Security', icon: '🔑', description: 'API key management and security settings' },
-  retention: { label: 'Data Retention', icon: '🗄', description: 'How long data is kept before cleanup' },
-  chat: { label: 'Chat', icon: '💬', description: 'Coordinator routing and chat behavior settings' },
-  gateway: { label: 'Gateway', icon: '🔌', description: 'OpenClaw gateway connection settings' },
+  general: { label: 'General', icon: 'settings', description: 'Core Mission Control settings' },
+  security: { label: 'Security', icon: 'lock', description: 'API key management and security settings' },
+  retention: { label: 'Data Retention', icon: 'archive', description: 'How long data is kept before cleanup' },
+  org: { label: 'Org Sync', icon: 'repo', description: 'GitHub-backed org synchronization settings' },
+  chat: { label: 'Chat', icon: 'chat', description: 'Coordinator routing and chat behavior settings' },
+  gateway: { label: 'Gateway', icon: 'gateway', description: 'OpenClaw gateway connection settings' },
   profiles: { label: 'Security Profiles', icon: 'shield', description: 'Hook profile controls security scanning strictness' },
-  custom: { label: 'Custom', icon: '🔧', description: 'User-defined settings' },
+  custom: { label: 'Custom', icon: 'custom', description: 'User-defined settings' },
 }
-
-const categoryOrder = ['general', 'security', 'profiles', 'retention', 'chat', 'gateway', 'custom']
+const categoryOrder = ['general', 'security', 'profiles', 'org', 'retention', 'chat', 'gateway', 'custom']
 
 // Dropdown options for subscription plan settings
 const subscriptionDropdowns: Record<string, { label: string; value: string }[]> = {
@@ -131,6 +139,10 @@ export function SettingsPanel() {
   const [hookProfileSaving, setHookProfileSaving] = useState(false)
   const [coordinatorTargetAgents, setCoordinatorTargetAgents] = useState<CoordinatorTargetAgent[]>([])
   const [coordinatorSessions, setCoordinatorSessions] = useState<CoordinatorSession[]>([])
+  const [githubTokenDraft, setGithubTokenDraft] = useState('')
+  const [githubTokenConnected, setGithubTokenConnected] = useState(false)
+  const [githubTokenSaving, setGithubTokenSaving] = useState(false)
+  const [githubSyncRunning, setGithubSyncRunning] = useState(false)
 
   // Replay onboarding state
   const [replayingOnboarding, setReplayingOnboarding] = useState(false)
@@ -318,7 +330,25 @@ export function SettingsPanel() {
     } catch { /* non-critical */ }
   }, [])
 
-  useEffect(() => { fetchSettings(); fetchApiKeyInfo(); fetchHermesStatus() }, [fetchSettings, fetchApiKeyInfo, fetchHermesStatus])
+  const fetchGithubIntegration = useCallback(async () => {
+    try {
+      const res = await fetch('/api/integrations')
+      if (!res.ok) return
+      const data = (await res.json()) as IntegrationStatusResponse
+      const github = (data.integrations || []).find((integration) => integration.id === 'github')
+      const hasToken = Boolean(github?.envVars?.GITHUB_TOKEN?.set)
+      setGithubTokenConnected(hasToken)
+    } catch {
+      // non-critical
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSettings()
+    fetchApiKeyInfo()
+    fetchHermesStatus()
+    fetchGithubIntegration()
+  }, [fetchSettings, fetchApiKeyInfo, fetchHermesStatus, fetchGithubIntegration])
 
   const handleEdit = (key: string, value: string) => {
     setEdits(prev => ({ ...prev, [key]: value }))
@@ -385,6 +415,61 @@ export function SettingsPanel() {
 
   const handleDiscard = () => {
     setEdits({})
+  }
+
+  const handleSaveGithubToken = async () => {
+    if (!githubTokenDraft.trim()) {
+      showFeedback(false, 'Enter a GitHub token first')
+      return
+    }
+    setGithubTokenSaving(true)
+    try {
+      const res = await fetch('/api/integrations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vars: { GITHUB_TOKEN: githubTokenDraft.trim() } }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        showFeedback(false, data.error || 'Failed to save GitHub token')
+        return
+      }
+      setGithubTokenDraft('')
+      showFeedback(true, 'GitHub token saved')
+      await fetchGithubIntegration()
+    } catch {
+      showFeedback(false, 'Network error')
+    } finally {
+      setGithubTokenSaving(false)
+    }
+  }
+
+  const handleSyncOrgFromGithub = async () => {
+    setGithubSyncRunning(true)
+    try {
+      const res = await fetch('/api/org/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync-github' }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        showFeedback(false, data.error || 'GitHub org sync failed')
+        return
+      }
+      const before = String(data?.sync?.beforeCommit || '').slice(0, 7)
+      const after = String(data?.sync?.afterCommit || '').slice(0, 7)
+      const changed = Boolean(data?.sync?.changed)
+      if (before && after) {
+        showFeedback(true, changed ? `Synced ${before} -> ${after}` : `Already up to date (${after})`)
+      } else {
+        showFeedback(true, 'GitHub org sync completed')
+      }
+    } catch {
+      showFeedback(false, 'Network error')
+    } finally {
+      setGithubSyncRunning(false)
+    }
   }
 
   if (loading) {
@@ -853,6 +938,63 @@ export function SettingsPanel() {
       {/* Interface Mode (General tab) */}
       {activeCategory === 'general' && (
         <InterfaceModeSelector />
+      )}
+
+      {/* Org Sync */}
+      {activeCategory === 'org' && (
+        <div className="space-y-3">
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">GitHub Access</p>
+                <p className="text-xs text-muted-foreground">
+                  Add a GitHub token to allow pulling from private repositories such as ZTech_Agents.
+                </p>
+              </div>
+              <span className={`text-2xs px-2 py-1 rounded ${githubTokenConnected ? 'bg-green-500/15 text-green-400' : 'bg-muted text-muted-foreground'}`}>
+                {githubTokenConnected ? 'Token connected' : 'Token missing'}
+              </span>
+            </div>
+
+            <div className="mt-3 flex flex-col sm:flex-row gap-2">
+              <input
+                type="password"
+                value={githubTokenDraft}
+                onChange={(e) => setGithubTokenDraft(e.target.value)}
+                placeholder="ghp_... or github_pat_..."
+                className="flex-1 px-2 py-1.5 text-xs font-mono bg-background border border-border rounded text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40"
+                autoComplete="off"
+                data-1p-ignore
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={githubTokenSaving}
+                onClick={() => { void handleSaveGithubToken() }}
+              >
+                {githubTokenSaving ? 'Saving...' : 'Save Token'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Repository Sync</p>
+              <p className="text-xs text-muted-foreground">
+                Pull latest org structure from the repository and refresh departments, teams, and agent assignments.
+              </p>
+            </div>
+            <div className="mt-3">
+              <Button
+                size="sm"
+                disabled={githubSyncRunning}
+                onClick={() => { void handleSyncOrgFromGithub() }}
+              >
+                {githubSyncRunning ? 'Syncing...' : 'Sync Now'}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Settings list for active category */}

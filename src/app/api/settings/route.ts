@@ -29,6 +29,18 @@ const settingDefinitions: Record<string, { category: string; description: string
   'gateway.host': { category: 'gateway', description: 'Gateway hostname', default: config.gatewayHost },
   'gateway.port': { category: 'gateway', description: 'Gateway port number', default: String(config.gatewayPort) },
 
+  // Org sync (GitHub-backed agent directory refresh)
+  'org.github_repo': {
+    category: 'org',
+    description: 'GitHub repository for org sync (owner/repo or full https URL)',
+    default: 'ZTech-Inc/ZTech_Agents',
+  },
+  'org.github_branch': {
+    category: 'org',
+    description: 'Default branch used for org sync pulls/clones',
+    default: 'main',
+  },
+
   // Chat
   'chat.coordinator_target_agent': {
     category: 'chat',
