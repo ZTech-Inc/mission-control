@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase, db_helpers, Message } from '@/lib/db'
 import { runOpenClaw } from '@/lib/command'
-import { getAllGatewaySessions } from '@/lib/sessions'
+import { getAllGatewaySessions, invalidateSessionCache } from '@/lib/sessions'
 import { eventBus } from '@/lib/event-bus'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { scanForInjection, sanitizeForPrompt } from '@/lib/injection-guard'
 import { callOpenClawGateway } from '@/lib/openclaw-gateway'
 import { resolveCoordinatorDeliveryTarget } from '@/lib/coordinator-routing'
+
+function getPreferredToolsProfile(): string {
+  return String(process.env.OPENCLAW_TOOLS_PROFILE || 'coding').trim() || 'coding'
+}
+
+function isUnsupportedSessionsSpawnError(error: unknown): boolean {
+  const message = String((error as any)?.message || '').toLowerCase()
+  const stderr = String((error as any)?.stderr || '').toLowerCase()
+  return (
+    (message.includes('unknown method') || stderr.includes('unknown method')) &&
+    (message.includes('sessions_spawn') || stderr.includes('sessions_spawn'))
+  )
+}
 
 type ForwardInfo = {
   attempted: boolean
@@ -112,6 +125,113 @@ function createChatReply(
   })
 }
 
+function parseAgentConfig(raw: string | null | undefined): Record<string, unknown> {
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function getConfigOpenClawId(raw: string | null | undefined): string | null {
+  const parsed = parseAgentConfig(raw)
+  return typeof parsed.openclawId === 'string' && parsed.openclawId.trim()
+    ? parsed.openclawId.trim()
+    : null
+}
+
+function collectStructuredText(value: unknown, parts: string[], depth = 0): void {
+  if (depth > 8 || value == null) return
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed) parts.push(trimmed)
+    return
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) collectStructuredText(item, parts, depth + 1)
+    return
+  }
+
+  if (typeof value !== 'object') return
+
+  const record = value as Record<string, unknown>
+  const blockType = String(record.type || '').toLowerCase()
+  if (
+    (blockType === 'text' || blockType === 'output_text' || blockType === 'input_text') &&
+    typeof record.text === 'string'
+  ) {
+    const trimmed = record.text.trim()
+    if (trimmed) parts.push(trimmed)
+  }
+
+  if (typeof record.content === 'string') {
+    const trimmed = record.content.trim()
+    if (trimmed) parts.push(trimmed)
+  }
+
+  const nestedCandidates = [
+    record.content,
+    record.message,
+    record.messages,
+    record.output,
+    record.result,
+    record.response,
+    record.parts,
+    record.items,
+  ]
+
+  for (const candidate of nestedCandidates) {
+    if (candidate != null) collectStructuredText(candidate, parts, depth + 1)
+  }
+}
+
+function extractHistoryMessageText(message: any): string | null {
+  if (!message || typeof message !== 'object') return null
+
+  const parts: string[] = []
+  collectStructuredText(message.content, parts)
+  if (parts.length > 0) return parts.join('\n').slice(0, 8000)
+
+  if (typeof message.text === 'string' && message.text.trim()) {
+    return message.text.trim().slice(0, 8000)
+  }
+
+  return null
+}
+
+async function getLatestAssistantReplyFromHistory(sessionKey: string | null | undefined): Promise<string | null> {
+  const resolvedSessionKey = String(sessionKey || '').trim()
+  if (!resolvedSessionKey) return null
+
+  try {
+    const historyPayload = await callOpenClawGateway<any>(
+      'chat.history',
+      {
+        sessionKey: resolvedSessionKey,
+        limit: 12,
+      },
+      10_000,
+    )
+
+    const messages = Array.isArray(historyPayload?.messages) ? historyPayload.messages : []
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const message = messages[i]
+      if (!message || typeof message !== 'object') continue
+      if (String(message.role || '').toLowerCase() !== 'assistant') continue
+      const text = extractHistoryMessageText(message)
+      if (text) return text
+    }
+  } catch (err) {
+    logger.warn({ err, sessionKey: resolvedSessionKey }, 'Failed to read chat history fallback')
+  }
+
+  return null
+}
+
 function extractReplyText(waitPayload: any): string | null {
   if (!waitPayload || typeof waitPayload !== 'object') return null
 
@@ -137,6 +257,22 @@ function extractReplyText(waitPayload: any): string | null {
     }
   }
 
+  const structuredCandidates = [
+    waitPayload.message,
+    waitPayload.result?.message,
+    waitPayload.response?.message,
+    waitPayload.output?.message,
+    waitPayload.final,
+    waitPayload.result,
+    waitPayload.response,
+  ]
+
+  for (const value of structuredCandidates) {
+    const parts: string[] = []
+    collectStructuredText(value, parts)
+    if (parts.length > 0) return parts.join('\n').slice(0, 8000)
+  }
+
   if (Array.isArray(waitPayload.output)) {
     const parts: string[] = []
     for (const item of waitPayload.output) {
@@ -154,6 +290,10 @@ function extractReplyText(waitPayload: any): string | null {
     }
     if (parts.length > 0) return parts.join('\n').slice(0, 8000)
   }
+
+  const fallbackParts: string[] = []
+  collectStructuredText(waitPayload.output, fallbackParts)
+  if (fallbackParts.length > 0) return fallbackParts.join('\n').slice(0, 8000)
 
   return null
 }
@@ -528,6 +668,23 @@ export async function POST(request: NextRequest) {
               )
               .get(deliveryAgent.id, workspaceId, liveDirectCutoff) as { connection_id?: string } | undefined)
           : undefined
+        const statusAgentName =
+          typeof agent?.name === 'string' && agent.name
+            ? String(agent.name)
+            : typeof deliveryAgent?.name === 'string' && deliveryAgent.name
+            ? String(deliveryAgent.name)
+            : coordinatorResolution.deliveryName
+        const updateDeliveryAgentStatus = (
+          status: 'offline' | 'idle' | 'busy' | 'error',
+          activity: string,
+        ) => {
+          if (!statusAgentName) return
+          try {
+            db_helpers.updateAgentStatus(statusAgentName, status, activity, workspaceId)
+          } catch (err) {
+            logger.warn({ err, agent: statusAgentName, status }, 'Failed to update delivery agent status')
+          }
+        }
         const canFallbackToDirectQueue = Boolean(activeDirectConnection?.connection_id && deliveryAgent?.name)
         const listConnectedDirectAgents = () =>
           db
@@ -561,25 +718,15 @@ export async function POST(request: NextRequest) {
         }
 
         if (!sessionKey && !canFallbackToDirectQueue) {
-          forwardInfo.reason = 'no_active_session'
+          const isTeamOrDeptChat =
+            typeof conversation_id === 'string' &&
+            (conversation_id.startsWith('team:') || conversation_id.startsWith('dept:'))
 
-          // For coordinator messages, emit an immediate visible status reply
-          if (typeof conversation_id === 'string' && conversation_id.startsWith('coord:')) {
-            try {
-                createChatReply(
-                  db,
-                  workspaceId,
-                  conversation_id,
-                  COORDINATOR_AGENT,
-                  from,
-                  'I received your message, but my live coordinator session is offline right now. Start/restore the coordinator session and retry.',
-                  'status',
-                  { status: 'offline', reason: 'no_active_session' }
-                )
-            } catch (e) {
-              logger.error({ err: e }, 'Failed to create offline status reply')
-            }
-          } else if (typeof conversation_id === 'string') {
+          if (isTeamOrDeptChat) {
+            // Auto-spawn flow: start a session for the offline agent and surface its reply
+            forwardInfo.attempted = true
+            forwardInfo.reason = 'auto_spawn'
+
             try {
               createChatReply(
                 db,
@@ -587,12 +734,230 @@ export async function POST(request: NextRequest) {
                 conversation_id,
                 String(to),
                 from,
-                'Message received, but no live runtime session is available right now.',
+                'Spawning agent session...',
                 'status',
-                { status: 'offline', reason: 'no_active_session' }
+                { status: 'spawning' }
               )
             } catch (e) {
-              logger.error({ err: e }, 'Failed to create non-coordinator offline status reply')
+              logger.error({ err: e }, 'Failed to create spawning status reply')
+            }
+
+            try {
+              const toolsProfile = getPreferredToolsProfile()
+              const targetAgentId = openclawAgentId || getConfigOpenClawId(agent?.config) || deliveryTargetName
+              const spawnPayload: Record<string, unknown> = {
+                agentId: targetAgentId,
+                task: content,
+                label: 'chat-reply',
+                runTimeoutSeconds: 120,
+                tools: { profile: toolsProfile },
+              }
+
+              let spawnResult: any
+              try {
+                spawnResult = await callOpenClawGateway('sessions_spawn', spawnPayload, 15_000)
+              } catch (firstError: any) {
+                const rawErr = String(firstError?.message || '').toLowerCase()
+                const isToolsSchemaError =
+                  (rawErr.includes('unknown field') || rawErr.includes('unknown key') || rawErr.includes('invalid argument')) &&
+                  (rawErr.includes('tools') || rawErr.includes('profile'))
+                if (isToolsSchemaError) {
+                  const fallbackPayload = { ...spawnPayload }
+                  delete fallbackPayload.tools
+                  spawnResult = await callOpenClawGateway('sessions_spawn', fallbackPayload, 15_000)
+                } else if (isUnsupportedSessionsSpawnError(firstError) && targetAgentId) {
+                  const invokeResult = await runOpenClaw(
+                    [
+                      'gateway',
+                      'call',
+                      'agent',
+                      '--timeout',
+                      '12000',
+                      '--params',
+                      JSON.stringify({
+                        agentId: targetAgentId,
+                        message: `Message from ${from}: ${content}`,
+                        idempotencyKey: `mc-${messageId}-${Date.now()}`,
+                        deliver: false,
+                      }),
+                      '--json',
+                    ],
+                    { timeoutMs: 15000 }
+                  )
+                  spawnResult = parseGatewayJson(invokeResult.stdout)
+                } else {
+                  throw firstError
+                }
+              }
+
+              const spawnedSessionKey = spawnResult?.sessionId || spawnResult?.session_id || null
+              const runId = spawnResult?.runId || spawnResult?.run_id || null
+
+              forwardInfo.delivered = true
+              forwardInfo.session = spawnedSessionKey || undefined
+              forwardInfo.runId = runId || undefined
+              updateDeliveryAgentStatus('busy', 'Processing team chat message')
+
+              // Invalidate session cache so subsequent messages find the new session
+              try { invalidateSessionCache() } catch {}
+
+              if (runId) {
+                const replyAgentName = String(to || 'agent').trim() || 'agent'
+                try {
+                  const waitResult = await runOpenClaw(
+                    [
+                      'gateway',
+                      'call',
+                      'agent.wait',
+                      '--timeout',
+                      '8000',
+                      '--params',
+                      JSON.stringify({ runId, timeoutMs: 6000 }),
+                      '--json',
+                    ],
+                    { timeoutMs: 9000 }
+                  )
+
+                  const waitPayload = parseGatewayJson(waitResult.stdout)
+                  const waitStatus = String(waitPayload?.status || '').toLowerCase()
+                  const toolEvents = extractToolEvents(waitPayload)
+
+                  if (toolEvents.length > 0) {
+                    for (const evt of toolEvents) {
+                      createChatReply(
+                        db,
+                        workspaceId,
+                        conversation_id,
+                        replyAgentName,
+                        from,
+                        evt.name,
+                        'tool_call',
+                        {
+                          event: 'tool_call',
+                          toolName: evt.name,
+                          input: evt.input || null,
+                          output: evt.output || null,
+                          status: evt.status || null,
+                          runId: runId || null,
+                        }
+                      )
+                    }
+                  }
+
+                  if (waitStatus === 'error') {
+                    const reason =
+                      typeof waitPayload?.error === 'string'
+                        ? waitPayload.error
+                        : 'Unknown runtime error'
+                    updateDeliveryAgentStatus('error', `Team chat execution failed: ${reason}`)
+                    createChatReply(
+                      db,
+                      workspaceId,
+                      conversation_id,
+                      replyAgentName,
+                      from,
+                      `Execution failed: ${reason}`,
+                      'status',
+                      { status: 'error', runId }
+                    )
+                  } else if (waitStatus === 'timeout') {
+                    updateDeliveryAgentStatus('busy', 'Processing team chat message')
+                    createChatReply(
+                      db,
+                      workspaceId,
+                      conversation_id,
+                      replyAgentName,
+                      from,
+                      'Request accepted and still processing. A textual response was not available yet.',
+                      'status',
+                      { status: 'processing', runId }
+                    )
+                  } else {
+                    const replyText =
+                      extractReplyText(waitPayload) ||
+                      await getLatestAssistantReplyFromHistory(spawnedSessionKey)
+                    updateDeliveryAgentStatus('idle', 'Replied in team chat')
+                    if (replyText) {
+                      createChatReply(
+                        db,
+                        workspaceId,
+                        conversation_id,
+                        replyAgentName,
+                        from,
+                        replyText,
+                        'text',
+                        { status: waitStatus || 'completed', runId }
+                      )
+                    } else {
+                      createChatReply(
+                        db,
+                        workspaceId,
+                        conversation_id,
+                        replyAgentName,
+                        from,
+                        'Execution completed, but no textual response was returned.',
+                        'status',
+                        { status: waitStatus || 'completed', runId }
+                      )
+                    }
+                  }
+                } catch (waitErr) {
+                  updateDeliveryAgentStatus('busy', 'Processing team chat message')
+                  logger.warn({ err: waitErr, runId }, 'Auto-spawn wait/readback failed')
+                }
+              }
+            } catch (spawnErr: any) {
+              updateDeliveryAgentStatus('error', 'Team chat auto-spawn failed')
+              logger.error({ err: spawnErr, to, conversation_id }, 'Auto-spawn failed')
+              try {
+                createChatReply(
+                  db,
+                  workspaceId,
+                  conversation_id,
+                  String(to),
+                  from,
+                  'Failed to auto-spawn agent session. Please try again or start a session manually.',
+                  'status',
+                  { status: 'spawn_failed' }
+                )
+              } catch (e) {
+                logger.error({ err: e }, 'Failed to create spawn-failed status reply')
+              }
+            }
+          } else {
+            forwardInfo.reason = 'no_active_session'
+
+            // For coordinator messages, emit an immediate visible status reply
+            if (typeof conversation_id === 'string' && conversation_id.startsWith('coord:')) {
+              try {
+                  createChatReply(
+                    db,
+                    workspaceId,
+                    conversation_id,
+                    COORDINATOR_AGENT,
+                    from,
+                    'I received your message, but my live coordinator session is offline right now. Start/restore the coordinator session and retry.',
+                    'status',
+                    { status: 'offline', reason: 'no_active_session' }
+                  )
+              } catch (e) {
+                logger.error({ err: e }, 'Failed to create offline status reply')
+              }
+            } else if (typeof conversation_id === 'string') {
+              try {
+                createChatReply(
+                  db,
+                  workspaceId,
+                  conversation_id,
+                  String(to),
+                  from,
+                  'Message received, but no live runtime session is available right now.',
+                  'status',
+                  { status: 'offline', reason: 'no_active_session' }
+                )
+              } catch (e) {
+                logger.error({ err: e }, 'Failed to create non-coordinator offline status reply')
+              }
             }
           }
         } else {
@@ -616,6 +981,9 @@ export async function POST(request: NextRequest) {
               forwardInfo.session = sessionKey
               if (typeof acceptedPayload?.runId === 'string' && acceptedPayload.runId) {
                 forwardInfo.runId = acceptedPayload.runId
+              }
+              if (forwardInfo.delivered) {
+                updateDeliveryAgentStatus('busy', 'Processing chat message')
               }
             } else if (canFallbackToDirectQueue && deliveryAgent?.name) {
               markDirectQueueDelivery(deliveryAgent.name, activeDirectConnection?.connection_id)
@@ -646,6 +1014,7 @@ export async function POST(request: NextRequest) {
               if (typeof acceptedPayload?.runId === 'string' && acceptedPayload.runId) {
                 forwardInfo.runId = acceptedPayload.runId
               }
+              updateDeliveryAgentStatus('busy', 'Processing chat message')
             }
           } catch (err) {
             // OpenClaw may return accepted JSON on stdout but still emit a late stderr warning.
@@ -662,6 +1031,7 @@ export async function POST(request: NextRequest) {
               if (typeof acceptedPayload?.runId === 'string' && acceptedPayload.runId) {
                 forwardInfo.runId = acceptedPayload.runId
               }
+              updateDeliveryAgentStatus('busy', 'Processing chat message')
             } else if (canFallbackToDirectQueue && deliveryAgent?.name) {
               markDirectQueueDelivery(deliveryAgent.name, activeDirectConnection?.connection_id)
               logger.warn(
@@ -839,7 +1209,9 @@ export async function POST(request: NextRequest) {
                     { status: 'processing', runId: forwardInfo.runId }
                   )
                 } else {
-                  const replyText = extractReplyText(waitPayload)
+                  const replyText =
+                    extractReplyText(waitPayload) ||
+                    await getLatestAssistantReplyFromHistory(forwardInfo.session)
                   if (replyText) {
                     createChatReply(
                       db,
@@ -918,6 +1290,7 @@ export async function POST(request: NextRequest) {
                   typeof waitPayload?.error === 'string'
                     ? waitPayload.error
                     : 'Unknown runtime error'
+                updateDeliveryAgentStatus('error', `Chat execution failed: ${reason}`)
                 createChatReply(
                   db,
                   workspaceId,
@@ -929,6 +1302,7 @@ export async function POST(request: NextRequest) {
                   { status: 'error', runId: forwardInfo.runId }
                 )
               } else if (waitStatus === 'timeout') {
+                updateDeliveryAgentStatus('busy', 'Processing chat message')
                 createChatReply(
                   db,
                   workspaceId,
@@ -940,7 +1314,10 @@ export async function POST(request: NextRequest) {
                   { status: 'processing', runId: forwardInfo.runId }
                 )
               } else {
-                const replyText = extractReplyText(waitPayload)
+                const replyText =
+                  extractReplyText(waitPayload) ||
+                  await getLatestAssistantReplyFromHistory(forwardInfo.session)
+                updateDeliveryAgentStatus('idle', 'Replied in chat')
                 if (replyText) {
                   createChatReply(
                     db,
@@ -966,6 +1343,7 @@ export async function POST(request: NextRequest) {
                 }
               }
             } catch (waitErr) {
+              updateDeliveryAgentStatus('busy', 'Processing chat message')
               logger.warn({ err: waitErr, runId: forwardInfo.runId }, 'Non-coordinator wait/readback failed')
             }
           }
