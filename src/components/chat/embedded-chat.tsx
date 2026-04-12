@@ -20,7 +20,8 @@ function getSystemMessage(name: string, status: Agent['status']): string | null 
     case 'busy':
       return `${name} is busy. Your message is queued and will be delivered.`
     case 'offline':
-      return `${name} is offline. Your message will be delivered when available.`
+      // Backend handles offline via auto-spawn — no client-side status needed
+      return null
     case 'error':
       return `${name} is in an error state. Your message was sent but response may be delayed.`
     default:
@@ -57,9 +58,8 @@ export function EmbeddedChat({
     loadMessages()
   }, [loadMessages])
 
-  useSmartPoll(loadMessages, 15000, {
+  useSmartPoll(loadMessages, isGenerating ? 3000 : 15000, {
     enabled: true,
-    pauseWhenSseConnected: true,
   })
 
   useEffect(() => {
@@ -87,19 +87,27 @@ export function EmbeddedChat({
       setIsGenerating(true)
 
       try {
-        const res = await fetch('/api/chat/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            from: 'human',
-            to: targetAgentName,
-            content,
-            conversation_id: conversationId,
-            message_type: 'text',
-            attachments,
-            forward: true,
-          }),
-        })
+        const abortController = new AbortController()
+        const abortTimeout = setTimeout(() => abortController.abort(), 30_000)
+        let res: Response
+        try {
+          res = await fetch('/api/chat/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'human',
+              to: targetAgentName,
+              content,
+              conversation_id: conversationId,
+              message_type: 'text',
+              attachments,
+              forward: true,
+            }),
+            signal: abortController.signal,
+          })
+        } finally {
+          clearTimeout(abortTimeout)
+        }
 
         if (res.ok) {
           const data = await res.json()
@@ -108,6 +116,8 @@ export function EmbeddedChat({
           } else {
             setMessages((prev) => prev.map((msg) => (msg.id === tempId ? { ...msg, pendingStatus: 'sent' } : msg)))
           }
+
+          await loadMessages()
 
           if (targetAgentStatus !== 'idle') {
             const sysMsg = getSystemMessage(targetAgentName, targetAgentStatus)
@@ -133,9 +143,10 @@ export function EmbeddedChat({
         setMessages((prev) => prev.map((msg) => (msg.id === tempId ? { ...msg, pendingStatus: 'failed' } : msg)))
       } finally {
         setIsGenerating(false)
+        await loadMessages()
       }
     },
-    [conversationId, targetAgentName, targetAgentStatus]
+    [conversationId, targetAgentName, targetAgentStatus, loadMessages]
   )
 
   return (
