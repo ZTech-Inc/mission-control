@@ -6,6 +6,7 @@ import { callOpenClawGateway } from './openclaw-gateway'
 import { eventBus } from './event-bus'
 import { logger } from './logger'
 import { config } from './config'
+import { ensureOpenClawAgent, normalizeOpenClawAgentId } from './openclaw-agent-provision'
 import { syncTaskOutbound } from './github-sync-engine'
 import { resolveTaskHierarchyDecision, type TaskHierarchyAssignment, type TaskHierarchyDepartmentManager } from './task-routing'
 import {
@@ -47,6 +48,8 @@ interface DispatchableTask {
   agent_name: string
   agent_id: number
   agent_config: string | null
+  workspace_path?: string | null
+  soul_content?: string | null
   ticket_prefix: string | null
   project_ticket_no: number | null
   project_id: number | null
@@ -145,7 +148,7 @@ function resolveGatewayAgentId(task: DispatchableTask): string {
       if (typeof cfg.openclawId === 'string' && cfg.openclawId) return cfg.openclawId
     } catch { /* ignore */ }
   }
-  return task.agent_name
+  return normalizeOpenClawAgentId(task.agent_name)
 }
 
 function buildTaskPrompt(task: DispatchableTask, rejectionFeedback?: string | null): string {
@@ -588,6 +591,8 @@ interface ReviewableTask {
   resolution: string | null
   assigned_to: string | null
   agent_config: string | null
+  workspace_path?: string | null
+  soul_content?: string | null
   workspace_id: number
   project_id: number | null
   ticket_prefix: string | null
@@ -601,7 +606,7 @@ function resolveGatewayAgentIdForReview(task: ReviewableTask): string {
       if (typeof cfg.openclawId === 'string' && cfg.openclawId) return cfg.openclawId
     } catch { /* ignore */ }
   }
-  return task.assigned_to || 'jarv'
+  return normalizeOpenClawAgentId(task.assigned_to || 'jarv')
 }
 
 function buildReviewPrompt(task: ReviewableTask): string {
@@ -659,7 +664,8 @@ export async function runAegisReviews(): Promise<{ ok: boolean; message: string 
 
   const tasks = db.prepare(`
     SELECT t.id, t.title, t.description, t.status, t.priority, t.resolution, t.assigned_to, t.workspace_id,
-           t.project_id, p.ticket_prefix, t.project_ticket_no, a.config as agent_config
+           t.project_id, p.ticket_prefix, t.project_ticket_no, a.config as agent_config,
+           a.workspace_path, a.soul_content
     FROM tasks t
     LEFT JOIN projects p ON p.id = t.project_id AND p.workspace_id = t.workspace_id
     LEFT JOIN agents a ON a.name = t.assigned_to AND a.workspace_id = t.workspace_id
@@ -695,7 +701,7 @@ export async function runAegisReviews(): Promise<{ ok: boolean; message: string 
           id: task.id, title: task.title, description: task.description,
           status: 'quality_review', priority: 'high', assigned_to: 'aegis',
           workspace_id: task.workspace_id, agent_name: 'aegis', agent_id: 0,
-          agent_config: null, ticket_prefix: task.ticket_prefix,
+          agent_config: null, workspace_path: null, soul_content: null, ticket_prefix: task.ticket_prefix,
           project_ticket_no: task.project_ticket_no, project_id: null,
         }
         agentResponse = await callClaudeDirectly(reviewTask, prompt)
@@ -911,7 +917,7 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
 
   const tasks = db.prepare(`
     SELECT t.*, a.name as agent_name, a.id as agent_id, a.config as agent_config,
-           p.ticket_prefix, t.project_ticket_no
+           p.ticket_prefix, t.project_ticket_no, a.workspace_path, a.soul_content
     FROM tasks t
     JOIN agents a ON a.name = t.assigned_to AND a.workspace_id = t.workspace_id
     LEFT JOIN projects p ON p.id = t.project_id AND p.workspace_id = t.workspace_id
@@ -1016,7 +1022,14 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
         }
       } else {
         // Invoke via gateway and fail over through the pool allocation chain on provider/session failures.
-        const gatewayAgentId = resolveGatewayAgentId(task)
+        const ensuredAgent = await ensureOpenClawAgent({
+          agentId: resolveGatewayAgentId(task),
+          agentName: task.agent_name,
+          agentConfigRaw: task.agent_config,
+          workspacePath: task.workspace_path,
+          soulContent: task.soul_content,
+        })
+        const gatewayAgentId = ensuredAgent.agentId
         const defaultModel = classifyTaskModel(task)
         const dispatchChain: SessionDispatchCandidate[] = sessionCandidates.length > 0
           ? sessionCandidates

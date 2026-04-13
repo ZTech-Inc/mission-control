@@ -10,6 +10,7 @@ const scanForInjection = vi.fn()
 const sanitizeForPrompt = vi.fn((value) => value)
 const callOpenClawGateway = vi.fn()
 const resolveCoordinatorDeliveryTarget = vi.fn()
+const ensureOpenClawAgent = vi.fn()
 const logger = {
   error: vi.fn(),
   warn: vi.fn(),
@@ -59,6 +60,10 @@ vi.mock('@/lib/coordinator-routing', () => ({
   resolveCoordinatorDeliveryTarget,
 }))
 
+vi.mock('@/lib/openclaw-agent-provision', () => ({
+  ensureOpenClawAgent,
+}))
+
 vi.mock('@/lib/db', () => ({
   getDatabase: vi.fn(() => ({ prepare })),
   db_helpers: {
@@ -83,6 +88,11 @@ describe('POST /api/chat/messages', () => {
       sessionKey: null,
       openclawAgentId: 'finance-manager',
       resolvedBy: 'direct',
+    }))
+    ensureOpenClawAgent.mockImplementation(async ({ agentId, agentName }) => ({
+      agentId: String(agentId || agentName || 'agent').toLowerCase().replace(/[^a-z0-9._-]+/g, '-'),
+      created: false,
+      workspace: null,
     }))
     logActivity.mockReset()
     createNotification.mockReset()
@@ -134,6 +144,42 @@ describe('POST /api/chat/messages', () => {
                   status: 'offline',
                   config: JSON.stringify({ openclawId: 'finance-manager' }),
                   session_key: null,
+                }
+              : workspaceId === 1 && String(name).toLowerCase() === 'agent evaluation specialist'
+              ? {
+                  id: 23,
+                  name: 'Agent Evaluation Specialist',
+                  role: 'specialist',
+                  status: 'offline',
+                  config: '{}',
+                  session_key: null,
+                  openclaw_id: null,
+                }
+              : undefined,
+        }
+      }
+
+      if (sql.includes('SELECT * FROM agents WHERE id = ? AND workspace_id = ?')) {
+        return {
+          get: (id: number, workspaceId: number) =>
+            workspaceId === 1 && Number(id) === 42
+              ? {
+                  id: 42,
+                  name: 'finance-manager',
+                  role: 'lead',
+                  status: 'offline',
+                  config: JSON.stringify({ openclawId: 'finance-manager' }),
+                  session_key: null,
+                }
+              : workspaceId === 1 && Number(id) === 23
+              ? {
+                  id: 23,
+                  name: 'Agent Evaluation Specialist',
+                  role: 'specialist',
+                  status: 'offline',
+                  config: '{}',
+                  session_key: null,
+                  openclaw_id: null,
                 }
               : undefined,
         }
@@ -279,5 +325,40 @@ describe('POST /api/chat/messages', () => {
     )
     expect(messages.map((row) => row.content)).toContain('History fallback reply.')
     expect(messages.map((row) => row.content)).not.toContain('Execution completed, but no textual response was returned.')
+  })
+
+  it('does not call gateway agent fallback with synthesized slug ids', async () => {
+    resolveCoordinatorDeliveryTarget.mockImplementation(() => ({
+      deliveryName: 'Agent Evaluation Specialist',
+      sessionKey: null,
+      openclawAgentId: 'agent-evaluation-specialist',
+      resolvedBy: 'direct',
+    }))
+    callOpenClawGateway.mockRejectedValue(new Error('unknown method sessions_spawn'))
+
+    const { POST } = await import('@/app/api/chat/messages/route')
+    const request = new NextRequest('http://localhost/api/chat/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        from: 'human',
+        to: 'Agent Evaluation Specialist',
+        content: 'gello',
+        conversation_id: 'team:934278768:agent:23',
+        message_type: 'text',
+        forward: true,
+      }),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(201)
+    expect(runOpenClaw).not.toHaveBeenCalledWith(
+      expect.arrayContaining(['gateway', 'call', 'agent']),
+      expect.anything(),
+    )
+    expect(messages.map((row) => row.content)).toContain(
+      'Failed to auto-spawn agent session. Please try again or start a session manually.',
+    )
   })
 })

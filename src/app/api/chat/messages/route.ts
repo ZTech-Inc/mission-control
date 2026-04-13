@@ -7,6 +7,7 @@ import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { scanForInjection, sanitizeForPrompt } from '@/lib/injection-guard'
 import { callOpenClawGateway } from '@/lib/openclaw-gateway'
+import { ensureOpenClawAgent } from '@/lib/openclaw-agent-provision'
 import { resolveCoordinatorDeliveryTarget } from '@/lib/coordinator-routing'
 
 function getPreferredToolsProfile(): string {
@@ -140,6 +141,20 @@ function getConfigOpenClawId(raw: string | null | undefined): string | null {
   return typeof parsed.openclawId === 'string' && parsed.openclawId.trim()
     ? parsed.openclawId.trim()
     : null
+}
+
+function getStoredOpenClawId(agent: any): string | null {
+  if (!agent || typeof agent !== 'object') return null
+  const fromConfig = getConfigOpenClawId(typeof agent.config === 'string' ? agent.config : null)
+  if (fromConfig) return fromConfig
+  const fromColumn = typeof agent.openclaw_id === 'string' && agent.openclaw_id.trim()
+    ? agent.openclaw_id.trim()
+    : null
+  if (fromColumn) return fromColumn
+  const fromCamel = typeof agent.openclawId === 'string' && agent.openclawId.trim()
+    ? agent.openclawId.trim()
+    : null
+  return fromCamel || null
 }
 
 function collectStructuredText(value: unknown, parts: string[], depth = 0): void {
@@ -630,8 +645,8 @@ export async function POST(request: NextRequest) {
           sessionKey = match?.key || match?.sessionId || null
         }
 
-        // Prefer configured openclawId when present, fallback to normalized name
-        let openclawAgentId: string | null = coordinatorResolution.openclawAgentId
+        // Only use persisted gateway IDs for direct `gateway call agent` invocations.
+        let openclawAgentId: string | null = getStoredOpenClawId(agent) || null
         const resolvedDeliveryAgent = db
           .prepare('SELECT id, name FROM agents WHERE lower(name) = lower(?) AND workspace_id = ?')
           .get(coordinatorResolution.deliveryName, workspaceId) as { id: number; name: string } | undefined
@@ -652,6 +667,36 @@ export async function POST(request: NextRequest) {
                 .get(workspaceId, workspaceId, liveDirectCutoff) as { id: number; name: string; connection_id?: string } | undefined)
             : undefined
         const deliveryAgent = resolvedDeliveryAgent || fallbackConnectedCoordinatorAgent
+        const deliveryAgentRecord = deliveryAgent
+          ? (db
+              .prepare('SELECT * FROM agents WHERE id = ? AND workspace_id = ?')
+              .get(deliveryAgent.id, workspaceId) as any)
+          : null
+        const provisionSource = deliveryAgentRecord || agent || null
+        if (!openclawAgentId) {
+          openclawAgentId = getStoredOpenClawId(deliveryAgentRecord) || null
+        }
+        let canInvokeGatewayAgent = Boolean(openclawAgentId)
+        if (provisionSource) {
+          const ensuredAgent = await ensureOpenClawAgent({
+            agentId: openclawAgentId,
+            agentName: String(
+              provisionSource.name || coordinatorResolution.deliveryName || deliveryTargetName || 'agent'
+            ),
+            agentConfigRaw: typeof provisionSource.config === 'string' ? provisionSource.config : null,
+            workspacePath:
+              typeof provisionSource.workspace_path === 'string' ? provisionSource.workspace_path : null,
+            soulContent:
+              typeof provisionSource.soul_content === 'string' ? provisionSource.soul_content : null,
+          })
+          openclawAgentId = ensuredAgent.agentId
+          canInvokeGatewayAgent = canInvokeGatewayAgent || Boolean(ensuredAgent.created)
+        }
+        const spawnAgentId =
+          openclawAgentId ||
+          coordinatorResolution.openclawAgentId ||
+          getConfigOpenClawId(agent?.config) ||
+          deliveryTargetName
         const activeDirectConnection = fallbackConnectedCoordinatorAgent?.connection_id
           ? ({ connection_id: fallbackConnectedCoordinatorAgent.connection_id } as { connection_id?: string })
           : deliveryAgent
@@ -744,9 +789,8 @@ export async function POST(request: NextRequest) {
 
             try {
               const toolsProfile = getPreferredToolsProfile()
-              const targetAgentId = openclawAgentId || getConfigOpenClawId(agent?.config) || deliveryTargetName
               const spawnPayload: Record<string, unknown> = {
-                agentId: targetAgentId,
+                agentId: spawnAgentId,
                 task: content,
                 label: 'chat-reply',
                 runTimeoutSeconds: 120,
@@ -765,7 +809,7 @@ export async function POST(request: NextRequest) {
                   const fallbackPayload = { ...spawnPayload }
                   delete fallbackPayload.tools
                   spawnResult = await callOpenClawGateway('sessions_spawn', fallbackPayload, 15_000)
-                } else if (isUnsupportedSessionsSpawnError(firstError) && targetAgentId) {
+                } else if (isUnsupportedSessionsSpawnError(firstError) && openclawAgentId && canInvokeGatewayAgent) {
                   const invokeResult = await runOpenClaw(
                     [
                       'gateway',
@@ -775,7 +819,7 @@ export async function POST(request: NextRequest) {
                       '12000',
                       '--params',
                       JSON.stringify({
-                        agentId: targetAgentId,
+                        agentId: openclawAgentId,
                         message: `Message from ${from}: ${content}`,
                         idempotencyKey: `mc-${messageId}-${Date.now()}`,
                         deliver: false,
@@ -987,7 +1031,7 @@ export async function POST(request: NextRequest) {
               }
             } else if (canFallbackToDirectQueue && deliveryAgent?.name) {
               markDirectQueueDelivery(deliveryAgent.name, activeDirectConnection?.connection_id)
-            } else if (openclawAgentId) {
+            } else if (openclawAgentId && canInvokeGatewayAgent) {
               const invokeParams: any = {
                 message: `Message from ${from}: ${content}`,
                 idempotencyKey,
